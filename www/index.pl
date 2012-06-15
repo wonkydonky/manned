@@ -22,6 +22,17 @@ TUWF::set(
   db_login => [undef, undef, undef],
   debug => 1,
   xml_pretty => 2,
+  # Cache the system information
+  pre_request_handler => sub {
+    my $self = shift;
+    if(!$self->{systems}) {
+      $self->{systems} = $self->dbSystemGet;
+      $_->{full} = $_->{name}.($_->{release}?' '.$_->{release}:'') for(@{$self->{systems}});
+      $self->{sysbyid} = { map +($_->{id}, $_), @{$self->{systems}} };
+      $self->{sysbyshort} = { map +($_->{short}, $_), @{$self->{systems}} };
+    }
+    1;
+  },
 );
 
 
@@ -39,8 +50,6 @@ TUWF::run();
 
 sub home {
   my $self = shift;
-  my $sys = $self->dbSystemGet;
-
   $self->htmlHeader(title => 'Man Pages Archive');
   h1 'Man Pages Archive';
   p 'Welcome blah mission etc.';
@@ -49,9 +58,9 @@ sub home {
 
   h2 'Browse!';
   ul;
-   for(@$sys) {
+   for(@{$self->{systems}}) {
      li;
-      a href => "/browse/$_->{short}", $_->{release} ? "$_->{name} $_->{release}" : $_->{name};
+      a href => "/browse/$_->{short}", $_->{full};
      end;
    }
   end;
@@ -69,7 +78,7 @@ sub home {
 sub browsesys {
   my($self, $short) = @_;
 
-  my $sys = $self->dbSystemGet($short)->[0];
+  my $sys = $self->{sysbyshort}{$short};
   return $self->resNotFound if !$sys;
 
   my $chr = $ENV{QUERY_STRING} ? $ENV{QUERY_STRING} : $ENV{QUERY_STRING} eq '' ? 'a' : '0';
@@ -103,7 +112,7 @@ sub browsesys {
 sub browsepkg {
   my($self, $short, $name) = @_;
 
-  my $sys = $self->dbSystemGet($short)->[0];
+  my $sys = $self->{sysbyshort}{$short};
   return $self->resNotFound if !$sys;
 
   my $pkgs = $self->dbPackageGet($sys->{id}, $name);
@@ -148,11 +157,12 @@ sub manselect {
 
   my %sys;
   push @{$sys{$_->{system}}}, $_ for (@$lst);
+
   dl id => 'nav';
-   for my $sys (sort keys %sys) {
+   for my $sys (sort { my $x=$self->{sysbyid}{$a}; my $y=$self->{sysbyid}{$b}; $x->{name} cmp $y->{name} or $y->{relorder} <=> $x->{relorder} } keys %sys) {
      my %pkgs;
      push @{$pkgs{"$_->{package}-$_->{version}"}}, $_ for @{$sys{$sys}};
-     dt $sys;
+     dt $self->{sysbyid}{$sys}{full};
      dd;
       # TODO: This package sorting sucks. Versions should be date-sorted, in descending order.
       for my $pkg (sort keys %pkgs) {
@@ -240,7 +250,7 @@ sub manhtml {
 # Given the name and optionally the section or hash of a man page, check with a
 # list of man pages with the same name to select the right hash for display.
 sub gethash {
-  my($name, $sect, $hash, $list) = @_;
+  my($self, $name, $sect, $hash, $list) = @_;
 
   # If we already have a shorthash, just get the full hash
   if($hash) {
@@ -253,7 +263,7 @@ sub gethash {
     !(($a->{locale}||'') =~ /^(en|$)/) != !(($b->{locale}||'') =~ /^(en|$)/)
       ? (($a->{locale}||'') =~ /^(en|$)/ ? -1 : 1)
     # Newer versions of a package have higher priority
-    : $a->{sysid} == $b->{sysid} && $a->{package} eq $b->{package} && $a->{version} ne $b->{version}
+    : $a->{system} == $b->{system} && $a->{package} eq $b->{package} && $a->{version} ne $b->{version}
       ? $b->{released} cmp $a->{released}
     # Section prefix match.
     : $sect && !($a->{section} =~ /^\Q$sect/) != !($b->{section} =~ /^\Q$sect/)
@@ -265,8 +275,11 @@ sub gethash {
     : substr($a->{section},0,1) ne substr($b->{section},0,1)
       ? $a->{section} cmp $b->{section}
     # Prefer Arch over other systems
-    : $a->{sysid} != $b->{sysid}
-      ? ($a->{sysid} == 1 ? -1 : 1)
+    : $a->{system} != $b->{system}
+      ? ($a->{system} == 1 ? -1 : 1)
+    # Prefer a later system release over an older one
+    : $a->{system} != $b->{system} && $self->{sysbyid}{$a->{system}}{name} eq $self->{sysbyid}{$b->{system}}{name}
+      ? $self->{sysbyid}{$b->{system}}{relorder} <=> $self->{sysbyid}{$a->{system}}{relorder}
     # Sections without appendix before sections with appendix
     : $a->{section} ne $b->{section}
       ? $a->{section} cmp $b->{section}
@@ -284,7 +297,7 @@ sub man {
   my $sect = $name =~ s/\.([0-9n])$// ? $1 : undef;
   my $m = $self->dbManInfo(name => $name);
   return $self->resNotFound() if !@$m;
-  $hash = gethash($name, $sect, $hash, $m);
+  $hash = gethash($self, $name, $sect, $hash, $m);
 
   $self->htmlHeader(title => $name);
   manselect $self, $m, $hash;
@@ -311,7 +324,7 @@ sub man {
     my $l = $self->dbManInfo(hash => $hash);
     for(@$l) {
       Tr;
-       td $_->{system};
+       td $self->{sysbyid}{$_->{system}}{full};
        td "$_->{category}/$_->{package}";
        td $_->{version};
        td;
@@ -326,9 +339,9 @@ sub man {
   end;
 
   div id => 'contents';
-    h2 'Contents';
-    my $c = $self->dbManContent($hash);
-    pre; lit manhtml manfmt $c; end;
+   h2 'Contents';
+   my $c = $self->dbManContent($hash);
+   pre; lit manhtml manfmt $c; end;
   end;
   $self->htmlFooter;
 }
@@ -378,11 +391,26 @@ sub htmlHeader {
 
 
 sub htmlFooter {
+  my $self = shift;
+
      div id => 'footer';
        lit '2012 manned.org';
      end;
    end 'body';
   end 'html';
+
+  # write the SQL queries as a HTML comment when debugging is enabled
+  # (stolen from VNDB code)
+  if($self->debug) {
+    lit "\n<!--\n SQL Queries:\n";
+    for (@{$self->{_TUWF}{DB}{queries}}) {
+      my $q = !ref $_->[0] ? $_->[0] :
+        $_->[0][0].(exists $_->[0][1] ? ' | "'.join('", "', map defined()?$_:'NULL', @{$_->[0]}[1..$#{$_->[0]}]).'"' : '');
+      $q =~ s/^\s//g;
+      lit sprintf "  [%6.2fms] %s\n", $_->[1]*1000, $q;
+    }
+    lit "-->\n";
+  }
 }
 
 
@@ -397,7 +425,6 @@ sub dbManInfo {
   my $s = shift;
   my %o = @_;
 
-  # TODO: Option to only fetch the latest version of a package?
   my %where = (
     $o{name}      ? ('m.name = ?' => $o{name}) : (),
     $o{package}   ? ('m.package = ?' => $o{package}) : (),
@@ -409,24 +436,20 @@ sub dbManInfo {
 
   # TODO: Flags to indicate what to information to fetch
   return $s->dbAll(q{
-    SELECT s.id AS sysid, s.name||' '||COALESCE(s.release, '') AS system, p.category, p.name AS package, p.version, p.released, m.name, m.section, m.filename, m.locale, encode(m.hash, 'hex') AS hash
+    SELECT p.system, p.category, p.name AS package, p.version, p.released, m.name, m.section, m.filename, m.locale, encode(m.hash, 'hex') AS hash
       FROM package p
       JOIN man m ON m.package = p.id
-      JOIN systems s ON s.id = p.system
         !W
   }, \%where);
 }
 
 
 sub dbSystemGet {
-  my($s, $short) = @_;
-  return $s->dbAll(
-    'SELECT id, name, release, short FROM systems !W ORDER BY name, relorder',
-    $short ? {'short = ?' => $short } : {}
-  );
+  return shift->dbAll('SELECT id, name, release, short, relorder FROM systems ORDER BY name, relorder');
 }
 
 
+# TODO: Optimize
 sub dbPackageList {
   my($s, $sysid, $char) = @_;
 
@@ -437,7 +460,6 @@ sub dbPackageList {
     defined($char) && !$char ? ( '(ASCII(name) < 97 OR ASCII(name) > 122) AND (ASCII(name) < 65 OR ASCII(name) > 90)' => 1 ) : (),
   );
 
-  # TODO: Optimize this one
   return $s->dbAll(q{
       SELECT DISTINCT name, category
         FROM package p
@@ -447,6 +469,7 @@ sub dbPackageList {
 }
 
 
+# TODO: Optimize?
 sub dbPackageGet {
   my($s, $sysid, $name) = @_;
 

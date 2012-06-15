@@ -1,7 +1,7 @@
 
 -- TODO: "system" -> "repository"?
 -- TODO: index of (reverse) man page references?
--- TODO: Probably want an index on man(name) and man(hash)
+-- TODO: Probably want an index on man(name). Or try swapping column order in the unique index.
 -- TODO: Use some consistent naming of tables and columns
 
 
@@ -47,6 +47,9 @@ CREATE TABLE man (
   hash     bytea     NOT NULL REFERENCES contents(hash),
   UNIQUE(package, filename)
 );
+
+
+CREATE INDEX ON man USING hash (hash);
 
 
 INSERT INTO systems (id, name, release, short, relorder) VALUES
