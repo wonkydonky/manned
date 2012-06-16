@@ -56,7 +56,8 @@ INSERT INTO systems (id, name, release, short, relorder) VALUES
   (1, 'Arch Linux', NULL,   'arch', 0),
   (2, 'Ubuntu',     '4.10', 'ubuntu-warty', 0),
   (3, 'Ubuntu',     '5.04', 'ubuntu-hoary', 1),
-  (4, 'Ubuntu',     '5.10', 'ubuntu-breezy', 2);
+  (4, 'Ubuntu',     '5.10', 'ubuntu-breezy', 2),
+  (5, 'Ubuntu',     '6.06', 'ubuntu-dapper', 3);
 
 
 -- Removes any path components and compression extensions from the filename.

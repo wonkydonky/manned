@@ -49,8 +49,10 @@ syncrepo() {
   CFN="$TMP/Contents"
   PFN="$TMP/Packages"
   printf "" >"$PFN"
-  $CURL "$REPO/$CONTENTSURL" -o "$CFN.gz" || return 1
-  gunzip "$CFN.gz"
+  if [ "$CONTENTSURL" != "-" ]; then
+    $CURL "$REPO/$CONTENTSURL" -o "$CFN.gz" || return 1
+    gunzip "$CFN.gz"
+  fi
 
   for CMP in $COMPONENTS; do
     echo "MANDIFF-COMPONENT: $CMP" >>"$PFN"
@@ -103,19 +105,46 @@ EOP
   rm -f "$TMP/fifo" "$CFN" "$PFN"
 }
 
+
 # TODO: backports?
 
-#syncrepo 2 "http://old-releases.ubuntu.com/ubuntu/" "warty" "main multiverse restricted universe"
-#syncrepo 2 "http://old-releases.ubuntu.com/ubuntu/" "warty-updates" "main multiverse restricted universe" "dists/warty/Contents-i386.gz"
-#syncrepo 2 "http://old-releases.ubuntu.com/ubuntu/" "warty-security" "main multiverse restricted universe" "dists/warty/Contents-i386.gz"
+ubuntu_warty() {
+  syncrepo 2 "http://old-releases.ubuntu.com/ubuntu/" "warty" "main multiverse restricted universe"
+  syncrepo 2 "http://old-releases.ubuntu.com/ubuntu/" "warty-updates" "main multiverse restricted universe" "dists/warty/Contents-i386.gz"
+  syncrepo 2 "http://old-releases.ubuntu.com/ubuntu/" "warty-security" "main multiverse restricted universe" "dists/warty/Contents-i386.gz"
+}
 
-#syncrepo 3 "http://old-releases.ubuntu.com/ubuntu/" "hoary" "main multiverse restricted universe"
-#syncrepo 3 "http://old-releases.ubuntu.com/ubuntu/" "hoary-updates" "main multiverse restricted universe" "dists/hoary/Contents-i386.gz"
-#syncrepo 3 "http://old-releases.ubuntu.com/ubuntu/" "hoary-security" "main multiverse restricted universe" "dists/hoary/Contents-i386.gz"
+ubuntu_hoary() {
+  syncrepo 3 "http://old-releases.ubuntu.com/ubuntu/" "hoary" "main multiverse restricted universe"
+  syncrepo 3 "http://old-releases.ubuntu.com/ubuntu/" "hoary-updates" "main multiverse restricted universe" "dists/hoary/Contents-i386.gz"
+  syncrepo 3 "http://old-releases.ubuntu.com/ubuntu/" "hoary-security" "main multiverse restricted universe" "dists/hoary/Contents-i386.gz"
+}
 
-#syncrepo 4 "http://old-releases.ubuntu.com/ubuntu/" "breezy" "main multiverse restricted universe"
-#syncrepo 4 "http://old-releases.ubuntu.com/ubuntu/" "breezy-updates" "main multiverse restricted universe" "dists/breezy/Contents-i386.gz"
-#syncrepo 4 "http://old-releases.ubuntu.com/ubuntu/" "breezy-security" "main multiverse restricted universe" "dists/breezy/Contents-i386.gz"
+ubuntu_breezy() {
+  syncrepo 4 "http://old-releases.ubuntu.com/ubuntu/" "breezy" "main multiverse restricted universe"
+  syncrepo 4 "http://old-releases.ubuntu.com/ubuntu/" "breezy-updates" "main multiverse restricted universe" "dists/breezy/Contents-i386.gz"
+  syncrepo 4 "http://old-releases.ubuntu.com/ubuntu/" "breezy-security" "main multiverse restricted universe" "dists/breezy/Contents-i386.gz"
+}
+
+ubuntu_dapper() {
+  # Contents-i386.gz in dists/dapper/ is broken, so try to combine the files from breezy, edgy and Contents-hppa.gz.
+  $CURL "http://old-releases.ubuntu.com/ubuntu/dists/dapper/Contents-hppa.gz" -o "$TMP/Contents-TMP.gz" || return
+  zcat "$TMP/Contents-TMP.gz" > "$TMP/Contents"
+  rm "$TMP/Contents-TMP.gz"
+  $CURL "http://old-releases.ubuntu.com/ubuntu/dists/breezy/Contents-i386.gz" -o "$TMP/Contents-TMP.gz" || return
+  zcat "$TMP/Contents-TMP.gz" >> "$TMP/Contents"
+  rm "$TMP/Contents-TMP.gz"
+  $CURL "http://old-releases.ubuntu.com/ubuntu/dists/edgy/Contents-i386.gz" -o "$TMP/Contents-TMP.gz" || return
+  zcat "$TMP/Contents-TMP.gz" >> "$TMP/Contents"
+  rm "$TMP/Contents-TMP.gz"
+  syncrepo 5 "http://old-releases.ubuntu.com/ubuntu/" "dapper" "main multiverse restricted universe" -
+
+  # -updates and -security do have a functional Contents-i386.gz
+  syncrepo 5 "http://old-releases.ubuntu.com/ubuntu/" "dapper-updates" "main multiverse restricted universe"
+  syncrepo 5 "http://old-releases.ubuntu.com/ubuntu/" "dapper-security" "main multiverse restricted universe"
+}
+
+ubuntu_dapper
 
 rm -rf "$TMP"
 
