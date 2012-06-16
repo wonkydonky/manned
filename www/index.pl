@@ -194,7 +194,7 @@ sub manfmt {
   # doesn't '.so' it.
   $c =~ s/^\.so man.macros$//mg;
   # Other .so's should be handled by the web interface
-  $c =~ s/^\.so (.+)$/\[\[\[MANDIFF-INCLUDE $1\]\]\]/mg;
+  $c =~ s/^\.so (.+)$/\[\[\[MANNEDINCLUDE $1\]\]\]/mg;
 
   # Disable hyphenation, since that screws up man page references. :-(
   $c = ".hy 0\n.de hy\n..\n$c";

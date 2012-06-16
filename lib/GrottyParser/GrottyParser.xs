@@ -101,6 +101,16 @@ static void flushline(ctx_t *x) {
   static const char eol[] = "\n";
   char *s = x->line, *es = x->line;
 
+  // Special-case [[[MANNEDINCLUDE ..]]] directive
+  if(x->linelen > 20 && *s == '[' && strncmp(s, "[[[MANNEDINCLUDE ", 17) == 0 && strcmp("]]]", s+x->linelen-3) == 0) {
+    s[x->linelen-3] = 0;
+    s += 17;
+    char *fn = strrchr(s, '/');
+    fn = fn ? fn+1 : s;
+    sv_catpvf(x->dest, "&gt;&gt; Included manual page: <a href=\"/%s\">%s</a>", fn, s);
+    goto end;
+  }
+
   if(x->noref) {
     flushchunk(x, x->line, x->flags, x->line+x->linelen);
     goto end;
