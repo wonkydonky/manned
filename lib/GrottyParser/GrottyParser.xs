@@ -95,6 +95,37 @@ static void flushchunk(ctx_t *x, const char *s, const char *f, const char *e) {
 #define ismanchar(x) (isalnum(x) || x == '_' || x == '-' || x == '.')
 
 
+static void flushinclude(ctx_t *x) {
+  char buf[8] = {};
+  char *s = x->line;
+
+  s[x->linelen-3] = 0;
+  s += 17;
+  char *fn = strrchr(s, '/');
+  fn = fn ? fn+1 : s;
+  sv_catpv(x->dest, "&gt;&gt; Included manual page: <a href=\"/");
+
+  // Replace ‐ (U+2010) with - (U+2d). ASCII dashes are replaced with an
+  // Unicode dash when passed through groff, which we need to revert in order
+  // to get the link working. (Apparently it recognizes man page references and
+  // URLs, as it doesn't do this replacement in those situations.)
+  while(*fn) {
+    if(*fn == (char)0xe2 && fn[1] == (char)0x80 && fn[2] == (char)0x90) {
+      buf[0] = '-';
+      fn += 3;
+    } else {
+      buf[0] = *fn;
+      fn++;
+    }
+    sv_catpvn(x->dest, buf, 1);
+  }
+
+  sv_catpv(x->dest, "\">");
+  sv_catpv(x->dest, s);
+  sv_catpv(x->dest, "</a>");
+}
+
+
 // HTML-escapes and "Flushes" the current line to the output string. Tries to
 // convert man references and URLs into links if format is true.
 static void flushline(ctx_t *x) {
@@ -103,11 +134,7 @@ static void flushline(ctx_t *x) {
 
   // Special-case [[[MANNEDINCLUDE ..]]] directive
   if(x->linelen > 20 && *s == '[' && strncmp(s, "[[[MANNEDINCLUDE ", 17) == 0 && strcmp("]]]", s+x->linelen-3) == 0) {
-    s[x->linelen-3] = 0;
-    s += 17;
-    char *fn = strrchr(s, '/');
-    fn = fn ? fn+1 : s;
-    sv_catpvf(x->dest, "&gt;&gt; Included manual page: <a href=\"/%s\">%s</a>", fn, s);
+    flushinclude(x);
     goto end;
   }
 
