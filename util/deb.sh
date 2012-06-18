@@ -16,7 +16,7 @@ checkpkg() {
   FILE=$6
   echo "===> $NAME-$VERSION"
   FN="$TMP/$NAME-$VERSION.deb"
-  $CURL "$REPO/$FILE" -o "$FN" || return
+  $CURL "$REPO$FILE" -o "$FN" || return
 
   # Get the date from the last modification time of the debian-binary file
   # inside the .deb. Preferably, the date we store in the database indicates
@@ -50,14 +50,14 @@ syncrepo() {
   PFN="$TMP/Packages"
   printf "" >"$PFN"
   if [ "$CONTENTSURL" != "-" ]; then
-    $CURL "$REPO/$CONTENTSURL" -o "$CFN.gz" || return 1
+    $CURL "$REPO$CONTENTSURL" -o "$CFN.gz" || return 1
     gunzip "$CFN.gz"
   fi
 
   for CMP in $COMPONENTS; do
     echo "MANDIFF-COMPONENT: $CMP" >>"$PFN"
     TFN="$TMP/Packages-$CMP.bz2"
-    $CURL "$REPO/dists/$DISTRO/$CMP/binary-i386/Packages.bz2" -o "$TFN" || return 1
+    $CURL "${REPO}dists/$DISTRO/$CMP/binary-i386/Packages.bz2" -o "$TFN" || return 1
     bzcat "$TFN" >>"$PFN"
     rm "$TFN"
   done
@@ -144,7 +144,25 @@ ubuntu_dapper() {
   syncrepo 5 "http://old-releases.ubuntu.com/ubuntu/" "dapper-security" "main multiverse restricted universe"
 }
 
-ubuntu_dapper
+ubuntu_edgy() {
+  syncrepo 6 "http://old-releases.ubuntu.com/ubuntu/" "edgy" "main multiverse restricted universe"
+  syncrepo 6 "http://old-releases.ubuntu.com/ubuntu/" "edgy-updates" "main multiverse restricted universe" "dists/edgy/Contents-i386.gz"
+  syncrepo 6 "http://old-releases.ubuntu.com/ubuntu/" "edgy-security" "main multiverse restricted universe" "dists/edgy/Contents-i386.gz"
+}
+
+ubuntu_feisty() {
+  syncrepo 7 "http://old-releases.ubuntu.com/ubuntu/" "feisty" "main multiverse restricted universe"
+  syncrepo 7 "http://old-releases.ubuntu.com/ubuntu/" "feisty-updates" "main multiverse restricted universe"
+  syncrepo 7 "http://old-releases.ubuntu.com/ubuntu/" "feisty-security" "main multiverse restricted universe"
+}
+
+ubuntu_gutsy() {
+  syncrepo 8 "http://old-releases.ubuntu.com/ubuntu/" "gutsy" "main multiverse restricted universe"
+  syncrepo 8 "http://old-releases.ubuntu.com/ubuntu/" "gutsy-updates" "main multiverse restricted universe"
+  syncrepo 8 "http://old-releases.ubuntu.com/ubuntu/" "gutsy-security" "main multiverse restricted universe"
+}
+
+ubuntu_gutsy
 
 rm -rf "$TMP"
 
