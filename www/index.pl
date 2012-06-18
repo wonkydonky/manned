@@ -38,6 +38,7 @@ TUWF::set(
 
 TUWF::register(
   qr// => \&home,
+  qr{info/about} => \&about,
   qr{browse/([^/]+)} => \&browsesys,
   qr{browse/([^/]+)/([^/]+)} => \&browsepkg,
   qr{([^/]+)/([0-9a-f]{8})} => \&man,
@@ -52,25 +53,117 @@ sub home {
   my $self = shift;
   $self->htmlHeader(title => 'Man Pages Archive');
   h1 'Man Pages Archive';
-  p 'Welcome blah mission etc.';
-  h2 'What do you index?';
-  p 'System and repos etc.';
+  p style => 'float: none';
+   # Relevant query: SELECT count(distinct hash), count(distinct name), count(*), count(distinct package) FROM man;
+   # It's far too slow to run that on every pageview. :-(
+   lit 'Indexing <b>185,211</b> versions of <b>76,549</b> manual pages found in <b>515,783</b> files of <b>52,088</b> packages.';
+   br;
+   txt 'At this point only Arch Linux and some Ubuntu releases have been indexed. More systems and repositories will be added later on.';
+  end;
 
-  h2 'Browse!';
-  ul;
-   for(@{$self->{systems}}) {
+  h2 'Browse the manuals';
+  ul id => 'systems';
+   my %sys;
+   push @{$sys{$_->{name}}}, $_ for(@{$self->{systems}});
+   for my $sys (sort keys %sys) {
+     $sys = $sys{$sys};
+     (my $img = $sys->[0]{short}) =~ s/^(.+)-.+$/$1/;
      li;
-      a href => "/browse/$_->{short}", $_->{full};
+      a href => "/browse/$sys->[0]{short}" if @$sys == 1;
+       span style => "background-image: url('images/$img.png')", '';
+       txt $sys->[0]{name};
+       if(@$sys > 1) {
+         for(@$sys) {
+           a href => "/browse/$_->{short}", $_->{release};
+         }
+       }
+      end 'a' if @$sys == 1;
      end;
    }
   end;
 
-  h2 'Will you do ...?';
-  p 'This page looks more like FAQ than a front page... hmmm.';
-  h2 'Stats?';
-  p 'Stats are always nice!';
   h2 'Other sites';
-  p '<insert some links here>';
+  ul;
+   li; a href => 'http://man.cx/', 'Man.cx'; end;
+   li; a href => 'http://man.he.net/', 'Man.he.net'; end;
+   li; a href => 'http://linux.die.net/man/', 'Die.net'; end;
+   li; a href => 'http://www.freebsd.org/cgi/man.cgi', 'FreeBSD.org Man Pages'; end;
+   li; a href => 'http://www.openbsd.org/cgi-bin/man.cgi', 'OpenBSD Man Pages'; end;
+   li; a href => 'http://linuxmanpages.net/', 'Fedora Manuals'; end;
+   li; a href => 'http://manpages.ubuntu.com/', 'Ubuntu Manuals'; end;
+   li; a href => 'http://www.manpagez.com/', 'Manpagez.com'; txt ' (Mac OS X, has some texinfo documentation as well)'; end;
+   # li; a href => 'http://www.ma.utexas.edu/cgi-bin/man-cgi', 'ma.utexas.edu'; end; <- No idea what this has to offer when compared to the rest
+  end;
+  $self->htmlFooter;
+}
+
+
+sub about {
+  my $self = shift;
+  $self->htmlHeader(title => 'About');
+  h1 'About Manned.org';
+
+  h2 'Goal';
+  p 'Blah.';
+
+  h2 'The indexing process';
+  p; lit <<'  _';
+   All man pages are fetched right from the (binary) packages available on the
+   public repositories of Linux distributions. In particular:<br />
+   <br />
+   <dl>
+    <dt>Arch Linux</dt><dd>
+     The core, extra and community repositories are fetched from a local
+     Arch mirror.</dd>
+    <dt>Ubuntu</dt><dd>
+     Historical releases were fetched from
+     <a href="http://old-releases.ubuntu.com/ubuntu/">http://old-releases.ubuntu.com/ubuntu/</a>.
+     All components (main, universe, restricted and multiverse) are fetched
+     from the $release, $release-updates and $release-security repositories.
+     Backports are not included at the moment.</dd>
+   </dl><br />
+   Only packages for a single architecture (i386 or i686) are scanned. To my
+   knowledge, packages that come with different manuals for different
+   architectures either don't exist or are extremely rare. It does happen that
+   some packages are not available for all architectures.  Usually, though,
+   every package is at least available for i386/i686, so hopefully we're not
+   missing out on much.
+   <br /><br />
+   The repositories are scanned for new packages on a daily basis.
+  _
+  end;
+
+  h2 'Other systems';
+  p; lit <<'  _';
+   I'd love to index the manuals of most major Linux distributions in the
+   future. In the short term, this means all Debian and Fedora releases will
+   get indexed. In the long term, many others may be added as well.
+   <br /><br />
+   It would also be great to index a few non-Linux systems such as *BSD,
+   Solaris/Illumos and Mac OS X. Unfortunately, those don't always follow a
+   binary package based approach, or are otherwise less easy to properly index.
+   The FreeBSD ports look like a good future target, however.
+   <br /><br />
+   In general, systems that follow an entirely source-based distribution
+   approach can't be indexed without compiling everything. Since that is both
+   very resource-heavy and open to security issues, there are no plans to
+   include manuals from such systems at the moment. So unless someone comes
+   with a solution I hadn't thought of yet, there won't be any Gentoo manuals
+   here. :-(
+  _
+  end;
+
+  h2 'Copyright';
+  p; lit <<'  _';
+   All manual pages are copyrighted by their respective authors. The manuals
+   have been fetched from publically available repositories of free and
+   (primarily) open source software. The distributors of said software have put
+   in efforts to only include software and documentation that allows free
+   distribution. Nonetheless, if a manual that does not allow to be
+   redistributed has been inadvertently included in our index, please let me
+   know and I will have it removed as soon as possible.
+  _
+  end;
   $self->htmlFooter;
 }
 
@@ -97,7 +190,7 @@ sub browsesys {
   end;
 
   p 'Note: Packages without man pages are not listed.';
-  ul;
+  ul id => 'packages';
    for(@$pkg) {
      li;
       a href => "/browse/$short/$_->{name}", $_->{name};
@@ -133,9 +226,9 @@ sub browsepkg {
 
     my $mans = $self->dbManInfo(package => $pkg->{id});
     # This can be a table as well.
-    ul;
+    ul id => 'packages';
      # TODO: Put this sort in the SQL query
-     for(sort { $a->{name}."\x09".($a->{locale}||'') cmp $b->{name}."\x09".($b->{locale}||'') } @$mans) {
+     for(sort { $a->{name} cmp $b->{name} || ($a->{locale}||'') cmp ($b->{locale}||'') } @$mans) {
        li;
         a href => "/$_->{name}/".substr($_->{hash},0,8), "$_->{name}($_->{section})";
         b " $_->{locale}" if $_->{locale};
@@ -159,26 +252,26 @@ sub manselect {
   push @{$sys{$_->{system}}}, $_ for (@$lst);
 
   dl id => 'nav';
+   my $lastname = '';
    for my $sys (sort { my $x=$self->{sysbyid}{$a}; my $y=$self->{sysbyid}{$b}; $x->{name} cmp $y->{name} or $y->{relorder} <=> $x->{relorder} } keys %sys) {
      my %pkgs;
      push @{$pkgs{"$_->{package}-$_->{version}"}}, $_ for @{$sys{$sys}};
-     dt $self->{sysbyid}{$sys}{full};
+     dt $lastname eq $self->{sysbyid}{$sys}{name} ? (class => 'oldrelease') : (), $self->{sysbyid}{$sys}{full};
      dd;
-      # TODO: This package sorting sucks. Versions should be date-sorted, in descending order.
-      for my $pkg (sort keys %pkgs) {
+      for my $pkg (sort { $pkgs{$a}[0]{package} cmp $pkgs{$b}[0]{package} || $pkgs{$b}[0]{released} cmp $pkgs{$a}[0]{released} } keys %pkgs) {
         dl;
          dt $pkg;
          dd;
-          for my $man (sort { $a->{section} cmp $b->{section} } @{$pkgs{$pkg}}) {
+          for my $man (sort { $a->{section} cmp $b->{section} || ($a->{locale}||'') cmp ($b->{locale}||'') } @{$pkgs{$pkg}}) {
             my $t = $man->{locale} ? "$man->{section}.$man->{locale}" : $man->{section};
             a href => sprintf('/%s/%s', $man->{name}, substr $man->{hash}, 0, 8), $t if $selhash ne $man->{hash};
             b $t if $selhash eq $man->{hash};
-            txt ' ';
           }
          end;
         end;
       }
      end 'dd';
+     $lastname = $self->{sysbyid}{$sys}{name};
    }
   end 'dl';
 }
@@ -239,22 +332,16 @@ sub manfmt {
 }
 
 
-sub manhtml {
-  my $t0 = [gettimeofday];
-  my $d = GrottyParser::html(shift);
-  warn sprintf "manhtml took %fms\n", tv_interval($t0)*1000;
-  return $d;
-}
+# Given the name and optionally the hash of a man page, check with a list of
+# man pages with the same name to select the right one for display.
+sub getman {
+  my($self, $name, $hash, $list) = @_;
 
-
-# Given the name and optionally the section or hash of a man page, check with a
-# list of man pages with the same name to select the right hash for display.
-sub gethash {
-  my($self, $name, $sect, $hash, $list) = @_;
+  my $sect = $name =~ /\.([0-9n])$/ ? $1 : undef;
 
   # If we already have a shorthash, just get the full hash
   if($hash) {
-    $_->{hash} =~ /^$hash/ && return $_->{hash} for (@$list);
+    $_->{hash} =~ /^$hash/ && return $_ for (@$list);
   }
 
   # If that failed, sort the list based on some heuristics.
@@ -287,28 +374,25 @@ sub gethash {
     : $a->{hash} cmp $b->{hash};
   } @$list;
 
-  return $l[0]{hash};
+  return $l[0];
 }
 
 
 sub man {
   my($self, $name, $hash) = @_;
 
-  my $sect = $name =~ s/\.([0-9n])$// ? $1 : undef;
   my $m = $self->dbManInfo(name => $name);
   return $self->resNotFound() if !@$m;
-  $hash = gethash($self, $name, $sect, $hash, $m);
+  my $man = getman($self, $name, $hash, $m);
 
   $self->htmlHeader(title => $name);
-  manselect $self, $m, $hash;
+  manselect $self, $m, $man->{hash};
 
-  h1 $name;
+  h1 $man->{name};
   p;
-   txt $hash;
+   a href => "/$man->{name}/".substr($hash, 0, 8), 'permalink';
    txt ' - ';
-   a href => "/$name/".substr($hash, 0, 8), 'permalink';
-   txt ' - ';
-   a href => "/$name/".substr($hash, 0, 8).'/src', 'source';
+   a href => "/$man->{name}/".substr($hash, 0, 8).'/src', 'source';
   end;
 
   div id => 'locations';
@@ -321,15 +405,15 @@ sub man {
      td 'Name';
      td 'Filename';
     end; end;
-    my $l = $self->dbManInfo(hash => $hash);
+    my $l = $self->dbManInfo(hash => $man->{hash});
     for(@$l) {
       Tr;
        td $self->{sysbyid}{$_->{system}}{full};
        td "$_->{category}/$_->{package}";
        td $_->{version};
        td;
-        a href => "/$_->{name}", $_->{name} if $_->{name} ne $name;
-        txt $_->{name} if $_->{name} eq $name;
+        a href => "/$_->{name}", $_->{name} if $_->{name} ne $man->{name};
+        txt $_->{name} if $_->{name} eq $man->{name};
         txt ".$_->{section}";
        end;
        td $_->{filename};
@@ -340,8 +424,8 @@ sub man {
 
   div id => 'contents';
    h2 'Contents';
-   my $c = $self->dbManContent($hash);
-   pre; lit manhtml manfmt $c; end;
+   my $c = $self->dbManContent($man->{hash});
+   pre; lit GrottyParser::html(manfmt $c); end;
   end;
   $self->htmlFooter;
 }
@@ -393,9 +477,10 @@ sub htmlHeader {
 sub htmlFooter {
   my $self = shift;
 
-     div id => 'footer';
-       lit '2012 manned.org';
-     end;
+    div id => 'footer';
+     lit 'All manual pages are copyrighted by their respective authors.
+       | <a href="/info/about">About manned.org</a> | <a href="mailto:contact@manned.org">Contact</a>.';
+    end;
    end 'body';
   end 'html';
 
@@ -425,8 +510,9 @@ sub dbManInfo {
   my $s = shift;
   my %o = @_;
 
+  (my $oname = $o{name}||'') =~ s/\.([0-9n])$//;
   my %where = (
-    $o{name}      ? ('m.name = ?' => $o{name}) : (),
+    $o{name}      ? ('m.name IN(!l)' => [[ $o{name}, $oname ne $o{name} ? $oname : () ]]) : (),
     $o{package}   ? ('m.package = ?' => $o{package}) : (),
     $o{section}   ? ('m.section = ?' => $o{section}) : (),
     $o{shorthash} ? (q{substring(m.hash from 1 for 4) = decode(?, 'hex')} => $o{shorthash}) : (),

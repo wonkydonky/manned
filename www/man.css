@@ -4,7 +4,7 @@ body { margin: 20px auto; max-width: 1250px; background: #fff; padding: 10px; -w
 	-webkit-box-shadow: 0 10px 10px #def; }
 h1 { font-size: 24px; font-weight: normal; color: #abc; }
 h1 + p { float: right; }
-h2 { font-size: 21px; margin-top: 40px; color: #468; font-weight: normal; }
+h2 { font-size: 21px; margin-top: 40px; color: #468; font-weight: normal; clear: left }
 h2 + i { font-size: 12px; }
 dd { margin-left: 20px; }
 a { color: #048; font-family: Verdana; font-weight: normal; text-decoration: underline; padding: 3px 5px;
@@ -30,6 +30,12 @@ td { padding: 1px 5px; font-size: 12px; }
 #nav a { font-size: 13px; }
 #nav b { font-family: Verdana; font-size: 13px; background: #cde; padding: 3px 5px;
 	-webkit-border-radius: 4px; -moz-border-radius: 4px; }
+
+#systems li { display: block; float: left; font-size: 24px; width: 360px; margin: 20px;  }
+#systems span { display: block; float: left; width: 50px; height: 50px; margin: 5px; background-size: contain; background-repeat: no-repeat; }
+
+#packages li { display: block; }
+#packages i { color: #ccc; font-size: 13px; }
 
 #footer { height: 60px; clear: both; padding: 4px 10px; color: #f8f8f8; background: -webkit-linear-gradient(#b0c5da, #40556a); margin: 10px -10px -20px -10px; -webkit-border-radius: 0 0 8px 8px; -moz-border-radius: 0 0 8px 8px;
 	border-top: 1px solid #888; }
