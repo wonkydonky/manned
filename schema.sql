@@ -53,14 +53,23 @@ CREATE INDEX ON man USING hash (hash);
 
 
 INSERT INTO systems (id, name, release, short, relorder) VALUES
-  (1, 'Arch Linux', NULL,   'arch', 0),
-  (2, 'Ubuntu',     '4.10', 'ubuntu-warty', 0),
-  (3, 'Ubuntu',     '5.04', 'ubuntu-hoary', 1),
-  (4, 'Ubuntu',     '5.10', 'ubuntu-breezy', 2),
-  (5, 'Ubuntu',     '6.06', 'ubuntu-dapper', 3),
-  (6, 'Ubuntu',     '6.10', 'ubuntu-edgy', 4),
-  (7, 'Ubuntu',     '7.04', 'ubuntu-feisty', 5),
-  (8, 'Ubuntu',     '7.10', 'ubuntu-gutsy', 6);
+  (1,  'Arch Linux', NULL,    'arch',            0),
+  (2,  'Ubuntu',     '4.10',  'ubuntu-warty',    0),
+  (3,  'Ubuntu',     '5.04',  'ubuntu-hoary',    1),
+  (4,  'Ubuntu',     '5.10',  'ubuntu-breezy',   2),
+  (5,  'Ubuntu',     '6.06',  'ubuntu-dapper',   3),
+  (6,  'Ubuntu',     '6.10',  'ubuntu-edgy',     4),
+  (7,  'Ubuntu',     '7.04',  'ubuntu-feisty',   5),
+  (8,  'Ubuntu',     '7.10',  'ubuntu-gutsy',    6),
+  (9,  'Ubuntu',     '8.04',  'ubuntu-hardy',    7),
+  (10, 'Ubuntu',     '8.10',  'ubuntu-intrepid', 8),
+  (11, 'Ubuntu',     '9.04',  'ubuntu-jaunty',   9),
+  (12, 'Ubuntu',     '9.10',  'ubuntu-karmic',   10),
+  (13, 'Ubuntu',     '10.04', 'ubuntu-lucid',    11),
+  (14, 'Ubuntu',     '10.10', 'ubuntu-maverick', 12),
+  (15, 'Ubuntu',     '11.04', 'ubuntu-natty',    13),
+  (16, 'Ubuntu',     '11.10', 'ubuntu-oneiric',  14),
+  (17, 'Ubuntu',     '12.04', 'ubuntu-precise',  15);
 
 
 -- Removes any path components and compression extensions from the filename.

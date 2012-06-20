@@ -30,7 +30,16 @@ checkpkg() {
 
   # Extract and handle the man pages
   if [ "$?" -eq 0 -a -n "$PKGID" ]; then
-    ar p "$FN" data.tar.gz | ./add_tar.sh - $PKGID -z
+    DATAFN=`ar t $FN | grep -F data.tar`
+    case "$DATAFN" in
+      "data.tar.gz") DATAZ="-z" ;;
+      "data.tar.bz2") DATAZ="-j" ;;
+      "data.tar.lzma") DATAZ="--lzma" ;;
+      "data.tar.xz") DATAZ="-J" ;;
+      *) echo "No data.tar found, or unknown compression format."; DATAZ="ERR" ;;
+    esac
+
+    [ "$DATAZ" != "ERR" ] && ar p "$FN" "$DATAFN" | ./add_tar.sh - $PKGID $DATAZ
   fi
 
   rm "$FN"
@@ -89,7 +98,7 @@ syncrepo() {
         if($p && $v && $s && $f) {
           print "$p $v $s $f" if $pkg{$p} && $pkg{$p} == 1
             && !$db->selectrow_arrayref(q{SELECT 1 FROM package WHERE system = ? AND name = ? AND version = ?}, {}, $sysid, $p, $v);
-          warn "Duplicate package? $p\n" if $pkg{$p} && $pkg{$p} == 2;
+          #warn "Duplicate package? $p\n" if $pkg{$p} && $pkg{$p} == 2;
           $pkg{$p} = 2;
         }
         $p=$v=$f=undef
@@ -104,6 +113,8 @@ EOP
 
   rm -f "$TMP/fifo" "$CFN" "$PFN"
 }
+
+
 
 
 # TODO: backports?
@@ -162,7 +173,84 @@ ubuntu_gutsy() {
   syncrepo 8 "http://old-releases.ubuntu.com/ubuntu/" "gutsy-security" "main multiverse restricted universe"
 }
 
-ubuntu_gutsy
+ubuntu_hardy() {
+  syncrepo 9 "http://nl.archive.ubuntu.com/ubuntu/" "hardy" "main multiverse restricted universe"
+  syncrepo 9 "http://nl.archive.ubuntu.com/ubuntu/" "hardy-updates" "main multiverse restricted universe"
+  syncrepo 9 "http://nl.archive.ubuntu.com/ubuntu/" "hardy-security" "main multiverse restricted universe"
+}
+
+ubuntu_intrepid() {
+  syncrepo 10 "http://old-releases.ubuntu.com/ubuntu/" "intrepid" "main multiverse restricted universe"
+  syncrepo 10 "http://old-releases.ubuntu.com/ubuntu/" "intrepid-updates" "main multiverse restricted universe"
+  syncrepo 10 "http://old-releases.ubuntu.com/ubuntu/" "intrepid-security" "main multiverse restricted universe"
+}
+
+ubuntu_jaunty() {
+  syncrepo 11 "http://old-releases.ubuntu.com/ubuntu/" "jaunty" "main multiverse restricted universe"
+  syncrepo 11 "http://old-releases.ubuntu.com/ubuntu/" "jaunty-updates" "main multiverse restricted universe"
+  syncrepo 11 "http://old-releases.ubuntu.com/ubuntu/" "jaunty-security" "main multiverse restricted universe"
+}
+
+ubuntu_karmic() {
+  syncrepo 12 "http://old-releases.ubuntu.com/ubuntu/" "karmic" "main multiverse restricted universe"
+  syncrepo 12 "http://old-releases.ubuntu.com/ubuntu/" "karmic-updates" "main multiverse restricted universe"
+  syncrepo 12 "http://old-releases.ubuntu.com/ubuntu/" "karmic-security" "main multiverse restricted universe"
+}
+
+ubuntu_lucid() {
+  syncrepo 13 "http://nl.archive.ubuntu.com/ubuntu/" "lucid" "main multiverse restricted universe"
+  syncrepo 13 "http://nl.archive.ubuntu.com/ubuntu/" "lucid-updates" "main multiverse restricted universe"
+  syncrepo 13 "http://nl.archive.ubuntu.com/ubuntu/" "lucid-security" "main multiverse restricted universe"
+}
+
+ubuntu_maverick() {
+  syncrepo 14 "http://nl.archive.ubuntu.com/ubuntu/" "maverick" "main multiverse restricted universe"
+  syncrepo 14 "http://nl.archive.ubuntu.com/ubuntu/" "maverick-updates" "main multiverse restricted universe"
+  syncrepo 14 "http://nl.archive.ubuntu.com/ubuntu/" "maverick-security" "main multiverse restricted universe"
+}
+
+ubuntu_natty() {
+  syncrepo 15 "http://nl.archive.ubuntu.com/ubuntu/" "natty" "main multiverse restricted universe"
+  syncrepo 15 "http://nl.archive.ubuntu.com/ubuntu/" "natty-updates" "main multiverse restricted universe"
+  syncrepo 15 "http://nl.archive.ubuntu.com/ubuntu/" "natty-security" "main multiverse restricted universe"
+}
+
+ubuntu_oneiric() {
+  syncrepo 16 "http://nl.archive.ubuntu.com/ubuntu/" "oneiric" "main multiverse restricted universe"
+  syncrepo 16 "http://nl.archive.ubuntu.com/ubuntu/" "oneiric-updates" "main multiverse restricted universe"
+  syncrepo 16 "http://nl.archive.ubuntu.com/ubuntu/" "oneiric-security" "main multiverse restricted universe"
+}
+
+ubuntu_precise() {
+  syncrepo 17 "http://nl.archive.ubuntu.com/ubuntu/" "precise" "main multiverse restricted universe"
+  syncrepo 17 "http://nl.archive.ubuntu.com/ubuntu/" "precise-updates" "main multiverse restricted universe"
+  syncrepo 17 "http://nl.archive.ubuntu.com/ubuntu/" "precise-security" "main multiverse restricted universe"
+}
+
+ubuntu_old() {
+  ubuntu_warty
+  ubuntu_hoary
+  ubuntu_breezy
+  ubuntu_dapper
+  ubuntu_edgy
+  ubuntu_feisty
+  ubuntu_gutsy
+  ubuntu_intrepid
+  ubuntu_jaunty
+  ubuntu_karmic
+  ubuntu_maverick
+}
+
+ubuntu_active() {
+  ubuntu_hardy    # until 2013-04
+  ubuntu_lucid    # until 2015-04
+  ubuntu_natty    # until 2012-10
+  ubuntu_oneiric  # until 2013-04
+  ubuntu_precise  # until 2017-04
+}
+
+
+"$@"
 
 rm -rf "$TMP"
 

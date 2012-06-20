@@ -56,9 +56,9 @@ sub home {
   p style => 'float: none';
    # Relevant query: SELECT count(distinct hash), count(distinct name), count(*), count(distinct package) FROM man;
    # It's far too slow to run that on every pageview. :-(
-   lit 'Indexing <b>185,211</b> versions of <b>76,549</b> manual pages found in <b>515,783</b> files of <b>52,088</b> packages.';
+   lit 'Indexing <b>483,771</b> versions of <b>119,397</b> manual pages found in <b>1,574,505</b> files of <b>169,949</b> packages.';
    br;
-   txt 'At this point only Arch Linux and some Ubuntu releases have been indexed. More systems and repositories will be added later on.';
+   txt 'At this point only Arch Linux and Ubuntu have been indexed. More systems and repositories will be added later on.';
   end;
 
   h2 'Browse the manuals';
@@ -116,11 +116,12 @@ sub about {
      The core, extra and community repositories are fetched from a local
      Arch mirror.</dd>
     <dt>Ubuntu</dt><dd>
-     Historical releases were fetched from
-     <a href="http://old-releases.ubuntu.com/ubuntu/">http://old-releases.ubuntu.com/ubuntu/</a>.
-     All components (main, universe, restricted and multiverse) are fetched
-     from the $release, $release-updates and $release-security repositories.
-     Backports are not included at the moment.</dd>
+     Historical releases were fetched from <a
+     href="http://old-releases.ubuntu.com/ubuntu/">http://old-releases.ubuntu.com/ubuntu/</a>,
+     supported releases from a local mirror.  All components (main, universe,
+     restricted and multiverse) from the $release, $release-updates and
+     $release-security repositories are indexed.  Backports are not included at
+     the moment.</dd>
    </dl><br />
    Only packages for a single architecture (i386 or i686) are scanned. To my
    knowledge, packages that come with different manuals for different
