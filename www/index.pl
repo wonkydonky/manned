@@ -7,6 +7,7 @@ use IPC::Open2;
 use IO::Select;
 use Encode 'encode_utf8', 'decode_utf8';
 use Time::HiRes 'tv_interval', 'gettimeofday';
+use JSON::XS;
 
 use Cwd 'abs_path';
 our $ROOT;
@@ -243,44 +244,6 @@ sub browsepkg {
 }
 
 
-sub manselect {
-  my($self, $lst, $selhash) = @_;
-  return if !@$lst;
-
-  $selhash ||= '';
-
-  my %sys;
-  push @{$sys{$_->{system}}}, $_ for (@$lst);
-
-  dl id => 'nav';
-   my $lastname = '';
-   for my $sys (sort { my $x=$self->{sysbyid}{$a}; my $y=$self->{sysbyid}{$b}; $x->{name} cmp $y->{name} or $y->{relorder} <=> $x->{relorder} } keys %sys) {
-     my %pkgs;
-     push @{$pkgs{"$_->{package}-$_->{version}"}}, $_ for @{$sys{$sys}};
-     dt $lastname eq $self->{sysbyid}{$sys}{name} ? (class => 'oldrelease') : (), $self->{sysbyid}{$sys}{full};
-     dd;
-      for my $pkg (sort { $pkgs{$a}[0]{package} cmp $pkgs{$b}[0]{package} || $pkgs{$b}[0]{released} cmp $pkgs{$a}[0]{released} } keys %pkgs) {
-        dl;
-         dt;
-          txt $pkgs{$pkg}[0]{package};
-          i $pkgs{$pkg}[0]{version};
-         end;
-         dd;
-          for my $man (sort { $a->{section} cmp $b->{section} || ($a->{locale}||'') cmp ($b->{locale}||'') } @{$pkgs{$pkg}}) {
-            my $t = $man->{locale} ? "$man->{section}.$man->{locale}" : $man->{section};
-            a href => sprintf('/%s/%s', $man->{name}, substr $man->{hash}, 0, 8), $t if $selhash ne $man->{hash};
-            b $t if $selhash eq $man->{hash};
-          }
-         end;
-        end;
-      }
-     end 'dd';
-     $lastname = $self->{sysbyid}{$sys}{name};
-   }
-  end 'dl';
-}
-
-
 # TODO: Store/cache the result of this of this function in the database.
 sub manfmt {
   my $c = shift;
@@ -332,7 +295,45 @@ sub manfmt {
   waitpid $pid, 0;
 
   $ret = decode_utf8($ret);
+  $ret =~ s/[\t\s\r\n]+$//;
   return $ret;
+}
+
+
+sub manjslist {
+  my($self, $m) = @_;
+
+  # For JS: (Already sorted)
+  # [
+  #   ["System", "Full name", [
+  #       [ "package", "version", [
+  #           [ "section", "locale"||null ],
+  #           ...
+  #         ],
+  #       ],
+  #       ...
+  #     ],
+  #   ],
+  #   ...
+  # ]
+  my %sys;
+  push @{$sys{$_->{system}}}, $_ for (@$m);
+  [
+    map [ $self->{sysbyid}{$_}{name}, $self->{sysbyid}{$_}{full},
+      do {
+        my %pkgs;
+        for(@{$sys{$_}}) {
+          my $pn = "$_->{package}-$_->{version}";
+          $pkgs{$pn} = [ $_->{package}, $_->{version}, [], $_->{released} ] if !$pkgs{$pn};
+          push @{$pkgs{$pn}[2]}, [ $_->{section}, $_->{locale}, substr $_->{hash}, 0, 8 ];
+        }
+        [ grep
+          delete($_->[3]) && ($_->[2] = [sort { $a->[0] cmp $b->[0] || ($a->[1]||'') cmp ($b->[1]||'') } @{$_->[2]}]),
+          sort { $a->[0] cmp $b->[0] || $b->[3] cmp $a->[3] } values %pkgs ];
+      }
+    ],
+    sort { my $x=$self->{sysbyid}{$a}; my $y=$self->{sysbyid}{$b}; $x->{name} cmp $y->{name} or $y->{relorder} <=> $x->{relorder} } keys %sys
+  ]
 }
 
 
@@ -348,8 +349,9 @@ sub getman {
     $_->{hash} =~ /^$hash/ && return $_ for (@$list);
   }
 
-  # If that failed, sort the list based on some heuristics.
-  my @l = sort {
+  # If that failed, use some heuristics
+  my $cmp = sub {
+    local($a,$b) = @_;
     # English or non-locale packages always win
     !(($a->{locale}||'') =~ /^(en|$)/) != !(($b->{locale}||'') =~ /^(en|$)/)
       ? (($a->{locale}||'') =~ /^(en|$)/ ? -1 : 1)
@@ -376,9 +378,11 @@ sub getman {
       ? $a->{section} cmp $b->{section}
     # Fallback to hash if nothing else matters (guarantees the order is at least stable)
     : $a->{hash} cmp $b->{hash};
-  } @$list;
+  };
 
-  return $l[0];
+  my $winner = $list->[0];
+  $cmp->($winner, $_) > 0 and ($winner = $_) for (@$list);
+  return $winner;
 }
 
 
@@ -390,7 +394,7 @@ sub man {
   my $man = getman($self, $name, $hash, $m);
 
   $self->htmlHeader(title => $name);
-  manselect $self, $m, $man->{hash};
+  dl id => 'nav', ' '; # To be filled in by JS
 
   h1 $man->{name};
   p;
@@ -401,8 +405,7 @@ sub man {
 
   div id => 'contents';
    my $c = $self->dbManContent($man->{hash});
-   ($c = GrottyParser::html(manfmt $c)) =~ s/[\t\s\r\n]+$//; # TODO: <- Do this in GrottyParser
-   pre; lit $c; end;
+   pre; lit GrottyParser::html(manfmt $c); end;
   end;
 
   div id => 'locations';
@@ -437,7 +440,7 @@ sub man {
    end;
   end;
 
-  $self->htmlFooter;
+  $self->htmlFooter(js => { hash => substr($man->{hash}, 0, 8), name => $man->{name}, mans => manjslist($self, $m) });
 }
 
 
@@ -465,11 +468,6 @@ sub htmlHeader {
   html;
    head;
     Link rel => 'stylesheet', type => 'text/css', href => '/man.css';
-    style type => 'text/css';
-     lit 'thead tr { font-weight: bold; border-bottom: 1px solid #ccc }';
-     lit 'table td { border-left: 1px solid #ccc; padding: 0 3px }';
-     lit 'table { border-collapse: collapse }';
-    end;
     title $o{title}.' - manned.org';
    end 'head';
    body;
@@ -487,7 +485,7 @@ sub htmlHeader {
 
 
 sub htmlFooter {
-  my $self = shift;
+  my($self, %o) = @_;
 
      br style => 'clear: both';
     end;
@@ -495,6 +493,14 @@ sub htmlFooter {
      lit 'All manual pages are copyrighted by their respective authors.
        | <a href="/info/about">About manned.org</a> | <a href="mailto:contact@manned.org">Contact</a>';
     end;
+    if($o{js}) {
+      script type => 'text/javascript';
+       lit 'VARS = ';
+       lit(JSON::XS->new->ascii->encode($o{js}));
+       lit ';';
+      end;
+    }
+    script type => 'text/javascript', src => '/man.js', '';
    end;
   end 'html';
 

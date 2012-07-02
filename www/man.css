@@ -16,8 +16,9 @@ dd { margin-left: 15px; }
 a { color: #048; font-family: "Verdana"; font-weight: normal; text-decoration: underline; padding: 3px 5px;
   -webkit-border-radius: 4px; -moz-border-radius: 4px; border-radius: 4px; }
 a:hover { text-decoration: none; background: #cde; }
-table { background: #eee; border: 5px solid #f8f8f8; margin: 10px 0; }
-td { padding: 1px 5px; font-size: 12px; }
+table { background: #eee; border: 5px solid #f8f8f8; margin: 10px 0; border-collapse: collapse; }
+thead tr { font-weight: bold; border-bottom: 1px solid #ccc }
+td { padding: 1px 5px; font-size: 12px; border-left: 1px solid #ccc; }
 
 #header { padding: 4px 20px; border-bottom: 1px solid #888; font: 24px "Arial";
   -webkit-border-radius: 8px 8px 0 0; -moz-border-radius: 8px 8px 0 0; border-radius: 8px 8px 0 0;
