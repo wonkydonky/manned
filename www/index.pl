@@ -21,7 +21,7 @@ TUWF::set(
   logfile => $ENV{TUWF_LOG},
   db_login => [undef, undef, undef],
   debug => 1,
-  xml_pretty => 2,
+  xml_pretty => 0,
   # Cache the system information
   pre_request_handler => sub {
     my $self = shift;
@@ -56,7 +56,7 @@ sub home {
   p style => 'float: none';
    # Relevant query: SELECT count(distinct hash), count(distinct name), count(*), count(distinct package) FROM man;
    # It's far too slow to run that on every pageview. :-(
-   lit 'Indexing <b>483,771</b> versions of <b>119,397</b> manual pages found in <b>1,574,505</b> files of <b>169,949</b> packages.';
+   lit 'Indexing <b>485,506</b> versions of <b>119,406</b> manual pages found in <b>1,578,498</b> files of <b>170,215</b> packages.';
    br;
    txt 'At this point only Arch Linux and Ubuntu have been indexed. More systems and repositories will be added later on.';
   end;
@@ -71,11 +71,11 @@ sub home {
      li;
       a href => "/browse/$sys->[0]{short}" if @$sys == 1;
        span style => "background-image: url('images/$img.png')", '';
-       txt $sys->[0]{name};
+       b $sys->[0]{name};
        if(@$sys > 1) {
-         for(@$sys) {
-           a href => "/browse/$_->{short}", $_->{release};
-         }
+         my $i = 0;
+         a href => "/browse/$_->{short}", ++$i > 3 ? (class => "old") : (), $_->{release} for(reverse @$sys);
+         a href => "#", 'more...' if $i > 3;
        }
       end 'a' if @$sys == 1;
      end;
@@ -83,7 +83,7 @@ sub home {
   end;
 
   h2 'Other sites';
-  ul;
+  ul id => 'external';
    li; a href => 'http://man.cx/', 'Man.cx'; end;
    li; a href => 'http://man.he.net/', 'Man.he.net'; end;
    li; a href => 'http://linux.die.net/man/', 'Die.net'; end;
@@ -261,7 +261,10 @@ sub manselect {
      dd;
       for my $pkg (sort { $pkgs{$a}[0]{package} cmp $pkgs{$b}[0]{package} || $pkgs{$b}[0]{released} cmp $pkgs{$a}[0]{released} } keys %pkgs) {
         dl;
-         dt $pkg;
+         dt;
+          txt $pkgs{$pkg}[0]{package};
+          i $pkgs{$pkg}[0]{version};
+         end;
          dd;
           for my $man (sort { $a->{section} cmp $b->{section} || ($a->{locale}||'') cmp ($b->{locale}||'') } @{$pkgs{$pkg}}) {
             my $t = $man->{locale} ? "$man->{section}.$man->{locale}" : $man->{section};
@@ -391,9 +394,15 @@ sub man {
 
   h1 $man->{name};
   p;
-   a href => "/$man->{name}/".substr($hash, 0, 8), 'permalink';
+   a href => "/$man->{name}/".substr($man->{hash}, 0, 8), 'permalink';
    txt ' - ';
-   a href => "/$man->{name}/".substr($hash, 0, 8).'/src', 'source';
+   a href => "/$man->{name}/".substr($man->{hash}, 0, 8).'/src', 'source';
+  end;
+
+  div id => 'contents';
+   my $c = $self->dbManContent($man->{hash});
+   ($c = GrottyParser::html(manfmt $c)) =~ s/[\t\s\r\n]+$//; # TODO: <- Do this in GrottyParser
+   pre; lit $c; end;
   end;
 
   div id => 'locations';
@@ -406,8 +415,13 @@ sub man {
      td 'Name';
      td 'Filename';
     end; end;
-    my $l = $self->dbManInfo(hash => $man->{hash});
-    for(@$l) {
+    my @l = sort {
+         $self->{sysbyid}{$a->{system}}{name}     cmp $self->{sysbyid}{$b->{system}}{name}
+      || $self->{sysbyid}{$b->{system}}{relorder} <=> $self->{sysbyid}{$a->{system}}{relorder}
+      || $b->{released} cmp $a->{released}
+      || $a->{filename} cmp $b->{filename}
+    } @{$self->dbManInfo(hash => $man->{hash})};
+    for(@l) {
       Tr;
        td $self->{sysbyid}{$_->{system}}{full};
        td "$_->{category}/$_->{package}";
@@ -423,11 +437,6 @@ sub man {
    end;
   end;
 
-  div id => 'contents';
-   h2 'Contents';
-   my $c = $self->dbManContent($man->{hash});
-   pre; lit GrottyParser::html(manfmt $c); end;
-  end;
   $self->htmlFooter;
 }
 
@@ -472,17 +481,21 @@ sub htmlHeader {
       input type => 'submit', value => 'Search';
      end;
     end;
+
+    div id => 'body';
 }
 
 
 sub htmlFooter {
   my $self = shift;
 
+     br style => 'clear: both';
+    end;
     div id => 'footer';
      lit 'All manual pages are copyrighted by their respective authors.
-       | <a href="/info/about">About manned.org</a> | <a href="mailto:contact@manned.org">Contact</a>.';
+       | <a href="/info/about">About manned.org</a> | <a href="mailto:contact@manned.org">Contact</a>';
     end;
-   end 'body';
+   end;
   end 'html';
 
   # write the SQL queries as a HTML comment when debugging is enabled

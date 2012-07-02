@@ -1,46 +1,75 @@
-* { margin: 0; padding: 0; font-family: Trebuchet MS, sans-serif; }
+/* TODO:
+ * - The linear-gradient() functions are fairly new - perhaps want to provide background images for those.
+ * - column-width is better done in Perl? (More like a column-count, then)
+ */
+
+* { margin: 0; padding: 0; font-family: "Trebuchet MS", sans-serif; }
 html { background: #333; padding: 0 10px; }
-body { margin: 20px auto; max-width: 1250px; background: #fff; padding: 10px; -webkit-border-radius: 10px; -moz-border-radius: 10px;
-	-webkit-box-shadow: 0 10px 10px #def; }
+body { margin: 10px auto 50px auto; max-width: 1250px; border-collapse: separate; padding-bottom: 10px;
+  -webkit-border-radius: 10px; -moz-border-radius: 10px;
+  -webkit-box-shadow: 0 10px 10px #def; -moz-box-shadow: 0 10px 10px #def; box-shadow: 0 10px 10px #def; }
 h1 { font-size: 24px; font-weight: normal; color: #abc; }
 h1 + p { float: right; }
 h2 { font-size: 21px; margin-top: 40px; color: #468; font-weight: normal; clear: left }
 h2 + i { font-size: 12px; }
-dd { margin-left: 20px; }
-a { color: #048; font-family: Verdana; font-weight: normal; text-decoration: underline; padding: 3px 5px;
-	-webkit-border-radius: 4px; -moz-border-radius: 4px; }
+dd { margin-left: 15px; }
+a { color: #048; font-family: "Verdana"; font-weight: normal; text-decoration: underline; padding: 3px 5px;
+  -webkit-border-radius: 4px; -moz-border-radius: 4px; border-radius: 4px; }
 a:hover { text-decoration: none; background: #cde; }
 table { background: #eee; border: 5px solid #f8f8f8; margin: 10px 0; }
 td { padding: 1px 5px; font-size: 12px; }
 
-#header { padding: 4px 20px; background: -webkit-linear-gradient(#40556a, #b0c5da); margin: -10px -10px 20px -10px; -webkit-border-radius: 8px 8px 0 0; -webkit-border-radius: 8px 8px 0 0;
-	border-bottom: 1px solid #888; font: 24px Arial; }
+#header { padding: 4px 20px; border-bottom: 1px solid #888; font: 24px "Arial";
+  -webkit-border-radius: 8px 8px 0 0; -moz-border-radius: 8px 8px 0 0; border-radius: 8px 8px 0 0;
+  background: -webkit-linear-gradient(#40556a, #b0c5da);
+  background: -moz-linear-gradient(#40556a, #b0c5da);
+  background: -ms-linear-gradient(#40556a, #b0c5da);
+  background: -o-linear-gradient(#40556a, #b0c5da);
+  background: linear-gradient(#40556a, #b0c5da); }
 #header a { color: #f8f8f8; text-decoration: none; font-weight: bold; }
 #header a:hover { background: none; }
 #header form { float: right; }
-#header input { -webkit-box-shadow: 1px 1px 3px #fff, -1px -1px 2px #234; }
+#header input { -webkit-box-shadow: 1px 1px 3px #fff, -1px -1px 2px #234; -moz-shadow: 1px 1px 3px #fff, -1px -1px 2px #234; box-shadow: 1px 1px 3px #fff, -1px -1px 2px #234; }
 #header input[type=text] { width: 260px; padding: 2px; border: 1px solid #444; border-radius: 12px 0 0 12px;
-	background: -webkit-gradient(linear, left top, left bottom, from(#89a), to(white), color-stop(.9, #cde)); padding-left: 15px; }
+  background: -webkit-gradient(linear, left top, left bottom, from(#89a), to(white), color-stop(.9, #cde)); padding-left: 15px; }
 #header input[type=text]:hover, #header input[type=text]:focus { background: -webkit-linear-gradient(#abc, #f0f8ff); outline: none; }
 #header input[type=submit] { padding: 2px 8px; border: 1px solid #444; border-radius: 0 12px 12px 0;  color: #EEE; padding-right: 12px;
-	margin-left: -5px; cursor: pointer; background: -webkit-gradient(linear, left top, left bottom, from(#556), to(#223)); }
+  margin-left: -5px; cursor: pointer; background: -webkit-gradient(linear, left top, left bottom, from(#556), to(#223)); }
 
-#nav { background: #f0f8ff; color: #036; float: right; padding: 8px; -webkit-border-radius: 8px; -moz-border-radius: 8px; width: 250px; margin-bottom: 10px; }
+#body { padding: 10px 10px 20px 10px; background: #fff }
+
+#nav { background: #f0f8ff; color: #036; float: right; padding: 8px; width: 250px; margin-bottom: 10px;
+  -webkit-border-radius: 8px; -moz-border-radius: 8px; border-radius: 8px; }
 #nav > dt { font-weight: bold; }
 #nav a { font-size: 13px; }
-#nav b { font-family: Verdana; font-size: 13px; background: #cde; padding: 3px 5px;
-	-webkit-border-radius: 4px; -moz-border-radius: 4px; }
+#nav i { font-style: normal; font-size: 12px; padding-left: 7px; color: #aaa }
+#nav b { font-family: "Verdana"; font-size: 13px; background: #cde; padding: 3px 5px;
+  -webkit-border-radius: 4px; -moz-border-radius: 4px; border-radius: 4px; }
 
-#systems li { display: block; float: left; font-size: 24px; width: 360px; margin: 20px;  }
-#systems span { display: block; float: left; width: 50px; height: 50px; margin: 5px; background-size: contain; background-repeat: no-repeat; }
+#systems li { display: block; float: left; width: 360px; margin: 20px;  }
+#systems span { display: block; float: left; width: 50px; height: 50px; margin: 5px; background-repeat: no-repeat; }
+#systems b { font-size: 24px; display: block; }
+#systems .old { display: none; }
 
+#external { list-style-type: none }
+
+#packages { margin: 20px 0; -webkit-column-width: 500px; -moz-column-width: 500px; column-width: 500px }
 #packages li { display: block; }
 #packages i { color: #ccc; font-size: 13px; }
 
-#footer { height: 60px; clear: both; padding: 4px 10px; color: #f8f8f8; background: -webkit-linear-gradient(#b0c5da, #40556a); margin: 10px -10px -20px -10px; -webkit-border-radius: 0 0 8px 8px; -moz-border-radius: 0 0 8px 8px;
-	border-top: 1px solid #888; }
+#footer { height: 60px; clear: both; padding: 4px 10px; color: #f8f8f8; margin: 0 0 -20px 0;
+  border-top: 1px solid #888; font-size: 13px;
+  -webkit-border-radius: 0 0 8px 8px; -moz-border-radius: 0 0 8px 8px; border-radius: 0 0 8px 8px;
+  background: -webkit-linear-gradient(#b0c5da, #40556a);
+  background: -moz-linear-gradient(#b0c5da, #40556a);
+  background: -ms-linear-gradient(#b0c5da, #40556a);
+  background: -o-linear-gradient(#b0c5da, #40556a);
+  background: linear-gradient(#b0c5da, #40556a); }
+#footer a { font-size: 13px; padding: 0; color: #f8f8f8; }
+#footer a:hover { background: none; }
 
-pre, pre * { font-family: Lucida Console, Monospace; }
+pre, pre * { font-family: "Lucida Console", Monospace; font-size: 15px }
 pre b { color: #369; font-weight: normal; }
 pre a { padding: 0; font-weight: normal; }
 pre a:hover { background: none; text-decoration: underline; color: #48B;}
+

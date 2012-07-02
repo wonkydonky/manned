@@ -50,6 +50,7 @@ CREATE TABLE man (
 
 
 CREATE INDEX ON man USING hash (hash);
+CREATE INDEX ON man (name);
 
 
 INSERT INTO systems (id, name, release, short, relorder) VALUES
