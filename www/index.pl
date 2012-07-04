@@ -305,7 +305,7 @@ sub manjslist {
 
   # For JS: (Already sorted)
   # [
-  #   ["System", "Full name", [
+  #   ["System", "Full name", "short" [
   #       [ "package", "version", [
   #           [ "section", "locale"||null ],
   #           ...
@@ -319,7 +319,7 @@ sub manjslist {
   my %sys;
   push @{$sys{$_->{system}}}, $_ for (@$m);
   [
-    map [ $self->{sysbyid}{$_}{name}, $self->{sysbyid}{$_}{full},
+    map [ $self->{sysbyid}{$_}{name}, $self->{sysbyid}{$_}{full}, $self->{sysbyid}{$_}{short},
       do {
         my %pkgs;
         for(@{$sys{$_}}) {
@@ -394,7 +394,7 @@ sub man {
   my $man = getman($self, $name, $hash, $m);
 
   $self->htmlHeader(title => $name);
-  dl id => 'nav', ' '; # To be filled in by JS
+  div id => 'nav', ' '; # To be filled in by JS
 
   h1 $man->{name};
   p;
