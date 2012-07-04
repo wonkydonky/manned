@@ -57,9 +57,9 @@ sub home {
   p style => 'float: none';
    # Relevant query: SELECT count(distinct hash), count(distinct name), count(*), count(distinct package) FROM man;
    # It's far too slow to run that on every pageview. :-(
-   lit 'Indexing <b>493,399</b> versions of <b>120,090</b> manual pages found in <b>1,598,828</b> files of <b>171,724</b> packages.';
+   lit 'Indexing <b>519,202</b> versions of <b>127,527</b> manual pages found in <b>1,663,033</b> files of <b>176,474</b> packages.';
    br;
-   txt 'At this point only Arch Linux and Ubuntu have been indexed. More systems and repositories will be added later on.';
+   txt 'At this point only Arch Linux, Ubuntu and some versions of Debian have been indexed. More systems and repositories will be added later on.';
   end;
 
   h2 'Browse the manuals';
@@ -105,7 +105,22 @@ sub about {
   h1 'About Manned.org';
 
   h2 'Goal';
-  p 'Blah.';
+  p; lit <<'  _';
+   The state of online indices of manual pages is a sad one. Existing sites
+   only offer you a single version of a man page: From one origin, and often
+   only in a single language. Most don't even tell you where the manual
+   actually originated from, making it very hard to determine whether the
+   manual you found actually applies to your situation and even harder to find
+   a manual from a specific system. Additionally, some sites render the manuals
+   in an unreadable way, don't correctly handle special formatting - like
+   tables - or don't correctly display non-ASCII characters.
+   <br /><br />
+   Manned.org was created in order to improve this situation. This site aims to
+   index the manual pages from a variaty of systems, both old and new, and
+   allows you to browse through the various versions of a manual page to find
+   out how each system behaves.
+  _
+  end;
 
   h2 'The indexing process';
   p; lit <<'  _';
@@ -128,7 +143,9 @@ sub about {
      href="http://archive.debian.org/debian/">http://archive.debian.org/debian/</a>.
      For buzz, rex and bo, only the 'main' component has been indexed, and
      we're missing a few man pages because some packages were missing from the
-     repository archives.
+     repository archives. For the other releases, all components (main, contrib
+     and non-free) from the $release and $release-updates repositories are
+     indexed.
     </dd>
    </dl><br />
    Only packages for a single architecture (i386 or i686) are scanned. To my
@@ -145,7 +162,7 @@ sub about {
   h2 'Other systems';
   p; lit <<'  _';
    I'd love to index the manuals of most major Linux distributions in the
-   future. In the short term, this means all Debian and Fedora releases will
+   future. In the short term, this means all Fedora and OpenSUSE releases will
    get indexed. In the long term, many others may be added as well.
    <br /><br />
    It would also be great to index a few non-Linux systems such as *BSD,

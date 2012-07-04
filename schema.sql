@@ -73,7 +73,10 @@ INSERT INTO systems (id, name, release, short, relorder) VALUES
   (17, 'Ubuntu',     '12.04', 'ubuntu-precise',  15),
   (18, 'Debian',     '1.1',   'debian-buzz',     0),
   (19, 'Debian',     '1.2',   'debian-rex',      1),
-  (20, 'Debian',     '1.3',   'debian-bo',       2);
+  (20, 'Debian',     '1.3',   'debian-bo',       2),
+  (21, 'Debian',     '2.0',   'debian-hamm',     3),
+  (22, 'Debian',     '2.1',   'debian-slink',    4),
+  (23, 'Debian',     '2.2',   'debian-potato',   5);
 
 
 -- Removes any path components and compression extensions from the filename.

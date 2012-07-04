@@ -82,7 +82,7 @@ syncrepo() {
   for CMP in $COMPONENTS; do
     echo "MANDIFF-COMPONENT: $CMP" >>"$PFN"
     TFN="$TMP/Packages-$CMP.bz2"
-    $CURL "${REPO}dists/$DISTRO/$CMP/binary-i386/Packages.bz2" -o "$TFN"
+    $CURL "${REPO}dists/$DISTRO/$CMP/binary-i386/Packages.bz2" -o "$TFN" 2>/dev/null
     if [ -s "$TFM" ]; then
       bzcat "$TFN" >>"$PFN"
     else
@@ -285,6 +285,27 @@ debian_rex() {
 debian_bo() {
   # Contrib and non-free don't have a Contents file :(
   syncrepo 20 "http://archive.debian.org/debian/" "bo" "main" "dists/bo/main/Contents-i386.gz"
+}
+
+debian_hamm() {
+  syncrepo 21 "http://archive.debian.org/debian/" "hamm" "main hamm contrib non-free"
+}
+
+debian_slink() {
+  syncrepo 22 "http://archive.debian.org/debian/" "slink" "main contrib non-free"
+}
+
+debian_potato() {
+  syncrepo 23 "http://archive.debian.org/debian/" "potato" "main contrib non-free"
+}
+
+debian_old() {
+  debian_buzz
+  debian_rex
+  debian_bo
+  debian_hamm
+  debian_slink
+  debian_potato
 }
 
 
