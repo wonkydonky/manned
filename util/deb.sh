@@ -2,7 +2,7 @@
 
 # A fetcher for debian-style repositories.
 
-CURL="curl -Ss"
+CURL="curl -fSs"
 PSQL="psql -U manned -Awtq"
 TMP=`mktemp -d manned.deb.XXXXXX`
 
@@ -16,13 +16,22 @@ checkpkg() {
   FILE=$6
   echo "===> $NAME-$VERSION"
   FN="$TMP/$NAME-$VERSION.deb"
-  $CURL "$REPO$FILE" -o "$FN" || return
+  $CURL "$REPO$FILE" -o "$FN" || return 1
+
+  # For 0.939000 formats:
+  #   control.tar.gz = tail -n+3 $FILE | head -c"`head -n2 $FILE | tail -n1`"
+  #   data.tar.gz = tail -n+3 $FILE | tail -c+"`head -n2 $FILE | tail -n1`" | tail -c+2
 
   # Get the date from the last modification time of the debian-binary file
   # inside the .deb. Preferably, the date we store in the database indicates
   # when the *source* package has been uploaded, but this will work fine as
   # an approximation, I guess.
-  DATE=`date -d "\`ar tv \"$FN\" debian-binary | perl -lne 's/^[^ ]+ [^ ]+ +\d+ (.+) debian-binary$/print $1/e'\`" "+%F"`
+  if [ "`head -c8 \"$FN\"`" = "0.939000" ]; then
+    DATE=`tail -n+3 "$FN" | head -c"\`head -n2 \"$FN\" | tail -n1\`" | tar -tvzf - | grep control | perl -lne 's/.+ ([^ ]+ [^ ]+) [^ ]*control$/print $1/e'`
+  else
+    DATE=`ar tv "$FN" debian-binary | perl -lne 's/^[^ ]+ [^ ]+ +\d+ (.+) debian-binary$/print $1/e'`
+  fi
+  DATE=`date -d "$DATE" +%F`
 
   # Insert package in the database
   PKGID=`echo "INSERT INTO package (system, category, name, version, released) VALUES(:'sysid',:'cat',:'name',:'ver',:'rel') RETURNING id"\
@@ -30,16 +39,23 @@ checkpkg() {
 
   # Extract and handle the man pages
   if [ "$?" -eq 0 -a -n "$PKGID" ]; then
-    DATAFN=`ar t $FN | grep -F data.tar`
-    case "$DATAFN" in
-      "data.tar.gz") DATAZ="-z" ;;
-      "data.tar.bz2") DATAZ="-j" ;;
-      "data.tar.lzma") DATAZ="--lzma" ;;
-      "data.tar.xz") DATAZ="-J" ;;
-      *) echo "No data.tar found, or unknown compression format."; DATAZ="ERR" ;;
-    esac
+    # Old format
+    if [ "`head -c8 \"$FN\"`" = "0.939000" ]; then
+      tail -n+3 "$FN" | tail -c+"`head -n2 \"$FN\" | tail -n1`" | tail -c+2 | ./add_tar.sh - $PKGID -z
 
-    [ "$DATAZ" != "ERR" ] && ar p "$FN" "$DATAFN" | ./add_tar.sh - $PKGID $DATAZ
+    # New format
+    else
+      DATAFN=`ar t $FN | grep -F data.tar`
+      case "$DATAFN" in
+        "data.tar.gz") DATAZ="-z" ;;
+        "data.tar.bz2") DATAZ="-j" ;;
+        "data.tar.lzma") DATAZ="--lzma" ;;
+        "data.tar.xz") DATAZ="-J" ;;
+        *) echo "No data.tar found, or unknown compression format."; DATAZ="ERR" ;;
+      esac
+
+      [ "$DATAZ" != "ERR" ] && ar p "$FN" "$DATAFN" | ./add_tar.sh - $PKGID $DATAZ
+    fi
   fi
 
   rm "$FN"
@@ -66,8 +82,13 @@ syncrepo() {
   for CMP in $COMPONENTS; do
     echo "MANDIFF-COMPONENT: $CMP" >>"$PFN"
     TFN="$TMP/Packages-$CMP.bz2"
-    $CURL "${REPO}dists/$DISTRO/$CMP/binary-i386/Packages.bz2" -o "$TFN" || return 1
-    bzcat "$TFN" >>"$PFN"
+    $CURL "${REPO}dists/$DISTRO/$CMP/binary-i386/Packages.bz2" -o "$TFN"
+    if [ -s "$TFM" ]; then
+      bzcat "$TFN" >>"$PFN"
+    else
+      $CURL "${REPO}dists/$DISTRO/$CMP/binary-i386/Packages.gz" -o "$TFN" || return 1
+      zcat "$TFN" >>"$PFN"
+    fi
     rm "$TFN"
   done
 
@@ -91,11 +112,12 @@ syncrepo() {
     while(<F>) {
       chomp;
       $p = $1 if /^Package: (.+)/;
-      $v = $1 if /^Version: (.+)/;
-      $s = $1 if /^Section: (.+)/;
-      $f = $1 if /^Filename: (.+)/;
+      $v = $1 if /^[Vv]ersion: (.+)/;
+      $s = $1 if /^[Ss]ection: (.+)/;
+      $f = $1 if /^[Ff]ilename: (.+)/;
       if(!$_) {
         if($p && $v && $s && $f) {
+          $f =~ s{^(Debian-1.[12])/}{dists/$1/main/};
           print "$p $v $s $f" if $pkg{$p} && $pkg{$p} == 1
             && !$db->selectrow_arrayref(q{SELECT 1 FROM package WHERE system = ? AND name = ? AND version = ?}, {}, $sysid, $p, $v);
           #warn "Duplicate package? $p\n" if $pkg{$p} && $pkg{$p} == 2;
@@ -247,6 +269,22 @@ ubuntu_active() {
   ubuntu_natty    # until 2012-10
   ubuntu_oneiric  # until 2013-04
   ubuntu_precise  # until 2017-04
+}
+
+
+debian_buzz() {
+  # Contrib uses a rather non-standard arch directory ("binary" and "binary-all"), so let's stick with main for now.
+  syncrepo 18 "http://archive.debian.org/debian/" "buzz" "main" "dists/buzz/main/Contents.gz"
+}
+
+debian_rex() {
+  # (Same note on contrib)
+  syncrepo 19 "http://archive.debian.org/debian/" "rex" "main" "dists/rex/main/Contents.gz"
+}
+
+debian_bo() {
+  # Contrib and non-free don't have a Contents file :(
+  syncrepo 20 "http://archive.debian.org/debian/" "bo" "main" "dists/bo/main/Contents-i386.gz"
 }
 
 

@@ -45,6 +45,7 @@ function setText(obj, txt) {
 /* What follows is specific to manned.org */
 
 // TODO: Fix the 'pkg' link
+// TODO: Keep same view when switching to different version of the same man page
 // TODO: Allow showing/hiding old package versions individually.
 // TODO: Allow complete hiding of old systems. (And enable that by default)
 

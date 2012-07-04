@@ -57,7 +57,7 @@ sub home {
   p style => 'float: none';
    # Relevant query: SELECT count(distinct hash), count(distinct name), count(*), count(distinct package) FROM man;
    # It's far too slow to run that on every pageview. :-(
-   lit 'Indexing <b>485,506</b> versions of <b>119,406</b> manual pages found in <b>1,578,498</b> files of <b>170,215</b> packages.';
+   lit 'Indexing <b>493,399</b> versions of <b>120,090</b> manual pages found in <b>1,598,828</b> files of <b>171,724</b> packages.';
    br;
    txt 'At this point only Arch Linux and Ubuntu have been indexed. More systems and repositories will be added later on.';
   end;
@@ -123,6 +123,13 @@ sub about {
      restricted and multiverse) from the $release, $release-updates and
      $release-security repositories are indexed.  Backports are not included at
      the moment.</dd>
+    <dt>Debian</dt><dd>
+     Historical releases were fetched from <a
+     href="http://archive.debian.org/debian/">http://archive.debian.org/debian/</a>.
+     For buzz, rex and bo, only the 'main' component has been indexed, and
+     we're missing a few man pages because some packages were missing from the
+     repository archives.
+    </dd>
    </dl><br />
    Only packages for a single architecture (i386 or i686) are scanned. To my
    knowledge, packages that come with different manuals for different

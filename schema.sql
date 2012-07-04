@@ -70,7 +70,10 @@ INSERT INTO systems (id, name, release, short, relorder) VALUES
   (14, 'Ubuntu',     '10.10', 'ubuntu-maverick', 12),
   (15, 'Ubuntu',     '11.04', 'ubuntu-natty',    13),
   (16, 'Ubuntu',     '11.10', 'ubuntu-oneiric',  14),
-  (17, 'Ubuntu',     '12.04', 'ubuntu-precise',  15);
+  (17, 'Ubuntu',     '12.04', 'ubuntu-precise',  15),
+  (18, 'Debian',     '1.1',   'debian-buzz',     0),
+  (19, 'Debian',     '1.2',   'debian-rex',      1),
+  (20, 'Debian',     '1.3',   'debian-bo',       2);
 
 
 -- Removes any path components and compression extensions from the filename.
@@ -110,3 +113,4 @@ $$ LANGUAGE SQL;
 --DELETE FROM contents c WHERE NOT EXISTS(SELECT 1 FROM man m WHERE m.hash = c.hash);
 --COMMIT;
 
+--DELETE FROM package WHERE system = 18 AND NOT EXISTS(SELECT 1 FROM man WHERE id = package);
