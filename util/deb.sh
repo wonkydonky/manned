@@ -299,6 +299,18 @@ debian_potato() {
   syncrepo 23 "http://archive.debian.org/debian/" "potato" "main contrib non-free"
 }
 
+debian_woody() {
+  syncrepo 24 "http://archive.debian.org/debian/" "woody" "main contrib non-free"
+}
+
+debian_sarge() {
+  syncrepo 25 "http://archive.debian.org/debian/" "sarge" "main contrib non-free"
+}
+
+debian_etch() {
+  syncrepo 26 "http://archive.debian.org/debian/" "etch" "main contrib non-free"
+}
+
 debian_old() {
   debian_buzz
   debian_rex
@@ -306,6 +318,9 @@ debian_old() {
   debian_hamm
   debian_slink
   debian_potato
+  debian_woody
+  debian_sarge
+  debian_etch
 }
 
 
