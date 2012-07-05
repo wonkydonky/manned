@@ -54,12 +54,18 @@ sub home {
   my $self = shift;
   $self->htmlHeader(title => 'Man Pages Archive');
   h1 'Man Pages Archive';
-  p style => 'float: none';
-   # Relevant query: SELECT count(distinct hash), count(distinct name), count(*), count(distinct package) FROM man;
-   # It's far too slow to run that on every pageview. :-(
-   lit 'Indexing <b>519,202</b> versions of <b>127,527</b> manual pages found in <b>1,663,033</b> files of <b>176,474</b> packages.';
-   br;
-   txt 'At this point only Arch Linux, Ubuntu and some versions of Debian have been indexed. More systems and repositories will be added later on.';
+  # Relevant query: SELECT count(distinct hash), count(distinct name), count(*), count(distinct package) FROM man;
+  # It's far too slow to run that on every pageview. :-(
+  p style => 'float: none'; lit <<'  _';
+   Indexing <b>519,202</b> versions of <b>127,527</b> manual pages found in
+   <b>1,663,033</b> files of <b>176,474</b> packages.
+   <br />
+   Manned.org aims to index all manual pages from a variety of systems, both
+   old and new, and provides a convenient interface for looking up and viewing
+   the various versions of each man page. This site is still in its early life,
+   so we're actively adding new systems to the database and finding ways to
+   improve the online interface. <a href="/info/about">About manned.org &raquo;</a>
+  _
   end;
 
   h2 'Browse the manuals';
@@ -118,7 +124,10 @@ sub about {
    Manned.org was created in order to improve this situation. This site aims to
    index the manual pages from a variaty of systems, both old and new, and
    allows you to browse through the various versions of a manual page to find
-   out how each system behaves.
+   out how each system behaves. The manuals are stored in the database as
+   UTF-8, and are passed through <a
+   href="http://www.gnu.org/software/groff/">groff</a> to render them in
+   (mostly) the same way as they are displayed in your terminal.
   _
   end;
 
@@ -130,14 +139,14 @@ sub about {
    <dl>
     <dt>Arch Linux</dt><dd>
      The core, extra and community repositories are fetched from a local
-     Arch mirror.</dd>
+     Arch mirror. Indexing started around begin June 2012.</dd>
     <dt>Ubuntu</dt><dd>
      Historical releases were fetched from <a
      href="http://old-releases.ubuntu.com/ubuntu/">http://old-releases.ubuntu.com/ubuntu/</a>,
      supported releases from a local mirror.  All components (main, universe,
      restricted and multiverse) from the $release, $release-updates and
      $release-security repositories are indexed.  Backports are not included at
-     the moment.</dd>
+     the moment. Indexing started around mid June 2012.</dd>
     <dt>Debian</dt><dd>
      Historical releases were fetched from <a
      href="http://archive.debian.org/debian/">http://archive.debian.org/debian/</a>.
