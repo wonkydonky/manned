@@ -59,7 +59,7 @@ sub home {
   p style => 'float: none'; lit <<'  _';
    Indexing <b>519,202</b> versions of <b>127,527</b> manual pages found in
    <b>1,663,033</b> files of <b>176,474</b> packages.
-   <br />
+   <br /><br />
    Manned.org aims to index all manual pages from a variety of systems, both
    old and new, and provides a convenient interface for looking up and viewing
    the various versions of each man page. This site is still in its early life,
