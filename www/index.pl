@@ -212,22 +212,43 @@ sub browsesys {
   my $sys = $self->{sysbyshort}{$short};
   return $self->resNotFound if !$sys;
 
-  my $chr = $ENV{QUERY_STRING} ? $ENV{QUERY_STRING} : $ENV{QUERY_STRING} eq '' ? 'a' : '0';
-  return $self->resNotFound if $chr !~ /^[0a-z]$/;
-  my $pkg = $self->dbPackageList($sys->{id}, $chr);
+  my $f = $self->formValidate(
+    { get => 'c', required => 0, enum => [ '0', 'all', 'a'..'z' ], default => 'all' },
+    { get => 's', required => 0, regex => qr/^[a-zA-Z0-9_+.-]+$/i },
+  );
+  return $self->resNotFound if $f->{_err};
+
+  my $pkg = $self->dbPackageList(
+    hasman => 1,
+    sysid => $sys->{id},
+    char => $f->{c} eq 'all' ? undef : $f->{c},
+    start => $f->{s},
+    results => 201,
+  );
+
+  my $more = @$pkg > 200 && pop @$pkg;
+
+  # TODO: A "previous" link would be nice...
+  my $next = sub {
+    use utf8;
+    p class => 'pagination';
+     a href => "/browse/$short?c=$f->{c};s=$pkg->[199]{name}", class => 'next', 'next »' if $more;
+    end;
+  };
 
   my $title = "Packages for $sys->{name}".($sys->{release}?" $sys->{release}":"");
   $self->htmlHeader(title => $title);
   h1 $title;
 
   p;
-   for(0, 'a'..'z') {
-     a href => "/browse/$short?$_", $_?$_:'#' if $_ ne $chr;
-     b $_?$_:'#' if $_ eq $chr;
+   for('all', 0, 'a'..'z') {
+     a href => "/browse/$short?c=$_", $_?uc$_:'#' if $_ ne $f->{c};
+     b $_?uc$_:'#' if $_ eq $f->{c};
    }
   end;
 
   p 'Note: Packages without man pages are not listed.';
+  $next->();
   ul id => 'packages';
    for(@$pkg) {
      li;
@@ -236,6 +257,7 @@ sub browsesys {
      end;
    }
   end;
+  $next->();
   $self->htmlFooter;
 }
 
@@ -592,22 +614,32 @@ sub dbSystemGet {
 
 
 # TODO: Optimize
+# Options: sysid char hasman start results
 sub dbPackageList {
-  my($s, $sysid, $char) = @_;
+  my $s = shift;
+  my %o = (results => 10, @_);
 
   my @where = (
-    'system = ?' => $sysid,
-    'EXISTS(SELECT 1 FROM man m WHERE m.package = p.id)' => 1,
-    $char ? ( 'LOWER(SUBSTR(name, 1, 1)) = ?' => $char ) : (),
-    defined($char) && !$char ? ( '(ASCII(name) < 97 OR ASCII(name) > 122) AND (ASCII(name) < 65 OR ASCII(name) > 90)' => 1 ) : (),
+    $o{sysid} ? ('system = ?' => $o{sysid}) : (),
+    $o{start} ? ('name > ?' => $o{start}) : (),
+    defined($o{hasman}) ? ('!s EXISTS(SELECT 1 FROM man m WHERE m.package = p.id)' => $o{hasman}?'':'NOT') : (),
+    $o{char} ? ( 'LOWER(SUBSTR(name, 1, 1)) = ?' => $o{char} ) : (),
+    defined($o{char}) && !$o{char} ? ( '(ASCII(name) < 97 OR ASCII(name) > 122) AND (ASCII(name) < 65 OR ASCII(name) > 90)' => 1 ) : (),
+    # Only get the latest version
+    # TODO: This is more efficient than using, e.g. SELECT DISTINCT to achieve
+    # the same effect. The downside of this solution is that packages of which
+    # the latest release does not include man pages are not listed, even if an
+    # earlier version does have mans.
+    'NOT EXISTS(SELECT 1 FROM package p2 WHERE p2.system = p.system AND p2.name = p.name AND p2.released > p.released)'
   );
 
   return $s->dbAll(q{
-      SELECT DISTINCT name, category
+      SELECT name, category
         FROM package p
           !W
-    ORDER BY name},
-  \@where)
+    ORDER BY name
+       LIMIT ?},
+  \@where, $o{results})
 }
 
 
