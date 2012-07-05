@@ -59,9 +59,14 @@ td { padding: 1px 5px; font-size: 12px; border-left: 1px solid #ccc; }
 
 #external { list-style-type: none }
 
-#packages { margin: 20px 0; -webkit-column-width: 500px; -moz-column-width: 500px; column-width: 500px }
+#packages { margin: 20px 0; -webkit-column-width: 300px; -moz-column-width: 300px; column-width: 300px }
 #packages li { display: block; }
-#packages i { color: #ccc; font-size: 13px; }
+#packages i { color: #aaa; font-size: 13px; }
+#packages b { padding: 3px 5px; font-family: "Verdana"; font-size: 14px }
+
+#manuals { margin: 20px 0; -webkit-column-width: 500px; -moz-column-width: 500px; column-width: 500px }
+#manuals li { display: block; }
+#manuals i { color: #aaa; font-size: 13px; }
 
 #footer { height: 60px; clear: both; padding: 4px 10px; color: #f8f8f8; margin: 0 0 -20px 0;
   border-top: 1px solid #888; font-size: 13px;

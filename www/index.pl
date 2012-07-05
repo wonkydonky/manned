@@ -41,7 +41,7 @@ TUWF::register(
   qr// => \&home,
   qr{info/about} => \&about,
   qr{browse/([^/]+)} => \&browsesys,
-  qr{browse/([^/]+)/([^/]+)} => \&browsepkg,
+  qr{browse/([^/]+)/([^/]+)(?:/([^/]+))?} => \&browsepkg,
   qr{([^/]+)/([0-9a-f]{8})} => \&man,
   qr{([^/]+)/([0-9a-f]{8})/src} => \&src,
   qr{([^/]+)} => \&man,
@@ -231,9 +231,11 @@ sub browsesys {
   # TODO: A "previous" link would be nice...
   my $next = sub {
     use utf8;
-    p class => 'pagination';
-     a href => "/browse/$short?c=$f->{c};s=$pkg->[199]{name}", class => 'next', 'next »' if $more;
-    end;
+    if($more) {
+      p class => 'pagination';
+       a href => "/browse/$short?c=$f->{c};s=$pkg->[199]{name}", 'next »';
+      end;
+    }
   };
 
   my $title = "Packages for $sys->{name}".($sys->{release}?" $sys->{release}":"");
@@ -263,40 +265,61 @@ sub browsesys {
 
 
 sub browsepkg {
-  my($self, $short, $name) = @_;
+  my($self, $short, $name, $ver) = @_;
 
   my $sys = $self->{sysbyshort}{$short};
   return $self->resNotFound if !$sys;
 
   my $pkgs = $self->dbPackageGet($sys->{id}, $name);
-  return $self->resNotFound if !@$pkgs;
+  my $sel = $ver ? (grep $_->{version} eq $ver, @$pkgs)[0] : $pkgs->[0];
+  return $self->resNotFound if !$sel;
 
-  my $title = "$sys->{name}".($sys->{release}?" $sys->{release}":"")." / $name";
+  my $f = $self->formValidate({ get => 's', required => 0});
+  return $self->resNotFound if $f->{_err};
+
+  my $mans = $self->dbManInfo(package => $sel->{id}, results => 201, start => $f->{s}, sort => 'name');
+  my $more = @$mans > 200 && pop @$mans;
+
+  # TODO: A "previous" link would be nice...
+  my $next = sub {
+    use utf8;
+    if($more) {
+      p class => 'pagination';
+       a href => "/browse/$sys->{short}/$name/$sel->{version}?s=$mans->[199]{name}", 'next »';
+      end;
+    }
+  };
+
+  my $title = "$sys->{name}".($sys->{release}?" $sys->{release}":"")." / $name $sel->{version}";
   $self->htmlHeader(title => $title);
   h1 $title;
 
-  #TODO: Link back to the system browsing page
-  #TODO: Have a menu/index listing the versions of this package? (With links to the anchors)
-  #TODO: Collapse the man page list by default for older versions if the page becomes too long?
+  # TODO: Link back to the system browsing page
 
-  for my $pkg (@$pkgs) {
-    h2;
-     a name => $pkg->{version}, href => "#$pkg->{version}", "$pkg->{category} / $pkg->{name} $pkg->{version} ($pkg->{released})";
-    end;
+  h2 'Versions';
+  ul id => 'packages';
+   for(@$pkgs) {
+     li;
+      txt "$_->{released} ";
+      a href => "/browse/$sys->{short}/$name/$_->{version}", $_->{version} if $_ != $sel;
+      b $_->{version} if $_ == $sel;
+      i " $_->{category}";
+     end;
+   }
+  end;
 
-    my $mans = $self->dbManInfo(package => $pkg->{id});
-    # This can be a table as well.
-    ul id => 'packages';
-     # TODO: Put this sort in the SQL query
-     for(sort { $a->{name} cmp $b->{name} || ($a->{locale}||'') cmp ($b->{locale}||'') } @$mans) {
-       li;
-        a href => "/$_->{name}/".substr($_->{hash},0,8), "$_->{name}($_->{section})";
-        b " $_->{locale}" if $_->{locale};
-        i " $_->{filename}";
-       end;
-     }
-    end;
-  }
+  h2 "Manuals for version $sel->{version}";
+  $next->();
+  ul id => 'manuals';
+   for(@$mans) {
+     li;
+      a href => "/$_->{name}/".substr($_->{hash},0,8), "$_->{name}($_->{section})";
+      b " $_->{locale}" if $_->{locale};
+      i " $_->{filename}";
+     end;
+   }
+  end;
+  $next->();
 
   $self->htmlFooter;
 }
@@ -583,7 +606,7 @@ sub dbManContent {
 }
 
 
-# Options: name, section, shorthash, locale, package
+# Options: name, section, shorthash, locale, package, start, results, sort
 sub dbManInfo {
   my $s = shift;
   my %o = @_;
@@ -596,6 +619,7 @@ sub dbManInfo {
     $o{shorthash} ? (q{substring(m.hash from 1 for 4) = decode(?, 'hex')} => $o{shorthash}) : (),
     $o{hash}      ? (q{m.hash = decode(?, 'hex')} => $o{hash}) : (),
     $o{locale}    ? ('m.locale = ?', $o{locale}) : exists $o{locale} ? ('m.locale IS NULL' => 1) : (),
+    $o{start}     ? ('m.name > ?' => $o{start}) : (),
   );
 
   # TODO: Flags to indicate what to information to fetch
@@ -604,7 +628,13 @@ sub dbManInfo {
       FROM package p
       JOIN man m ON m.package = p.id
         !W
-  }, \%where);
+        !s
+     LIMIT ?
+  },
+    \%where,
+    $o{sort} ? 'ORDER BY name, locale NULLS FIRST' : '',
+    $o{results}||10000
+  );
 }
 
 
