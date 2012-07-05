@@ -6,6 +6,22 @@ var collapsed_icon = '▸';
 function byId(n) {
   return document.getElementById(n)
 }
+function byName(){
+  var d = arguments.length > 1 ? arguments[0] : document;
+  var n = arguments.length > 1 ? arguments[1] : arguments[0];
+  return d.getElementsByTagName(n);
+}
+function byClass() { // [class], [parent, class], [tagname, class], [parent, tagname, class]
+  var par = typeof arguments[0] == 'object' ? arguments[0] : document;
+  var t = arguments.length == 2 && typeof arguments[0] == 'string' ? arguments[0] : arguments.length == 3 ? arguments[1] : '*';
+  var c = arguments[arguments.length-1];
+  var l = byName(par, t);
+  var ret = [];
+  for(var i=0; i<l.length; i++)
+    if(hasClass(l[i], c))
+      ret[ret.length] = l[i];
+  return ret;
+}
 
 /* wrapper around DOM element creation
  * tag('string') -> createTextNode
@@ -38,6 +54,34 @@ function setText(obj, txt) {
     obj.textContent = txt;
   else
     obj.innerText = txt;
+}
+
+function listClass(obj) {
+  var n = obj.className;
+  if(!n)
+    return [];
+  return n.split(/ /);
+}
+function hasClass(obj, c) {
+  var l = listClass(obj);
+  for(var i=0; i<l.length; i++)
+    if(l[i] == c)
+      return true;
+  return false;
+}
+function setClass(obj, c, set) {
+  var l = listClass(obj);
+  var n = [];
+  if(set) {
+    n = l;
+    if(!hasClass(obj, c))
+      n[n.length] = c;
+  } else {
+    for(var i=0; i<l.length; i++)
+      if(l[i] != c)
+        n[n.length] = l[i];
+  }
+  obj.className = n.join(' ');
 }
 
 
@@ -152,3 +196,18 @@ function navCreateLinks(nav) {
 if(byId('nav'))
   navCreate(byId('nav'));
 
+
+
+// The "more..." links on the homepage.
+if(byId('systems')) {
+  var f = function() {
+    var l = byName(this.parentNode, 'a', 'hidden');
+    for(var i=0; i<l.length; i++)
+      setClass(l[i], 'hidden', false);
+    setClass(this, 'hidden', true);
+    return false
+  };
+  var l = byClass(byId('systems'), 'a', 'more');
+  for(var i=0; i<l.length; i++)
+    l[i].onclick = f;
+}

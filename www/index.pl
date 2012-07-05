@@ -81,8 +81,11 @@ sub home {
        b $sys->[0]{name};
        if(@$sys > 1) {
          my $i = 0;
-         a href => "/browse/$_->{short}", ++$i > 3 ? (class => "old") : (), $_->{release} for(reverse @$sys);
-         a href => "#", 'more...' if $i > 3;
+         for(reverse @$sys) {
+           a href => "/browse/$_->{short}", ++$i > 3 ? (class => 'hidden') : (), $_->{release};
+           lit ' ';
+         }
+         a href => "#", class => 'more', 'more...' if $i > 3;
        }
       end 'a' if @$sys == 1;
      end;
