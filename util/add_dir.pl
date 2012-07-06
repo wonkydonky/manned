@@ -12,6 +12,9 @@ use Encode 'decode', 'find_encoding', 'decode_utf8';
 use Digest::SHA 'sha1_hex';
 use File::Find;
 use DBI;
+use Compress::Zlib ();
+use Compress::Raw::Bzip2 ();
+use Compress::Raw::Lzma ();
 
 die "Not enough arguments\n" if @ARGV < 2;
 my($dir, $pkgid) = @ARGV;
@@ -29,41 +32,39 @@ sub readman {
   my $dat = <$F>;
   close $F;
 
-  # Note: Don't forget to update 'section_from_filename()' in SQL when a new
-  # compression file extension is recognized.
-  my $fn = $ofn;
-  while(1) {
-    if($fn =~ s/\.gz$//) {
-      require Compress::Zlib;
-      $dat = Compress::Zlib::memGunzip($dat);
-      die "Error decompressing '$ofn': $Compress::Zlib::gzerrno\n" if !defined $dat;
-      next;
-    }
-    if($fn =~ s/\.bz2$//) {
-      # Don't try to use Compress::Bzip2::memBunzip() here. It's been terribly
-      # broken for at least 3 years:
-      # https://rt.cpan.org/Public/Bug/Display.html?id=48128
-      require Compress::Raw::Bzip2;
-      my($b, $s) = Compress::Raw::Bunzip2->new();
-      my $r;
-      die "Error decompressing '$ofn': Opening bzip2 decompressor: $s\n" if $s != Compress::Raw::Bzip2::BZ_OK();
-      die "Error decompressing '$ofn': $s\n" if ($s = $b->bzinflate($dat, $r)) != Compress::Raw::Bzip2::BZ_STREAM_END();
-      $dat = $r;
-      next;
-    }
-    if($fn =~ s/\.lzma$//) {
-      require Compress::Raw::Lzma;
-      my($l, $s) = Compress::Raw::Lzma::AutoDecoder->new();
-      my $r;
-      die "Error decompressing '$ofn': Opening lzma decompressor: $s\n" if $s != Compress::Raw::Lzma::LZMA_OK();
-      die "Error decompressing '$ofn': $s\n" if ($s = $l->code($dat, $r)) != Compress::Raw::Lzma::LZMA_STREAM_END();
-      $dat = $r;
-      next;
-    }
+  # Ignore the filename extensions when decompressing - those aren't reliable.
+  # Instead just pass stuff through the decompressors and let them fail if the
+  # format isn't correct.
+
+  my @alg;
+
+  while(length $dat) {
+    my($ndat, $s, $o, $r);
+
+    # gzip
+    $ndat = Compress::Zlib::memGunzip($dat);
+    defined $ndat and push(@alg, 'gz') and ($dat = $ndat) and next;
+
+    # bzip2
+    # Don't try to use Compress::Bzip2::memBunzip() here. It's been terribly
+    # broken for at least 3 years:
+    # https://rt.cpan.org/Public/Bug/Display.html?id=48128
+    ($o, $s) = Compress::Raw::Bunzip2->new();
+    die "Error opening bzip2 decompressor: $s\n" if $s != Compress::Raw::Bzip2::BZ_OK();
+    $ndat = $dat;
+    $o->bzinflate($ndat, $r) == Compress::Raw::Bzip2::BZ_STREAM_END() and push(@alg, 'bz2') and ($dat = $r) and next;
+
+    # lzma
+    ($o, $s) = Compress::Raw::Lzma::AutoDecoder->new();
+    die "Error opening lzma decompressor: $s\n" if $s != Compress::Raw::Lzma::LZMA_OK();
+    $ndat = $dat;
+    $r = '';
+    $o->code($ndat, $r) == Compress::Raw::Lzma::LZMA_STREAM_END() and push(@alg, 'lzma') and ($dat = $r) and next;
+
     last;
   }
 
-  return $dat;
+  return $dat, \@alg;
 }
 
 
@@ -117,7 +118,7 @@ sub decodeman {
 
 sub addman {
   my($pkg, $path, $fn, $locale) = @_;
-  my $dat = readman $fn;
+  my($dat, $alg) = readman $fn;
   my $hash = sha1_hex $dat;
 
   my($enc, $dec) = decodeman($dat, $locale);
@@ -131,7 +132,12 @@ sub addman {
         VALUES(?,name_from_filename(?),section_from_filename(?),?,?,decode(?, 'hex'))}, {},
     $pkg, $path, $path, $path, $locale, $hash);
 
-  printf "$path ($enc)\n";
+  # Report issues with the decompression extension
+  my $correctext = @$alg ? '.'.join('.', @$alg) : '';
+  my($tmp, $foundext) = ($path, '');
+  $foundext = ".$1$foundext" while($tmp =~ s/\.(gz|bz2|lzma)$//);
+
+  printf "%s (%s%s)\n", $path, $enc, $foundext ne $correctext ? " - Incorrect file extension, expected $correctext" : '';
 }
 
 
