@@ -57,8 +57,8 @@ sub home {
   # Relevant query: SELECT count(distinct hash), count(distinct name), count(*), count(distinct package) FROM man;
   # It's far too slow to run that on every pageview. :-(
   p style => 'float: none'; lit <<'  _';
-   Indexing <b>561,179</b> versions of <b>131,879</b> manual pages found in
-   <b>1,854,105</b> files of <b>196,356</b> packages.
+   Indexing <b>612,354</b> versions of <b>132,474</b> manual pages found in
+   <b>2,056,796</b> files of <b>217,369</b> packages.
    <br /><br />
    Manned.org aims to index all manual pages from a variety of systems, both
    old and new, and provides a convenient interface for looking up and viewing

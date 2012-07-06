@@ -79,7 +79,9 @@ INSERT INTO systems (id, name, release, short, relorder) VALUES
   (23, 'Debian',     '2.2',   'debian-potato',   5),
   (24, 'Debian',     '3.0',   'debian-woody',    6),
   (25, 'Debian',     '3.1',   'debian-sarge',    7),
-  (26, 'Debian',     '4.0',   'debian-etch',     8);
+  (26, 'Debian',     '4.0',   'debian-etch',     8),
+  (27, 'Debian',     '5.0',   'debian-lenny',    9),
+  (28, 'Debian',     '6.0',   'debian-squeeze',  10);
 
 
 -- Removes any path components and compression extensions from the filename.

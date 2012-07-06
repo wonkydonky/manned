@@ -139,7 +139,9 @@ EOP
 
 
 
+# TODO: Index stuff from snapshot.debian.org
 # TODO: backports?
+# TODO: Debian testing?
 
 ubuntu_warty() {
   syncrepo 2 "http://old-releases.ubuntu.com/ubuntu/" "warty" "main multiverse restricted universe"
@@ -271,6 +273,11 @@ ubuntu_active() {
   ubuntu_precise  # until 2017-04
 }
 
+ubuntu() {
+  ubuntu_old
+  ubuntu_active
+}
+
 
 debian_buzz() {
   # Contrib uses a rather non-standard arch directory ("binary" and "binary-all"), so let's stick with main for now.
@@ -311,6 +318,15 @@ debian_etch() {
   syncrepo 26 "http://archive.debian.org/debian/" "etch" "main contrib non-free"
 }
 
+debian_lenny() {
+  syncrepo 27 "http://archive.debian.org/debian/" "lenny" "main contrib non-free"
+}
+
+debian_squeeze() {
+  syncrepo 28 "http://ftp.nl.debian.org/debian/" "squeeze" "main contrib non-free"
+  syncrepo 28 "http://ftp.nl.debian.org/debian/" "squeeze-updates" "main contrib non-free"
+}
+
 debian_old() {
   debian_buzz
   debian_rex
@@ -321,6 +337,16 @@ debian_old() {
   debian_woody
   debian_sarge
   debian_etch
+  debian_lenny
+}
+
+debian_active() {
+  debian_squeeze
+}
+
+debian() {
+  debian_old
+  debian_active
 }
 
 
