@@ -75,7 +75,7 @@ checkpkg() {
 syncrepo() {
   REPO=$1
   F="$TMP/$REPO/repo.tar.gz"
-  echo "============ $REPO"
+  echo "============ $MIRROR $REPO"
   $CURL "$MIRROR/$REPO/os/i686/$REPO.files.tar.gz" -o "$F" || return 1
   tar -C "$TMP/$REPO" -xf "$F" || return 1
   rm -f "$F"
