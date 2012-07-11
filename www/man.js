@@ -90,18 +90,31 @@ function setClass(obj, c, set) {
 
 // TODO: Fix the 'pkg' link
 // TODO: Keep same view when switching to different version of the same man page
-// TODO: Allow showing/hiding old package versions individually.
-// TODO: Allow complete hiding of old systems. (And enable that by default)
+
+/* Structure of VARS.mans:
+  [
+    ["System", "Full name", "short", [
+        [ "package", "version", [
+            [ "section", "locale"||null ],
+            ...
+          ],
+          oldvisible // <- this is only set by JS
+        ],
+        ...
+      ],
+      oldvisible // <- this is only set by JS
+    ],
+    ...
+  ]
+*/
 
 navShowLocales  = false;
 navHasLocale    = false;
-navHasOldSys    = false;
-navHasHiddenSys = false; // OldSys, actually
 
 function navCreate(nav) {
   setText(nav, '');
 
-  navHasLocale = navHasHiddenSys = navHasOldSys = false;
+  navHasLocale = false;
   var dl = tag('dl', null);
 
   for(var i=0; i<VARS.mans.length; i++) {
@@ -110,25 +123,27 @@ function navCreate(nav) {
     var isold = i > 0 && VARS.mans[i-1][0] == sys[0];
     if(typeof sys[4] === 'undefined')
       sys[4] = !isold;
-    navHasOldSys = navHasOldSys || isold;
-    navHasHiddenSys = navHasHiddenSys || (isold && !sys[4]);
 
     var pkgnum = 0;
     var dd = tag('dd', null);
 
-    if(sys[4]) {
-      for(var j=0; j<sys[3].length; j++) {
-        if(j > 0 && sys[3][j-1][0] == sys[3][j][0])
-          continue;
-
-        if(navCreatePkg(dd, sys, sys[3][j]))
+    if(sys[4])
+      for(var j=0; j<sys[3].length; j++)
+        if(navCreatePkg(nav, dd, sys, j))
           pkgnum++;
-      }
-    }
 
-    dl.appendChild(tag('dt', sys[1], tag('a',
-      {href:'#', _sys: sys, onclick: function() { this._sys[4] = !this._sys[4]; navCreate(nav); return false }},
-      sys[4] ? expanded_icon : collapsed_icon)));
+    if(!isold || sys[4])
+      dl.appendChild(tag('dt',
+        isold || !VARS.mans[i+1] || VARS.mans[i+1][0] != sys[0] ? null : tag('a',
+          {href:'#', _sysn: sys[0], _sysi:i, onclick: function() {
+            for(var j=this._sysi+1; j<VARS.mans.length && VARS.mans[j][0] == this._sysn; j++)
+              VARS.mans[j][4] = !VARS.mans[j][4];
+            navCreate(nav);
+            return false
+          }}, VARS.mans[i+1][4] ? expanded_icon : collapsed_icon),
+        sys[1]
+      ));
+
     if(sys[4] && pkgnum > 0)
       dl.appendChild(dd);
   }
@@ -138,17 +153,22 @@ function navCreate(nav) {
 }
 
 
-function navCreatePkg(dd, sys, pkg) {
+function navCreatePkg(nav, dd, sys, n) {
+  var pkg = sys[3][n];
+
+  var isold = n > 0 && sys[3][n-1][0] == pkg[0];
+  if(isold && !pkg[3])
+    return false;
+
   var mannum = 0;
   var pdd = tag('dd', null);
-
-  for(var k=0; k<pkg[2].length; k++) {
-    var man = pkg[2][k];
+  for(var i=0; i<pkg[2].length; i++) {
+    var man = pkg[2][i];
     var txt = man[0] + (man[1] ? '.'+man[1] : '');
     if(man[2] != VARS.hash && man[1])
       navHasLocale = true;
     if(man[2] == VARS.hash || (navShowLocales || !man[1])) {
-      if(k > 0)
+      if(i > 0)
         pdd.appendChild(tag(' '));
       pdd.appendChild(man[2] == VARS.hash ? tag('b', txt) : tag('a', {href:'/'+VARS.name+'/'+man[2]}, txt));
       mannum++;
@@ -156,7 +176,15 @@ function navCreatePkg(dd, sys, pkg) {
   }
 
   if(mannum > 0) {
-    dd.appendChild(tag('dt', tag('a', {href:'/browse/'+sys[2]+'/'+pkg[0]}, pkg[0]), tag('i', pkg[1])));
+    dd.appendChild(tag('dt',
+      isold || !sys[3][n+1] || sys[3][n+1][0] != pkg[0] ? null : tag('a',
+        {href:'#', _pkgn: pkg[0], _pkgi:n, onclick: function() {
+          for(var j=this._pkgi+1; j<sys[3].length && sys[3][j][0] == this._pkgn; j++)
+            sys[3][j][3] = !sys[3][j][3];
+          navCreate(nav);
+          return false
+        }}, sys[3][n+1][3] ? expanded_icon : collapsed_icon),
+      tag('a', {href:'/browse/'+sys[2]+'/'+pkg[0]+'/'+pkg[1]}, pkg[0]), tag('i', pkg[1])));
     dd.appendChild(pdd);
     return true;
   }
@@ -165,22 +193,7 @@ function navCreatePkg(dd, sys, pkg) {
 
 
 function navCreateLinks(nav) {
-  nav.appendChild(tag('a', {'class':'global',href:'#',onclick: function() { }}, collapsed_icon + 'pkg'));
-
-  var t = (navHasHiddenSys ? collapsed_icon : expanded_icon) + 'sys';
-  nav.appendChild(!navHasOldSys ? tag('i', {'class':'global'}, t) : tag('a',
-    { 'class':'global',
-      title:  'Expand/collapse "old" systems.',
-      href:   '#',
-      onclick: function() {
-        for(var i=0; i<VARS.mans.length; i++)
-          if(i && VARS.mans[i][0] == VARS.mans[i-1][0])
-            VARS.mans[i][4] = navHasHiddenSys;
-        navCreate(nav);
-        return false
-      }
-    }, t
-  ));
+  nav.appendChild(tag('a', {'class':'global',href:'#',onclick: function() { alert("Not implemented yet."); return false }}, collapsed_icon + 'pkg'));
 
   var t = (navShowLocales ? expanded_icon : collapsed_icon) + 'locales';
   nav.appendChild(!navHasLocale ? tag('i', {'class':'global'}, t) : tag('a',

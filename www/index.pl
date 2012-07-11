@@ -328,19 +328,7 @@ sub browsepkg {
 sub manjslist {
   my($self, $m) = @_;
 
-  # For JS: (Already sorted)
-  # [
-  #   ["System", "Full name", "short" [
-  #       [ "package", "version", [
-  #           [ "section", "locale"||null ],
-  #           ...
-  #         ],
-  #       ],
-  #       ...
-  #     ],
-  #   ],
-  #   ...
-  # ]
+  # The structure we generate is described in the JS code.
   my %sys;
   push @{$sys{$_->{system}}}, $_ for (@$m);
   [
@@ -419,7 +407,7 @@ sub man {
   my $man = getman($self, $name, $hash, $m);
 
   $self->htmlHeader(title => $name);
-  div id => 'nav', ' '; # To be filled in by JS
+  div id => 'nav', 'Sorry, this navigation menu won\'t display without Javascript. :-(';
 
   h1 $man->{name};
   p;
