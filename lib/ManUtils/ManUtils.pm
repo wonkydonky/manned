@@ -52,10 +52,29 @@ sub fmt {
       return;
     }
 
-    my $groff = run_cmd [split / /, $cmd],
+    my $double;
+    @$errors = grep {
+      chomp;
+      s/^grog: grog: /grog: /;
+      !$double && /there are several macro packages: (.+)$/ ? ($double = $1) && 0 : 1;
+    } @$errors;
+
+    my @cmd = split / /, $cmd;
+    if($double) {
+      my %double = map +($_,1), split / /, $double;
+      # Use the first macro package in ASCIIbetical order. (This is somewhat
+      # arbitrary, need to find a better conflict resolution method).
+      my $macros = (sort keys %double)[0];
+      # Replace macro arguments with our selected one.
+      @cmd = grep !$double{$_}, @cmd;
+      @cmd = (@cmd[0..$#cmd-1], $macros, $cmd[$#cmd]);
+      push @$errors, "grog detected several macro packages: $double. Using $macros. (@cmd)";
+    }
+
+    my $groff = run_cmd \@cmd,
       '<' => \$input,
       '>' => \my $fmt,
-      '2>' => sub { $_[0] && push @$errors, "groff: $_[0]" };
+      '2>' => sub { if($_[0]) { chomp(my $e = $_[0]); push @$errors, "groff: $e" } };
 
     $groff->cb(sub {
       $$output = $fmt ? decode_utf8($fmt) : '';
@@ -74,7 +93,7 @@ sub fmt_block {
   my $c = shift;
   my $cv = fmt $c, \my $out, \my @err;
   $cv->recv;
-  warn $_ for @err;
+  warn "$_\n" for @err;
   $out;
 }
 
