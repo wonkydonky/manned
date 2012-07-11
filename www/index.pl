@@ -325,62 +325,6 @@ sub browsepkg {
 }
 
 
-# TODO: Store/cache the result of this of this function in the database.
-sub manfmt {
-  my $c = shift;
-
-  # tix comes with[1] a custom(?) macro package. But it looks okay even without
-  # loading that.
-  # [1] It actually doesn't, the tcllib package appears to have that file, but
-  # doesn't '.so' it.
-  $c =~ s/^\.so man.macros$//mg;
-  # Other .so's should be handled by the web interface
-  $c =~ s/^\.so (.+)$/\[\[\[MANNEDINCLUDE $1\]\]\]/mg;
-
-  # Disable hyphenation, since that screws up man page references. :-(
-  $c = ".hy 0\n.de hy\n..\n$c";
-
-  # Call grog to figure out which preprocessors to use.
-  # $MANWIDTH works by using the following groff options: -rLL=100n -rLT=100n
-  my($out, $in);
-  my $pid = open2($out, $in, qw|grog -Tutf8 -P-c -DUTF-8 -|);
-  binmode $in, ':utf8';
-  print $in $c;
-  close($in);
-  chomp(my $grog = <$out>);
-  waitpid $pid, 0;
-
-  # Call groff
-  $pid = open2($out, $in, split / /, $grog);
-  $c = encode_utf8($c);
-  my $ret;
-  # Read/write the data in chunks to avoid a deadlock on large I/O
-  while($c) {
-    my @a = IO::Select::select(IO::Select->new($out), IO::Select->new($in), undef);
-    die "IO::Select failed: $!\n" if !@a;
-    if(@{$a[0]}) {
-      my $b;
-      my $r = sysread($out, $b, 4096);
-      die "sysread failed: $!\n" if $r < 0;
-      $ret .= $b if $r;
-    }
-    if(@{$a[1]}) {
-      my $w = syswrite($in, $c, 4096);
-      die "syswrite failed: $!\n" if $w <= 0;
-      $c = substr($c, $w);
-    }
-  }
-  close($in);
-  local $/;
-  $ret .= <$out>; # Now I'm mixing sysread and buffered read. I don't suppose that is an issue in this case, though.
-  waitpid $pid, 0;
-
-  $ret = decode_utf8($ret);
-  $ret =~ s/[\t\s\r\n]+$//;
-  return $ret;
-}
-
-
 sub manjslist {
   my($self, $m) = @_;
 
@@ -486,7 +430,8 @@ sub man {
 
   div id => 'contents';
    my $c = $self->dbManContent($man->{hash});
-   pre; lit ManUtils::html(manfmt $c); end;
+   # TODO: Store/cache the result of fmt() in the database.
+   pre; lit ManUtils::html(ManUtils::fmt_block $c); end;
   end;
 
   div id => 'locations';

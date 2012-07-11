@@ -2,11 +2,82 @@ package ManUtils;
 
 use strict;
 use warnings;
+use AE;
+use AnyEvent::Util;
+use Encode 'decode_utf8', 'encode_utf8';
+
 
 our $VERSION = '0.01';
 
 require XSLoader;
 XSLoader::load('ManUtils', $VERSION);
+
+
+# Usage: $cv = fmt($input, \$output, \@errors)
+# $cv = AnyEvent condition variable, fired when done.
+# $input = UTF-8 encoded manual page source
+# $output = variable that will hold the output when done
+# @errors = list of warnings/errors while running groff
+sub fmt {
+  my($input, $output, $errors) = @_;
+  my $cv = AE::cv;
+  $$output = '';
+  @$errors = ();
+
+  # tix comes with[1] a custom(?) macro package. But it looks okay even without
+  # loading that.
+  # [1] It actually doesn't, the tcllib package appears to have that file, but
+  # doesn't '.so' it.
+  $input =~ s/^\.so man.macros$//mg;
+  # Other .so's should be handled by html()
+  $input =~ s/^\.so (.+)$/\[\[\[MANNEDINCLUDE $1\]\]\]/mg;
+
+  # Disable hyphenation, since that screws up man page references. :-(
+  $input = ".hy 0\n.de hy\n..\n$input";
+
+  $input = encode_utf8($input);
+
+  # Call grog to figure out which preprocessors to use.
+  # $MANWIDTH works by using the following groff options: -rLL=100n -rLT=100n
+  my $grog = run_cmd [qw|grog -Tutf8 -P-c -DUTF-8 -|],
+    '<' => \$input,
+    '>' => \my $cmd,
+    '2>' => sub { $_[0] && push @$errors, "grog: $_[0]" };
+
+  $grog->cb(sub {
+    chomp($cmd);
+    if(!$cmd || $cmd =~ /\n/) {
+      push @$errors, !$cmd ? 'grog failed to produce output' : "Excessive grog output: $cmd";
+      $cv->send;
+      return;
+    }
+
+    my $groff = run_cmd [split / /, $cmd],
+      '<' => \$input,
+      '>' => \my $fmt,
+      '2>' => sub { $_[0] && push @$errors, "groff: $_[0]" };
+
+    $groff->cb(sub {
+      $$output = $fmt ? decode_utf8($fmt) : '';
+      $$output =~ s/[\t\s\r\n]+$//;
+      $cv->send;
+    });
+  });
+
+  $cv;
+}
+
+
+# Blocking version of fmt(). Returns the formatted man page, errors are
+# forwarded to warn().
+sub fmt_block {
+  my $c = shift;
+  my $cv = fmt $c, \my $out, \my @err;
+  $cv->recv;
+  warn $_ for @err;
+  $out;
+}
+
 
 1;
 
