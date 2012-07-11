@@ -2,7 +2,7 @@
 
 use strict;
 use warnings;
-use TUWF ':html', 'html_escape';
+use TUWF ':html', 'html_escape', ':xml';
 use IPC::Open2;
 use IO::Select;
 use Encode 'encode_utf8', 'decode_utf8';
@@ -42,6 +42,7 @@ TUWF::register(
   qr{info/about} => \&about,
   qr{browse/([^/]+)} => \&browsesys,
   qr{browse/([^/]+)/([^/]+)(?:/([^/]+))?} => \&browsepkg,
+  qr{xml/search} => \&xmlsearch,
   qr{([^/]+)/([0-9a-f]{8})} => \&man,
   qr{([^/]+)/([0-9a-f]{8})/src} => \&src,
   qr{([^/]+)} => \&man,
@@ -466,6 +467,37 @@ sub src {
   $self->resHeader('Content-Type', 'text/plain; charset=UTF-8');
   my $c = $self->dbManContent($m->[0]{hash});
   lit $c;
+}
+
+
+# TODO: This is a prototype, really needs to be polished and optimized!
+sub xmlsearch {
+  my $self = shift;
+  my $q = $self->reqGet('q')||'';
+
+  my $mansect = $1 if $q =~ s/^([0-9])\s+// || $q =~ s/\(([a-zA-Z0-9]+)\)$//;
+  my $manname = $1 if $q =~ s/^([a-zA-Z0-9,.:_-]+)$//;
+
+  # Manual pages
+  my $man = !$manname ? [] : $self->dbAll(
+    'SELECT name, section
+       FROM man !W
+   GROUP BY name, section
+   ORDER BY name, section
+      LIMIT 10',
+    { # Don't use wildcards in this query, prevents index usage.
+      "name ILIKE '$manname%'" => 1,
+      $mansect ? ("section ILIKE '$mansect%'" => 1) : ()
+    }
+  );
+
+  $self->resHeader('Content-Type' => 'text/xml; charset=UTF-8');
+  xml;
+  tag 'results';
+   tag 'mans';
+    tag 'man', %$_, undef for(@$man);
+   end;
+  end 'results';
 }
 
 
