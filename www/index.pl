@@ -14,8 +14,8 @@ our $ROOT;
 BEGIN { ($ROOT = abs_path $0) =~ s{/www/index\.pl$}{}; }
 
 
-use lib "$ROOT/lib/GrottyParser/inst/lib/perl5";
-use GrottyParser;
+use lib "$ROOT/lib/ManUtils/inst/lib/perl5";
+use ManUtils;
 
 
 TUWF::set(
@@ -486,7 +486,7 @@ sub man {
 
   div id => 'contents';
    my $c = $self->dbManContent($man->{hash});
-   pre; lit GrottyParser::html(manfmt $c); end;
+   pre; lit ManUtils::html(manfmt $c); end;
   end;
 
   div id => 'locations';

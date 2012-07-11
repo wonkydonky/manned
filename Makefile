@@ -1,12 +1,12 @@
-.PHONY: GrottyParser
+.PHONY: ManUtils
 
-GrottyParser: lib/GrottyParser/Build
-	cd lib/GrottyParser && ./Build install --install-base=inst
+ManUtils: lib/ManUtils/Build
+	cd lib/ManUtils && ./Build install --install-base=inst
 
-lib/GrottyParser/Build: lib/GrottyParser/Build.PL
-	cd lib/GrottyParser && perl Build.PL
+lib/ManUtils/Build: lib/ManUtils/Build.PL
+	cd lib/ManUtils && perl Build.PL
 
 clean:
-	cd lib/GrottyParser && ./Build distclean
-	rm -rf lib/GrottyParser/inst
+	cd lib/ManUtils && ./Build distclean
+	rm -rf lib/ManUtils/inst
 

@@ -1,4 +1,4 @@
-package GrottyParser;
+package ManUtils;
 
 use strict;
 use warnings;
@@ -6,7 +6,7 @@ use warnings;
 our $VERSION = '0.01';
 
 require XSLoader;
-XSLoader::load('GrottyParser', $VERSION);
+XSLoader::load('ManUtils', $VERSION);
 
 1;
 

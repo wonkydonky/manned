@@ -257,7 +257,7 @@ static void parselines(ctx_t *x) {
 
 
 
-MODULE = GrottyParser		PACKAGE = GrottyParser
+MODULE = ManUtils	 PACKAGE = ManUtils
 
 SV *
 html(str)
