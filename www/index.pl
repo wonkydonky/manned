@@ -488,7 +488,7 @@ sub htmlHeader {
      a href => '/', 'manned.org';
      form;
       input type => 'text', name => 'q';
-      input type => 'submit', value => 'Search';
+      input type => 'submit', value => ' ';
      end;
     end;
 
