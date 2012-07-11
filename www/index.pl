@@ -409,10 +409,8 @@ sub man {
   $self->htmlHeader(title => $name);
   div id => 'nav', 'Sorry, this navigation menu won\'t display without Javascript. :-(';
 
-  h1 $man->{name};
-  p;
-   a href => "/$man->{name}/".substr($man->{hash}, 0, 8), 'permalink';
-   txt ' - ';
+  h1;
+   txt $man->{name};
    a href => "/$man->{name}/".substr($man->{hash}, 0, 8).'/src', 'source';
   end;
 

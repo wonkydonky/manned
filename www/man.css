@@ -10,6 +10,7 @@ body { margin: 10px auto 50px auto; max-width: 1250px; border-collapse: separate
   -webkit-box-shadow: 0 10px 10px #def; -moz-box-shadow: 0 10px 10px #def; box-shadow: 0 10px 10px #def; }
 h1 { font-size: 24px; font-weight: normal; color: #abc; }
 h1 + p { float: right; }
+h1 a { font-size: 10px; vertical-align: top }
 h2 { font-size: 21px; margin-top: 40px; color: #468; font-weight: normal; clear: left }
 h2 + i { font-size: 12px; }
 dd { margin-left: 15px; }
