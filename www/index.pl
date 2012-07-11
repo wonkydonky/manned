@@ -242,7 +242,7 @@ sub browsesys {
   $self->htmlHeader(title => $title);
   h1 $title;
 
-  p;
+  p id => 'charselect';
    for('all', 0, 'a'..'z') {
      a href => "/browse/$short?c=$_", $_?uc$_:'#' if $_ ne $f->{c};
      b $_?uc$_:'#' if $_ eq $f->{c};
