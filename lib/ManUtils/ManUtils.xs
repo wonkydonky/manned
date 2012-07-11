@@ -238,18 +238,28 @@ static void parselines(ctx_t *x) {
 
   while(*buf) {
     int c1 = UTF8SKIP(buf);
+    // Escape character right after a formatting code? Ignore the escape
+    // character and formatting code after that. Grotty sometimes
+    // double-formats a character, so you get "f ESC c ESC f ESC c", which you
+    // should read as "(f ESC c) ESC (f ESC c)".
+    if(*buf == 8 && buf[1] && buf[1+UTF8SKIP(buf+1)] == 8 && buf[2+UTF8SKIP(buf+1)]) {
+      int c2 = UTF8SKIP(buf+1);
+      buf += 2 + c2 + UTF8SKIP(buf+1+c2);
+      continue;
+    }
+    // Formatting code
     if(buf[c1] == 8 && buf[c1+1]) {
       int c2 = UTF8SKIP(buf+c1+1);
       for(i=0; i<c2; i++)
         appendline(x, buf[c1+i+1], *buf == '_' ? LI : LB);
       buf += c1+c2+1;
       continue;
-    } else {
-      if(*buf == '\n' && !buf[1])
-        x->noref = 1;
-      appendline(x, *buf, 0);
-      buf++;
     }
+    // Regular character
+    if(*buf == '\n' && !buf[1])
+      x->noref = 1;
+    appendline(x, *buf, 0);
+    buf++;
   }
   x->noref = 1;
   appendline(x, '\n', 0);
