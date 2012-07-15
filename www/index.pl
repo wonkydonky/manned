@@ -57,8 +57,8 @@ sub home {
   # Relevant query: SELECT count(distinct hash), count(distinct name), count(*), count(distinct package) FROM man;
   # It's far too slow to run that on every pageview. :-(
   p style => 'float: none'; lit <<'  _';
-   Indexing <b>612,354</b> versions of <b>132,474</b> manual pages found in
-   <b>2,056,796</b> files of <b>217,369</b> packages.
+   Indexing <b>679,885</b> versions of <b>132,493</b> manual pages found in
+   <b>2,213,486</b> files of <b>222,543</b> packages.
    <br /><br />
    Manned.org aims to index all manual pages from a variety of systems, both
    old and new, and provides a convenient interface for looking up and viewing
@@ -152,12 +152,13 @@ sub about {
      the moment. Indexing started around mid June 2012.</dd>
     <dt>Debian</dt><dd>
      Historical releases were fetched from <a
-     href="http://archive.debian.org/debian/">http://archive.debian.org/debian/</a>.
+     href="http://archive.debian.org/debian/">http://archive.debian.org/debian/</a>
+     and <a href="http://snapshot.debian.org/">http://snapshot.debian.org/</a>.
      For buzz, rex and bo, only the 'main' component has been indexed, and
      we're missing a few man pages because some packages were missing from the
      repository archives. For the other releases, all components (main, contrib
-     and non-free) from the $release and $release-updates repositories are
-     indexed.
+     and non-free) from the $release and $release-updates (where available)
+     repositories are indexed.
     </dd>
    </dl><br />
    Only packages for a single architecture (i386 or i686) are scanned. To my

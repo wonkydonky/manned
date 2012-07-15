@@ -2,7 +2,7 @@
 
 # A fetcher for debian-style repositories.
 
-CURL="curl -fSs"
+CURL="curl -fSs -A manual-page-crawler,info@manned.org --limit-rate 500k"
 PSQL="psql -U manned -Awtq"
 TMP=`mktemp -d manned.deb.XXXXXX`
 
@@ -76,7 +76,7 @@ syncrepo() {
   printf "" >"$PFN"
   if [ "$CONTENTSURL" != "-" ]; then
     $CURL "$REPO$CONTENTSURL" -o "$CFN.gz" || return 1
-    gunzip "$CFN.gz"
+    gunzip -f "$CFN.gz"
   fi
 
   for CMP in $COMPONENTS; do
@@ -347,6 +347,31 @@ debian_active() {
 debian() {
   debian_old
   debian_active
+}
+
+
+
+# Fetch older packages from snapshot.debian.org
+
+debian_snapshot_month() {
+  YEAR=$1
+  MONTH=$2
+  ROOT="http://snapshot.debian.org/archive/debian/"
+  DATES=`$CURL "$ROOT?year=$YEAR&month=$MONTH" | perl -lne 'm|<a href="([0-9]{8}T[0-9]{6}Z)/"| && print $1'`
+  PREVDATE="00000000"
+  for DATE in $DATES; do
+    CURDATE=`echo $DATE | head -c8`
+    [ "$CURDATE" = "$PREVDATE" ] && continue
+    PREVDATE=$CURDATE
+    [                                 $DATE \< "20070104"    ] && syncrepo 24 "$ROOT$DATE/" "woody" "main contrib non-free"
+    [ \( $DATE \> "20050607" \) -a \( $DATE \< "20081028" \) ] && syncrepo 25 "$ROOT$DATE/" "sarge" "main contrib non-free"
+    [ \( $DATE \> "20070409" \) -a \( $DATE \< "20100620" \) ] && syncrepo 26 "$ROOT$DATE/" "etch"  "main contrib non-free"
+    [ \( $DATE \> "20090218" \) -a \( $DATE \< "20120326" \) ] && syncrepo 27 "$ROOT$DATE/" "lenny" "main contrib non-free"
+    if [ $DATE \> "20110206" ]; then
+      syncrepo 28 "$ROOT$DATE/" "squeeze" "main contrib non-free"
+      syncrepo 28 "$ROOT$DATE/" "squeeze-updates" "main contrib non-free"
+    fi
+  done
 }
 
 

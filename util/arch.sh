@@ -9,7 +9,7 @@ REPOS="core extra community"
 DEBUG=false
 SYSID=1
 
-CURL="curl -fSs"
+CURL="curl -fSs -A manual-page-crawler,info@manned.org"
 PSQL="psql -U manned -Awtq"
 TMP=`mktemp -d manned.arch.XXXXXX`
 
