@@ -214,6 +214,8 @@ sub browsesearch {
   my $q = $self->reqGet('q')||'';
   my $man = $self->dbSearch($q, 150);
 
+  return $self->resRedirect("/$man->[0]{name}.".substr($man->[0]{section},0,1), 'temp') if @$man == 1;
+
   $self->htmlHeader(title => 'Search results for '.$q);
   h1 'Search results for '.$q;
   txt 'Note: This is just a simple case-insensitive prefix match on the man names. In the future we\'ll have more powerful search functionality. Hopefully.';
