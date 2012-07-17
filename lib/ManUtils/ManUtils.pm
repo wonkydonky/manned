@@ -39,7 +39,7 @@ sub fmt {
 
   # Call grog to figure out which preprocessors to use.
   # $MANWIDTH works by using the following groff options: -rLL=100n -rLT=100n
-  my $grog = run_cmd [qw|grog -Tutf8 -P-c -DUTF-8 -|],
+  my $grog = run_cmd [qw|grog -Tutf8 -P-c -DUTF-8 -rLL=90n -rLT=90n -|],
     '<' => \$input,
     '>' => \my $cmd,
     '2>' => sub { $_[0] && push @$errors, "grog: $_[0]" };
