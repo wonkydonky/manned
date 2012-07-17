@@ -67,6 +67,11 @@ td { padding: 1px 5px; font-size: 12px; border-left: 1px solid #ccc; }
 #packages i { color: #aaa; font-size: 13px; }
 #packages a { padding-right: 5px }
 
+#searchres { margin: 20px 0; -webkit-column-width: 300px; -moz-column-width: 300px; column-width: 300px }
+#searchres li { display: block; }
+#searchres i { color: #aaa; font-size: 13px; }
+#searchres a { padding-right: 5px }
+
 #manuals { margin: 20px 0; -webkit-column-width: 500px; -moz-column-width: 500px; column-width: 500px }
 #manuals li { display: block; }
 #manuals i { color: #aaa; font-size: 13px; }

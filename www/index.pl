@@ -40,6 +40,7 @@ TUWF::set(
 TUWF::register(
   qr// => \&home,
   qr{info/about} => \&about,
+  qr{browse/search} => \&browsesearch,
   qr{browse/([^/]+)} => \&browsesys,
   qr{browse/([^/]+)/([^/]+)(?:/([^/]+))?} => \&browsepkg,
   qr{xml/search\.xml} => \&xmlsearch,
@@ -204,6 +205,32 @@ sub about {
    know and I will have it removed as soon as possible.
   _
   end;
+  $self->htmlFooter;
+}
+
+
+sub browsesearch {
+  my $self = shift;
+  my $q = $self->reqGet('q')||'';
+  my $man = $self->dbSearch($q, 150);
+
+  $self->htmlHeader(title => 'Search results for '.$q);
+  h1 'Search results for '.$q;
+  txt 'Note: This is just a simple case-insensitive prefix match on the man names. In the future we\'ll have more powerful search functionality. Hopefully.';
+  if(@$man) {
+    ul id => 'searchres';
+     for(@$man) {
+       li;
+        a href => "/$_->{name}.".substr($_->{section},0,1), $_->{name};
+        i $_->{section};
+       end;
+     }
+    end;
+  } else {
+    br; br;
+    b 'No results :-(';
+  }
+
   $self->htmlFooter;
 }
 
@@ -502,7 +529,7 @@ sub htmlHeader {
 
     div id => 'header';
      a href => '/', 'manned.org';
-     form action => '/', method => 'get';
+     form action => '/browse/search', method => 'get';
       input type => 'text', name => 'q', id => 'q';
       input type => 'submit', value => ' ';
      end;
