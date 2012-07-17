@@ -42,7 +42,7 @@ TUWF::register(
   qr{info/about} => \&about,
   qr{browse/([^/]+)} => \&browsesys,
   qr{browse/([^/]+)/([^/]+)(?:/([^/]+))?} => \&browsepkg,
-  qr{xml/search} => \&xmlsearch,
+  qr{xml/search\.xml} => \&xmlsearch,
   qr{([^/]+)/([0-9a-f]{8})} => \&man,
   qr{([^/]+)/([0-9a-f]{8})/src} => \&src,
   qr{([^/]+)} => \&man,
@@ -470,33 +470,15 @@ sub src {
 }
 
 
-# TODO: This is a prototype, really needs to be polished and optimized!
 sub xmlsearch {
   my $self = shift;
   my $q = $self->reqGet('q')||'';
-
-  my $mansect = $1 if $q =~ s/^([0-9])\s+// || $q =~ s/\(([a-zA-Z0-9]+)\)$//;
-  my $manname = $1 if $q =~ s/^([a-zA-Z0-9,.:_-]+)$//;
-
-  # Manual pages
-  my $man = !$manname ? [] : $self->dbAll(
-    'SELECT name, section
-       FROM man !W
-   GROUP BY name, section
-   ORDER BY name, section
-      LIMIT 10',
-    { # Don't use wildcards in this query, prevents index usage.
-      "name ILIKE '$manname%'" => 1,
-      $mansect ? ("section ILIKE '$mansect%'" => 1) : ()
-    }
-  );
+  my $man = $self->dbSearch($q, 20);
 
   $self->resHeader('Content-Type' => 'text/xml; charset=UTF-8');
   xml;
   tag 'results';
-   tag 'mans';
-    tag 'man', %$_, undef for(@$man);
-   end;
+   tag 'man', %$_, undef for(@$man);
   end 'results';
 }
 
@@ -598,6 +580,24 @@ sub dbManInfo {
     \%where,
     $o{sort} ? 'ORDER BY name, locale NULLS FIRST' : '',
     $o{results}||10000
+  );
+}
+
+
+# Very simple (and fast) prefix match.
+sub dbSearch {
+  my($s, $q, $limit) = @_;
+
+  my $sect = $q =~ s/^([0-9])\s+// || $q =~ s/\(([a-zA-Z0-9]+)\)$// ? $1 : '';
+  my $name = $q =~ s/^([a-zA-Z0-9,.:_-]+)// ? $1 : '';
+
+  return !$name ? [] : $s->dbAll(
+    'SELECT name, section FROM man_index !W ORDER BY name, section LIMIT ?',
+    { # Don't use wildcards in this query, prevents index usage.
+      "lower(name) LIKE '\L$name\E%'" => 1,
+      $sect ? ("section ILIKE '\L$sect\E%'" => 1) : ()
+    },
+    $limit
   );
 }
 

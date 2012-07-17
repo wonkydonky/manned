@@ -53,6 +53,10 @@ CREATE INDEX ON man USING hash (hash);
 CREATE INDEX ON man (name);
 
 
+CREATE TABLE man_index AS SELECT DISTINCT name, section FROM man;
+CREATE INDEX ON man_index USING btree(lower(name) text_pattern_ops);
+
+
 INSERT INTO systems (id, name, release, short, relorder) VALUES
   (1,  'Arch Linux', NULL,    'arch',            0),
   (2,  'Ubuntu',     '4.10',  'ubuntu-warty',    0),
