@@ -475,10 +475,11 @@ sub xmlsearch {
   my $q = $self->reqGet('q')||'';
   my $man = $self->dbSearch($q, 20);
 
+  # The JS dropdown search expects this particular format.
   $self->resHeader('Content-Type' => 'text/xml; charset=UTF-8');
   xml;
   tag 'results';
-   tag 'man', %$_, undef for(@$man);
+   tag 'item', id => "$_->{name}.$_->{section}", %$_, undef for(@$man);
   end 'results';
 }
 
@@ -501,8 +502,8 @@ sub htmlHeader {
 
     div id => 'header';
      a href => '/', 'manned.org';
-     form;
-      input type => 'text', name => 'q';
+     form action => '/', method => 'get';
+      input type => 'text', name => 'q', id => 'q';
       input type => 'submit', value => ' ';
      end;
     end;

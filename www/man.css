@@ -80,3 +80,11 @@ td { padding: 1px 5px; font-size: 12px; border-left: 1px solid #ccc; }
 pre, pre * { font-family: "Lucida Console", Monospace; font-size: 15px }
 pre b { color: #369; font-weight: normal; }
 
+#ds_box { position: absolute; top: 0; border: 1px solid $border$; border-top: none; background: #f0f8ff; cursor: pointer; z-index: 2 }
+#ds_box.hidden { display: none }
+#ds_box b { padding: 2px 0 0 10px; font-size: 12px; }
+#ds_box tr.selected { background: #fff; }
+#ds_box table { width: 100%; border: 0; background: none; margin: 0 }
+#ds_box td { border: 0; padding: 1px 5px }
+#ds_box i { padding-left: 5px; color: #aaa; font-style: normal }
+
