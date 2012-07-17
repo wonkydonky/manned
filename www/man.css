@@ -52,6 +52,9 @@ td { padding: 1px 5px; font-size: 12px; border-left: 1px solid #ccc; }
 #nav b { font-size: 13px; background: #cde; padding: 3px 5px;
   -webkit-border-radius: 4px; -moz-border-radius: 4px; border-radius: 4px; }
 
+#about { max-width: 900px }
+#about p, #about dd { text-align: justify }
+
 #systems li { display: block; float: left; width: 300px; margin: 20px 10px; padding-left: 60px }
 #systems span { display: block; margin-left: -55px; float: left; width: 50px; height: 50px; background-repeat: no-repeat; }
 #systems b { font-size: 24px; display: block }

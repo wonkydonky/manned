@@ -114,6 +114,7 @@ sub about {
   my $self = shift;
   $self->htmlHeader(title => 'About');
   h1 'About Manned.org';
+  div id => 'about';
 
   h2 'Goal';
   p; lit <<'  _';
@@ -204,6 +205,8 @@ sub about {
    redistributed has been inadvertently included in our index, please let me
    know and I will have it removed as soon as possible.
   _
+  end;
+
   end;
   $self->htmlFooter;
 }
