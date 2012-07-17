@@ -170,23 +170,21 @@ static void flushline(ctx_t *x) {
     // HTTP(s) URL.
     // This is just a simple q{https?://[^ ][.,;"\)>]?( |$)} match, doesn't
     // always work right:
-    // - chmod.1: <http://gnu.org/licenses/gpl.html>.
-    // - pod2man.1: <http://www.eyrie.org/~eagle/software/podlators/>.
     // - troff.1: ⟨http://www.gnu.org/copyleft/fdl.html⟩.    <- yes, that's an Unicode character.
     // - roff.7: Has quite a few issues with wrapped URLs and situations similar to the above.
-    // - JSON.3pm: "RFC4627"(<http://www.ietf.org/rfc/rfc4627.txt>).
     // Note: Don't use strncmp() before manually checking for 'http'. The parse
     // time is otherwise increased by a factor 2.
     if(s[0] == 'h' && s[1] == 't' && s[2] == 't' && s[3] == 'p' && (strncmp(s, "http://", 7) == 0 || strncmp(s, "https://", 8) == 0)) {
-      char *sep = strchr(s, ' ');
-      if(!sep)
-        sep = s+strlen(s);
+      // Find the end of the URL (space or some other weird character).
+      char *sep = s;
+      while(*sep && *sep != '>' && *sep != '<' && *sep != ' ' && *sep != '"')
+        sep++;
       char *sp = sep;
       if(sp > s+10) {
         flush(s);
         char endchr = *sp;
         *(sp--) = 0;
-        if(*sp == '.' || *sp == ',' || *sp == ';' || *sp == '"' || *sp == ')' || *sp == '>') {
+        if(*sp == '.' || *sp == ',' || *sp == ';' || *sp == ')') {
           sp[1] = endchr;
           endchr = *sp;
           *(sp--) = 0;
