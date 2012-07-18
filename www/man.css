@@ -9,8 +9,7 @@ body { margin: 10px auto 50px auto; max-width: 1250px; border-collapse: separate
   -webkit-border-radius: 10px; -moz-border-radius: 10px;
   -webkit-box-shadow: 0 10px 10px #def; -moz-box-shadow: 0 10px 10px #def; box-shadow: 0 10px 10px #def; }
 h1 { font-size: 24px; font-weight: normal; color: #abc; }
-h1 + p { float: right; }
-h1 a { font-size: 10px; vertical-align: top }
+h1 a { font-size: 12px; padding-left: 5px; vertical-align: top }
 h2 { font-size: 21px; margin-top: 40px; color: #468; font-weight: normal; clear: left }
 h2 + i { font-size: 12px; }
 dd { margin-left: 15px; }
@@ -43,11 +42,13 @@ td { padding: 1px 5px; font-size: 12px; border-left: 1px solid #ccc; }
 
 #nav { background: #f0f8ff; color: #036; float: right; padding: 8px; width: 250px; margin-bottom: 10px;
   -webkit-border-radius: 8px; -moz-border-radius: 8px; border-radius: 8px; }
-#nav a.global, #nav i.global { float: right; font-family: "Verdana"; font-size: 13px; padding: 3px 5px; }
+#nav a.global, #nav i.global { float: right; font-family: "Verdana"; font-size: 13px; padding: 0px 5px; }
 #nav i.global { font-style: normal; color: #aaa }
-#nav dl { clear: right }
 #nav dl > dt { font-weight: bold; }
 #nav a { font-size: 13px; }
+#nav dd dt a { text-decoration: none; }
+#nav .expand { text-decoration: none; padding-left: 5px; font-size: 16px }
+#nav dd .expand { font-size: 14px }
 #nav dl i { font-style: normal; font-size: 12px; padding-left: 7px; color: #aaa }
 #nav b { font-size: 13px; background: #cde; padding: 3px 5px;
   -webkit-border-radius: 4px; -moz-border-radius: 4px; border-radius: 4px; }
@@ -60,6 +61,7 @@ td { padding: 1px 5px; font-size: 12px; border-left: 1px solid #ccc; }
 #systems b { font-size: 24px; display: block }
 #systems .hidden { display: none; }
 
+#charselect { float: right }
 #charselect b { padding: 3px }
 .pagination { display: block; margin: 10px; width: 100%; text-align: center }
 

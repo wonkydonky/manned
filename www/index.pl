@@ -40,7 +40,7 @@ TUWF::set(
     my $title = 'No manual entry for '.$self->reqPath;
     $self->htmlHeader(title => $title);
     h1 $title;
-    txt 'That is, the page you were looking for doesn\'t exist.';
+    p 'That is, the page you were looking for doesn\'t exist.';
     $self->htmlFooter;
   },
 );
@@ -67,7 +67,7 @@ sub home {
   my $fn = sub { local $_=shift; 1 while(s/(\d)(\d{3})($|,)/$1,$2/); $_ };
   $self->htmlHeader(title => 'Man Pages Archive');
   h1 'Man Pages Archive';
-  p style => 'float: none'; lit sprintf <<'  _', map $fn->($stats->{$_}), qw|hashes mans files packages|;
+  p; lit sprintf <<'  _', map $fn->($stats->{$_}), qw|hashes mans files packages|;
    Indexing <b>%s</b> versions of <b>%s</b> manual pages found in <b>%s</b>
    files of <b>%s</b> packages.
    <br /><br />
@@ -230,7 +230,7 @@ sub browsesearch {
 
   $self->htmlHeader(title => 'Search results for '.$q);
   h1 'Search results for '.$q;
-  txt 'Note: This is just a simple case-insensitive prefix match on the man names. In the future we\'ll have more powerful search functionality. Hopefully.';
+  p 'Note: This is just a simple case-insensitive prefix match on the man names. In the future we\'ll have more powerful search functionality. Hopefully.';
   if(@$man) {
     ul id => 'searchres';
      for(@$man) {

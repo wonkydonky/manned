@@ -355,15 +355,16 @@ function navCreate(nav) {
           pkgnum++;
 
     if(!isold || sys[4])
-      dl.appendChild(tag('dt',
+      dl.appendChild(tag('dt', sys[1],
         isold || !VARS.mans[i+1] || VARS.mans[i+1][0] != sys[0] ? null : tag('a',
-          {href:'#', _sysn: sys[0], _sysi:i, onclick: function() {
+          {href:'#', _sysn: sys[0], _sysi:i, 'class':'expand',
+           title: "Show/hide historical releases.",
+           onclick: function() {
             for(var j=this._sysi+1; j<VARS.mans.length && VARS.mans[j][0] == this._sysn; j++)
               VARS.mans[j][4] = !VARS.mans[j][4];
             navCreate(nav);
             return false
-          }}, VARS.mans[i+1][4] ? expanded_icon : collapsed_icon),
-        sys[1]
+          }}, VARS.mans[i+1][4] ? expanded_icon : collapsed_icon)
       ));
 
     if(sys[4] && pkgnum > 0)
@@ -398,15 +399,17 @@ function navCreatePkg(nav, dd, sys, n) {
   }
 
   if(mannum > 0) {
-    dd.appendChild(tag('dt',
+    dd.appendChild(tag('dt', tag('a', {href:'/browse/'+sys[2]+'/'+pkg[0]+'/'+pkg[1]}, pkg[0]),
       isold || !sys[3][n+1] || sys[3][n+1][0] != pkg[0] ? null : tag('a',
-        {href:'#', _pkgn: pkg[0], _pkgi:n, onclick: function() {
+        {href:'#', _pkgn: pkg[0], _pkgi:n, 'class':'expand',
+         title: 'Show/hide historical versions of this package',
+         onclick: function() {
           for(var j=this._pkgi+1; j<sys[3].length && sys[3][j][0] == this._pkgn; j++)
             sys[3][j][3] = !sys[3][j][3];
           navCreate(nav);
           return false
         }}, sys[3][n+1][3] ? expanded_icon : collapsed_icon),
-      tag('a', {href:'/browse/'+sys[2]+'/'+pkg[0]+'/'+pkg[1]}, pkg[0]), tag('i', pkg[1])));
+      tag('i', pkg[1])));
     dd.appendChild(pdd);
     return true;
   }
@@ -415,8 +418,6 @@ function navCreatePkg(nav, dd, sys, n) {
 
 
 function navCreateLinks(nav) {
-  nav.appendChild(tag('a', {'class':'global',href:'#',onclick: function() { alert("Not implemented yet."); return false }}, collapsed_icon + 'pkg'));
-
   var t = (navShowLocales ? expanded_icon : collapsed_icon) + 'locales';
   nav.appendChild(!navHasLocale ? tag('i', {'class':'global'}, t) : tag('a',
     { 'class': 'global',
