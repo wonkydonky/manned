@@ -34,6 +34,15 @@ TUWF::set(
     }
     1;
   },
+  error_404_handler => sub {
+    my $self = shift;
+    $self->resStatus(404);
+    my $title = 'No manual entry for '.$self->reqPath;
+    $self->htmlHeader(title => $title);
+    h1 $title;
+    txt 'That is, the page you were looking for doesn\'t exist.';
+    $self->htmlFooter;
+  },
 );
 
 
