@@ -449,6 +449,9 @@ sub man {
   return $self->resNotFound() if !@$m;
   my $man = getman($self, $name, $hash, $m);
 
+  my $view = $self->formValidate({get => 'v', regex => qr/^[a-z2-7]+$/});
+  $view = $view->{_err} ? '' : $view->{v};
+
   $self->htmlHeader(title => $name);
   div id => 'nav', 'Sorry, this navigation menu won\'t display without Javascript. :-(';
 
@@ -495,7 +498,7 @@ sub man {
    end;
   end;
 
-  $self->htmlFooter(js => { hash => substr($man->{hash}, 0, 8), name => $man->{name}, mans => manjslist($self, $m) });
+  $self->htmlFooter(js => { hash => substr($man->{hash}, 0, 8), name => $man->{name}, view => $view, mans => manjslist($self, $m) });
 }
 
 

@@ -1,7 +1,4 @@
-/* TODO:
- * - The linear-gradient() functions are fairly new - perhaps want to provide background images for those.
- * - column-width is better done in Perl? (More like a column-count, then)
- */
+/* TODO: column-width is better done in Perl? (More like a column-count, then) */
 
 * { margin: 0; padding: 0; font-family: "Trebuchet MS", sans-serif; }
 html { background: #333; padding: 0 10px; }

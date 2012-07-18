@@ -310,8 +310,38 @@ dsInit(byId('q'), '/xml/search.xml?q=', function(item, tr) {
 );
 
 
-// TODO: Fix the 'pkg' link
-// TODO: Keep same view when switching to different version of the same man page
+
+// Efficiently pack an array of booleans into a string. (Uses something like
+// base32) Note: The resulting array after decoding may have a few more
+// elements than it had before decoding. These will be false.
+var bsCharacters = "abcdefghijklmnopqrstuvwxyz234567";
+
+function bsEncode(a) {
+  var v = 0;
+  var b = 0;
+  var r = '';
+  for(var i=0; i<a.length; i++) {
+    v = (v<<1) + (a[i]?1:0);
+    if(++b == 5) {
+      r += bsCharacters.charAt(v);
+      v = b = 0;
+    }
+  }
+  if(!a.length || b > 0)
+    r += bsCharacters.charAt(v<<(5-b));
+  return r;
+}
+
+function bsDecode(s) {
+  var a = [];
+  for(var i=0; i<s.length; i++) {
+    var n = s.charCodeAt(i);
+    n -= n >= 97 ? 97 : 24;
+    a.push(!!((n>>4)&1), !!((n>>3)&1), !!((n>>2)&1), !!((n>>1)&1), !!(n&1));
+  }
+  return a;
+}
+
 
 /* Structure of VARS.mans:
   [
@@ -336,6 +366,7 @@ navHasLocale    = false;
 function navCreate(nav) {
   setText(nav, '');
 
+  view = navSerialize();
   navHasLocale = false;
   var dl = tag('dl', null);
 
@@ -351,7 +382,7 @@ function navCreate(nav) {
 
     if(sys[4])
       for(var j=0; j<sys[3].length; j++)
-        if(navCreatePkg(nav, dd, sys, j))
+        if(navCreatePkg(nav, view, dd, sys, j))
           pkgnum++;
 
     if(!isold || sys[4])
@@ -376,7 +407,7 @@ function navCreate(nav) {
 }
 
 
-function navCreatePkg(nav, dd, sys, n) {
+function navCreatePkg(nav, view, dd, sys, n) {
   var pkg = sys[3][n];
 
   var isold = n > 0 && sys[3][n-1][0] == pkg[0];
@@ -393,7 +424,7 @@ function navCreatePkg(nav, dd, sys, n) {
     if(man[2] == VARS.hash || (navShowLocales || !man[1])) {
       if(i > 0)
         pdd.appendChild(tag(' '));
-      pdd.appendChild(man[2] == VARS.hash ? tag('b', txt) : tag('a', {href:'/'+VARS.name+'/'+man[2]}, txt));
+      pdd.appendChild(man[2] == VARS.hash ? tag('b', txt) : tag('a', {href:'/'+VARS.name+'/'+man[2]+'?v='+view}, txt));
       mannum++;
     }
   }
@@ -429,8 +460,47 @@ function navCreateLinks(nav) {
 }
 
 
-if(byId('nav'))
+// Serializes the current navigation view into a short string. The string is a
+// bsEncode()ed bit array, creates as follows:
+//   array.push(navShowLocales);
+//   for(each system that has an expand button)
+//     array.push(is the butten expanded or not);
+//   for(each system)
+//     for(each package that has an expand button)
+//       array.push(is the button expanded or not);
+// Obviously, this means that the serialized view depends on the number and
+// order of systems and packages. The order is stable, the number may change
+// with database updates.
+function navSerialize() {
+  var a = [navShowLocales];
+  for(var i=0; i<VARS.mans.length; i++)
+    if(i+1 < VARS.mans.length && VARS.mans[i+1][0] == VARS.mans[i][0] && (i == 0 || VARS.mans[i-1][0] != VARS.mans[i][0]))
+      a.push(!!VARS.mans[i+1][4]);
+  for(var i=0; i<VARS.mans.length; i++)
+    for(var j=0; j<VARS.mans[i][3].length; j++)
+      if(j+1 < VARS.mans[i][3].length && VARS.mans[i][3][j+1][0] == VARS.mans[i][3][j][0] && (j == 0 || VARS.mans[i][3][j-1][0] != VARS.mans[i][3][j][0]))
+        a.push(!!VARS.mans[i][3][j+1][3]);
+  return bsEncode(a);
+}
+
+// And the reverse of the above.
+function navLoad(s) {
+  var a = bsDecode(s);
+  navShowLocales = !!a.shift();
+  for(var i=0; i<VARS.mans.length; i++)
+    if(i > 0 && VARS.mans[i-1][0] == VARS.mans[i][0])
+      VARS.mans[i][4] = i > 1 && VARS.mans[i-2][0] == VARS.mans[i-1][0] ? VARS.mans[i-1][4] : !!a.shift();
+  for(var i=0; i<VARS.mans.length; i++)
+    for(var j=0; j<VARS.mans[i][3].length; j++)
+      if(j > 0 && VARS.mans[i][3][j-1][0] == VARS.mans[i][3][j][0])
+        VARS.mans[i][3][j][3] = j > 1 && VARS.mans[i][3][j-2][0] == VARS.mans[i][3][j-1][0] ? VARS.mans[i][3][j-1][3] : !!a.shift();
+}
+
+
+if(byId('nav')) {
+  navLoad(VARS.view||'');
   navCreate(byId('nav'));
+}
 
 
 
