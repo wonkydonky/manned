@@ -6,5 +6,5 @@ PSQL="psql -U manned -Awtq"
 ./deb.sh ubuntu_active
 ./deb.sh debian_active
 echo "============ Updating SQL indices"
-$PGSL -f update_indices.sql
+$PSQL -f update_indices.sql
 
