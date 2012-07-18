@@ -54,13 +54,13 @@ TUWF::run();
 
 sub home {
   my $self = shift;
+  my $stats = $self->dbStats;
+  my $fn = sub { local $_=shift; 1 while(s/(\d)(\d{3})($|,)/$1,$2/); $_ };
   $self->htmlHeader(title => 'Man Pages Archive');
   h1 'Man Pages Archive';
-  # Relevant query: SELECT count(distinct hash), count(distinct name), count(*), count(distinct package) FROM man;
-  # It's far too slow to run that on every pageview. :-(
-  p style => 'float: none'; lit <<'  _';
-   Indexing <b>679,885</b> versions of <b>132,493</b> manual pages found in
-   <b>2,213,486</b> files of <b>222,543</b> packages.
+  p style => 'float: none'; lit sprintf <<'  _', map $fn->($stats->{$_}), qw|hashes mans files packages|;
+   Indexing <b>%s</b> versions of <b>%s</b> manual pages found in <b>%s</b>
+   files of <b>%s</b> packages.
    <br /><br />
    Manned.org aims to index all manual pages from a variety of systems, both
    old and new, and provides a convenient interface for looking up and viewing
@@ -682,5 +682,10 @@ sub dbPackageGet {
          AND EXISTS(SELECT 1 FROM man m WHERE m.package = p.id)
     ORDER BY released DESC},
   $sysid, $name)
+}
+
+
+sub dbStats {
+  return $_[0]->dbRow('SELECT * FROM stats_cache');
 }
 
