@@ -333,6 +333,9 @@ sub browsepkg {
     }
   };
 
+  # Latest version of this package determines last modification date of the page.
+  $self->setLastMod($pkgs->[0]{released});
+
   my $title = "$sys->{name}".($sys->{release}?" $sys->{release}":"")." / $name $sel->{version}";
   $self->htmlHeader(title => $title);
   h1 $title;
@@ -452,6 +455,12 @@ sub man {
   my $view = $self->formValidate({get => 'v', regex => qr/^[a-z2-7]+$/});
   $view = $view->{_err} ? '' : $view->{v};
 
+  # To be really correct, the last modification time of this page should be the
+  # release date of the latest version of the man page, as that is displayed in
+  # the menu. But let's just consider the content of the page as more
+  # important, and use release date of the man page as last modification date.
+  $self->setLastMod($man->{released});
+
   $self->htmlHeader(title => $name);
   div id => 'nav', 'Sorry, this navigation menu won\'t display without Javascript. :-(';
 
@@ -508,6 +517,7 @@ sub src {
   my $m = $self->dbManInfo(name => $name, shorthash => $hash);
   return $self->resNotFound if !@$m;
 
+  $self->setLastMod($m->[0]{released});
   $self->resHeader('Content-Type', 'text/plain; charset=UTF-8');
   my $c = $self->dbManContent($m->[0]{hash});
   lit $c;
@@ -532,6 +542,7 @@ sub xmlsearch {
 package TUWF::Object;
 
 use TUWF ':html', 'html_escape';
+use Time::Local 'timegm';
 
 sub htmlHeader {
   my $self = shift;
@@ -588,6 +599,18 @@ sub htmlFooter {
     }
     lit "-->\n";
   }
+}
+
+
+# Set the last modification time from a string in yyyy-mm-dd format.
+sub setLastMod {
+  my($s, $d) = @_;
+  return if $d !~ /^(\d{4})-(\d{2})-(\d{2})/;
+  my @t = gmtime timegm 0,0,0,$3,$2,$1;
+  $s->resHeader('Last-Modified', sprintf '%s, %02d %s %04d %02d:%02d:%02d GMT',
+    (qw|Sun Mon Tue Wed Thu Fri Sat|)[$t[6]], $t[3],
+    (qw|Jan Feb Mar Apr May Jun Jul Aug Sep Oct Nov Dec|)[$t[4]],
+    $t[5]+1900, $t[2], $t[1], $t[0]);
 }
 
 
