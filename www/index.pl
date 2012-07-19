@@ -606,7 +606,7 @@ sub htmlFooter {
 sub setLastMod {
   my($s, $d) = @_;
   return if $d !~ /^(\d{4})-(\d{2})-(\d{2})/;
-  my @t = gmtime timegm 0,0,0,$3,$2,$1;
+  my @t = gmtime timegm 0,0,0,$3,$2-1,$1;
   $s->resHeader('Last-Modified', sprintf '%s, %02d %s %04d %02d:%02d:%02d GMT',
     (qw|Sun Mon Tue Wed Thu Fri Sat|)[$t[6]], $t[3],
     (qw|Jan Feb Mar Apr May Jun Jul Aug Sep Oct Nov Dec|)[$t[4]],
