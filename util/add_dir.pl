@@ -10,6 +10,7 @@ use warnings;
 no warnings 'once';
 use Encode 'decode', 'find_encoding', 'decode_utf8';
 use Digest::SHA 'sha1_hex';
+use Cwd 'abs_path';
 use File::Find;
 use DBI;
 use Compress::Zlib ();
@@ -18,6 +19,7 @@ use Compress::Raw::Lzma ();
 
 die "Not enough arguments\n" if @ARGV < 2;
 my($dir, $pkgid) = @ARGV;
+$dir = abs_path $dir or die "abs_path($dir): $!";
 
 
 my $db = DBI->connect('dbi:Pg:dbname=manned', 'manned', '', {
@@ -26,9 +28,9 @@ my $db = DBI->connect('dbi:Pg:dbname=manned', 'manned', '', {
 
 
 sub readman {
-  my $ofn = shift;
+  my $fn = shift;
   local $/;
-  open my $F, '<', $ofn or die "Unable to open '$ofn': $!\n";
+  open my $F, '<', $fn or die "Unable to open '$fn': $!\n";
   my $dat = <$F>;
   close $F;
 
@@ -144,9 +146,13 @@ sub addman {
 
 my $found = 0;
 
+print "DIR = $dir\n";
+
 find sub {
   return if !-f $_;
-  (my $path = $File::Find::name) =~ s/^\Q$dir\E//;
+  my $path = abs_path $File::Find::name;
+  return warn "abs_path($File::Find::name): $!\n" if !$path;
+  return warn "$File::Find::name ($path) points outside of the tar directory!\n" if $path !~ s/^\Q$dir\E//;
   # Note: fltk also creates pre-formatted pages in /cat$sectre/, but those are ignored.
   # TODO: Also ignore html and INDEX sections
   return warn "Ignoring $path\n" if $path !~ m{man(?:/([^/]+))?/man[0-9n]/([^/]+)$};
