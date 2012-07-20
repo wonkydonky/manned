@@ -236,7 +236,7 @@ sub browsesearch {
      for(@$man) {
        li;
         a href => "/$_->{name}.".substr($_->{section},0,1), $_->{name};
-        i $_->{section};
+        i " $_->{section}";
        end;
      }
     end;
@@ -298,7 +298,7 @@ sub browsesys {
    for(@$pkg) {
      li;
       a href => "/browse/$short/$_->{name}", $_->{name};
-      i $_->{category};
+      i ' '.$_->{category};
      end;
    }
   end;
@@ -348,7 +348,7 @@ sub browsepkg {
      li;
       txt "$_->{released} ";
       a href => "/browse/$sys->{short}/$name/$_->{version}", $_->{version} if $_ != $sel;
-      b $_->{version} if $_ == $sel;
+      b " $_->{version}" if $_ == $sel;
       i " $_->{category}";
      end;
    }
@@ -465,7 +465,7 @@ sub man {
   div id => 'nav', 'Sorry, this navigation menu won\'t display without Javascript. :-(';
 
   h1;
-   txt $man->{name};
+   txt $man->{name}.' ';
    a href => "/$man->{name}/".substr($man->{hash}, 0, 8).'/src', 'source';
   end;
 
