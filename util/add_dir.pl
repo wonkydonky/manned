@@ -146,17 +146,16 @@ sub addman {
 
 my $found = 0;
 
-print "DIR = $dir\n";
-
 find sub {
   return if !-f $_;
+  (my $vpath = $File::Find::name) =~ s/^\Q$dir\E//;
   my $path = abs_path $File::Find::name;
   return warn "abs_path($File::Find::name): $!\n" if !$path;
-  return warn "$File::Find::name ($path) points outside of the tar directory!\n" if $path !~ s/^\Q$dir\E//;
+  return warn "$vpath ($path) points outside of the tar directory!\n" if $path !~ s/^\Q$dir\E//;
   # Note: fltk also creates pre-formatted pages in /cat$sectre/, but those are ignored.
   # TODO: Also ignore html and INDEX sections
-  return warn "Ignoring $path\n" if $path !~ m{man(?:/([^/]+))?/man[0-9n]/([^/]+)$};
-  addman $pkgid, $path, $2, $1;
+  return warn "Ignoring $vpath\n" if $vpath !~ m{man(?:/([^/]+))?/man[0-9n]/([^/]+)$};
+  addman $pkgid, $vpath, $2, $1;
   $found++;
 }, $dir;
 
