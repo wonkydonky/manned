@@ -1,6 +1,6 @@
 #!/bin/sh
 
-PSQL="psql -U manned -Awtq"
+. ./common.sh
 
 ./arch.sh
 ./deb.sh ubuntu_active

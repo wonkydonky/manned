@@ -2,10 +2,7 @@
 
 # A fetcher for debian-style repositories.
 
-CURL="curl -fSs -A manual-page-crawler,info@manned.org --limit-rate 500k"
-PSQL="psql -U manned -Awtq"
-TMP=`mktemp -d manned.deb.XXXXXX`
-
+. ./common.sh
 
 checkpkg() {
   SYSID=$1
@@ -41,7 +38,7 @@ checkpkg() {
   if [ "$?" -eq 0 -a -n "$PKGID" ]; then
     # Old format
     if [ "`head -c8 \"$FN\"`" = "0.939000" ]; then
-      tail -n+3 "$FN" | tail -c+"`head -n2 \"$FN\" | tail -n1`" | tail -c+2 | ./add_tar.sh - $PKGID -z
+      tail -n+3 "$FN" | tail -c+"`head -n2 \"$FN\" | tail -n1`" | tail -c+2 | add_tar - $PKGID -z
 
     # New format
     else
@@ -54,7 +51,7 @@ checkpkg() {
         *) echo "No data.tar found, or unknown compression format."; DATAZ="ERR" ;;
       esac
 
-      [ "$DATAZ" != "ERR" ] && ar p "$FN" "$DATAFN" | ./add_tar.sh - $PKGID $DATAZ
+      [ "$DATAZ" != "ERR" ] && ar p "$FN" "$DATAFN" | add_tar - $PKGID $DATAZ
     fi
   fi
 
@@ -139,7 +136,6 @@ EOP
 
 
 
-# TODO: Index stuff from snapshot.debian.org
 # TODO: backports?
 # TODO: Debian testing?
 
@@ -376,6 +372,4 @@ debian_snapshot_month() {
 
 
 "$@"
-
-rm -rf "$TMP"
 

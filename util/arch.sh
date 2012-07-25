@@ -9,10 +9,7 @@ REPOS="core extra community"
 DEBUG=false
 SYSID=1
 
-CURL="curl -fSs -A manual-page-crawler,info@manned.org"
-PSQL="psql -U manned -Awtq"
-TMP=`mktemp -d manned.arch.XXXXXX`
-
+. ./common.sh
 
 # Returns 0 if the package is already in the database or if an error occured.
 # Otherwise adds the package, sets PKGID to the new ID, and returns 1.
@@ -67,7 +64,7 @@ checkpkg() {
   echo "===> $FN"
   F="$TMP/$REPO/$FILENAME"
   $CURL "$MIRROR/$REPO/os/i686/$FILENAME" -o "$F" || return
-  ./add_tar.sh "$F" "$PKGID"
+  add_tar "$F" "$PKGID"
   rm -f "$F"
 }
 
@@ -90,6 +87,4 @@ for r in $REPOS; do
   syncrepo $r
   rm -rf "$TMP/$r"
 done
-
-rm -rf "$TMP"
 
