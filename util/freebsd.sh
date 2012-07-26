@@ -68,6 +68,36 @@ f1_0() {
   check_oldpkg 29 "$MIR/packages/zsh_bin.tgz" "zsh_bin" "1993-09-04"
 }
 
+f2_0_5() {
+  MIR="http://ftp-archive.freebsd.org/mirror/FreeBSD-Archive/old-releases/i386/2.0.5-RELEASE"
+  echo "============ $MIR"
+  check_dist 30 "$MIR/des/des.aa" "core-des-des" "1995-06-11"
+  check_dist 30 "$MIR/des/krb." "core-des-krb" "1995-06-11" ac
+  check_dist 30 "$MIR/manpages/manpages." "core-manpages" "1995-06-09" al
+}
 
-f1_0
+f2_1_5() {
+  MIR="http://ftp-archive.freebsd.org/mirror/FreeBSD-Archive/old-releases/i386/2.1.5-RELEASE"
+  echo "============ $MIR"
+  check_dist 31 "$MIR/des/des.aa" "core-des-des" "1996-07-16"
+  check_dist 31 "$MIR/des/krb." "core-des-krb" "1996-07-16" ac
+  check_dist 31 "$MIR/manpages/manpages." "core-manpages" "1996-07-16" am
+}
 
+f2_1_7() {
+  MIR="http://ftp-archive.freebsd.org/mirror/FreeBSD-Archive/old-releases/i386/2.1.7-RELEASE"
+  echo "============ $MIR"
+  check_dist 32 "$MIR/des/des.aa" "core-des-des" "1997-02-19"
+  check_dist 32 "$MIR/des/krb." "core-des-krb" "1997-02-19" ac
+  check_dist 32 "$MIR/manpages/manpages." "core-manpages" "1997-02-19" am
+}
+
+
+old() {
+  f1_0
+  f2_0_5
+  f2_1_5
+  f2_1_7
+}
+
+"$@"
