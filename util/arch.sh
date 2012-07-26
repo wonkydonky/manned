@@ -11,20 +11,6 @@ SYSID=1
 
 . ./common.sh
 
-# Returns 0 if the package is already in the database or if an error occured.
-# Otherwise adds the package, sets PKGID to the new ID, and returns 1.
-PKGID=
-add_pkginfo() { # cat name ver date
-  RES=`echo "SELECT id FROM package WHERE system = :'sysid' AND name = :'name' AND version = :'ver'"\
-    | $PSQL -v "sysid=$SYSID" -v "name=$2" -v "ver=$3"`
-  [ "$?" -ne 0 -o -n "$RES" ] && return 0
-  RES=`echo "INSERT INTO package (system, category, name, version, released) VALUES(:'sysid',:'cat',:'name',:'ver',:'rel') RETURNING id"\
-    | $PSQL -v "sysid=$SYSID" -v "cat=$1" -v "name=$2" -v "ver=$3" -v "rel=$4"`
-  [ "$?" -ne 0 ] && return 0
-  PKGID=$RES
-  return 1
-}
-
 
 checkpkg() {
   REPO=$1
@@ -54,7 +40,7 @@ checkpkg() {
   fi
   BUILDDATE=`date -d "@$BUILDDATE" '+%F'`
 
-  add_pkginfo "$REPO" "$NAME" "$VERSION" "$BUILDDATE"
+  add_pkginfo $SYSID "$REPO" "$NAME" "$VERSION" "$BUILDDATE"
   if [ "$?" -eq 0 ]; then
     $DEBUG && echo "===> $FN"
     $DEBUG && echo "Already up-to-date"
