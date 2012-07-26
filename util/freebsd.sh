@@ -92,12 +92,51 @@ f2_1_7() {
   check_dist 32 "$MIR/manpages/manpages." "core-manpages" "1997-02-19" am
 }
 
+f2_2_2() {
+  MIR="http://ftp-archive.freebsd.org/mirror/FreeBSD-Archive/old-releases/i386/2.2.2-RELEASE"
+  echo "============ $MIR"
+  check_dist 33 "$MIR/des/des." "core-des-des" "1997-05-20" ab
+  check_dist 33 "$MIR/des/krb." "core-des-krb" "1997-05-20" ac
+  check_dist 33 "$MIR/manpages/manpages." "core-manpages" "1997-05-20" ap
+}
+
+f2_2_5() {
+  MIR="http://ftp-archive.freebsd.org/mirror/FreeBSD-Archive/old-releases/i386/2.2.5-RELEASE"
+  echo "============ $MIR"
+  check_dist 34 "$MIR/des/des." "core-des-des" "1997-10-22" ab
+  check_dist 34 "$MIR/des/krb." "core-des-krb" "1997-10-22" ad
+  check_dist 34 "$MIR/manpages/manpages." "core-manpages" "1997-10-22" an
+}
+
+f2_2_6() {
+  MIR="http://ftp-archive.freebsd.org/mirror/FreeBSD-Archive/old-releases/i386/2.2.6-RELEASE"
+  echo "============ $MIR"
+  check_dist 35 "$MIR/des/des." "core-des-des" "1998-03-25" ab
+  check_dist 35 "$MIR/des/krb." "core-des-krb" "1998-03-25" ad
+  check_dist 35 "$MIR/manpages/manpages." "core-manpages" "1998-03-25" ao
+}
+
+f2_2_7() {
+  MIR="http://ftp-archive.freebsd.org/mirror/FreeBSD-Archive/old-releases/i386/2.2.7-RELEASE"
+  echo "============ $MIR"
+  check_dist 36 "$MIR/des/des." "core-des-des" "1998-07-22" ab
+  check_dist 36 "$MIR/des/krb." "core-des-krb" "1998-07-22" ad
+  check_dist 36 "$MIR/manpages/manpages." "core-manpages" "1998-07-22" ao
+  check_dist 36 "$MIR/XF86332/X332fsrv.tgz" "core-XF86332-X332fsrv" "1998-03-01"
+  check_dist 36 "$MIR/XF86332/X332man.tgz" "core-XF86332-X332man" "1998-03-01"
+  check_dist 36 "$MIR/XF86332/X332set.tgz" "core-XF86332-X332set" "1998-03-01"
+}
+
 
 old() {
   f1_0
   f2_0_5
   f2_1_5
   f2_1_7
+  f2_2_2
+  f2_2_5
+  f2_2_6
+  f2_2_7
 }
 
 "$@"
