@@ -33,6 +33,89 @@ check_oldpkg() { # <sysid> <url> <pkgname> <date>
 }
 
 
+check_pkg() { # <sysid> <base-url> <category> <filename> <name> <version>
+  SYSID=$1
+  URL=$2
+  CAT=$3
+  FN=$4
+  NAME=$5
+  VER=$6
+  echo "===> $NAME $VER"
+  $CURL "$URL/$CAT/$FN" -o "$TMP/$FN" || return 1
+
+  DATE=`tar -tvf "$TMP/$FN" '+DESC' | perl -lne 's/.+ ([^ ]+) [^ ]+ \+DESC$/print $1/e'`
+  if [ -z "$DATE" ]; then
+    echo "Error: No date found for +DESC"
+    rm -f "$TMP/$FN"
+    return
+  fi
+
+  PKGID=`echo "INSERT INTO package (system, category, name, version, released) VALUES(:'sysid',:'cat',:'name',:'ver',:'rel') RETURNING id"\
+    | $PSQL -v "sysid=$SYSID" -v "cat=$CAT" -v "name=$NAME" -v "ver=$VER" -v "rel=$DATE"`
+  add_tar "$TMP/$FN" $PKGID
+  rm -f "$TMP/$FN"
+}
+
+
+# Will check and index a packages/ directory. Uses the 'Latest/' directory as a
+# hint to split the package name from its version, and the other directories
+# (except All/) to find the actual packages and their category. Date of the
+# packages is extracted from the last modification time of the '+DESC' file in
+# each tarball.
+# TODO: Handle .tbz
+check_pkgdir() { # <sysid> <url>
+  SYSID=$1
+  URL=$2
+  # Get the list of categories from the lighttpd directory index.
+  $CURL "$URL/" | perl -lne 'm{href="([a-z0-9-]+)/">\1</a>/} && print $1' >"$TMP/categories"
+  # Get the list of package names without version string.
+  $CURL "$URL/Latest/" | perl -lne 'm{href="([^ "]+)\.tgz">\1\.tgz</a>} && print $1' >"$TMP/pkgnames"
+  if [ \( ! -s "$TMP/categories" \) -o \( ! -s "$TMP/pkgnames" \) ]; then
+    echo "== Error fetching package names or directory index."
+    rm -f "$TMP/categories" "$TMP/pkgnames"
+    return
+  fi
+
+  # Now check each category directory
+  while read CAT; do
+    $CURL "$URL/$CAT/" | perl -lne 'm{href="([^ "]+)\.tgz">\1\.tgz</a>} && print $1' >"$TMP/pkglist"
+    if [ ! -s "$TMP/pkglist" ]; then
+      echo "== Error fetching package index for /$CAT/"
+      continue
+    fi
+    perl -l - "$TMP/pkgnames" "$TMP/pkglist" $SYSID <<'EOP' >"$TMP/newpkgs"
+      ($names, $list, $sysid) = @ARGV;
+
+      use DBI;
+      $db = DBI->connect('dbi:Pg:dbname=manned', 'manned', '', {RaiseError => 1});
+
+      open F, '<', $names or die $!;
+      %names = map { chomp; ($_,1) } <F>;
+      close F;
+
+      open F, '<', $list or die $!;
+      while(<F>) {
+        chomp;
+        ($v,$n)=('',$_);
+        $v = $v ? "$1-$v" : $1 while(!$names{$_} && s/-([^-]+)$//);
+        warn "== Unknown package: $n\n" if !$_ || !$names{$_};
+        print "$n.tgz $_ $v" if $v && $_ && $names{$_}
+          && !$db->selectrow_arrayref(q{SELECT 1 FROM package WHERE system = ? AND name = ? AND version = ?}, {}, $sysid, $_, $v);
+      }
+      close F;
+EOP
+
+    while read NFO; do
+      check_pkg $SYSID $URL $CAT $NFO
+    done <"$TMP/newpkgs"
+
+    rm -f "$TMP/pkglist" "$TMP/newpkgs"
+  done <"$TMP/categories"
+
+  rm -f "$TMP/categories" "$TMP/pkgnames"
+}
+
+
 f1_0() {
   MIR="http://ftp-archive.freebsd.org/mirror/FreeBSD-Archive/old-releases/i386/1.0-RELEASE"
   echo "============ $MIR"
@@ -127,6 +210,18 @@ f2_2_7() {
   check_dist 36 "$MIR/XF86332/X332set.tgz" "core-XF86332-X332set" "1998-03-01"
 }
 
+f2_2_8() {
+  MIR="http://ftp-archive.freebsd.org/mirror/FreeBSD-Archive/old-releases/i386/2.2.8-RELEASE"
+  echo "============ $MIR"
+  check_dist 37 "$MIR/des/des." "core-des-des" "1998-11-29" ab
+  check_dist 37 "$MIR/des/krb." "core-des-krb" "1998-11-29" ad
+  check_dist 37 "$MIR/manpages/manpages." "core-manpages" "1998-11-29" ax
+  check_dist 37 "$MIR/XF86333/Xfsrv.tgz" "core-XF86333-Xfsrv" "1998-11-14"
+  check_dist 37 "$MIR/XF86333/Xman.tgz" "core-XF86333-Xman" "1998-11-14"
+  check_dist 37 "$MIR/XF86333/Xset.tgz" "core-XF86333-Xset" "1998-11-14"
+  check_pkgdir 37 "$MIR/packages"
+}
+
 
 old() {
   f1_0
@@ -137,6 +232,7 @@ old() {
   f2_2_5
   f2_2_6
   f2_2_7
+  f2_2_8
 }
 
 "$@"

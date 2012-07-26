@@ -30,7 +30,7 @@ add_pkginfo() {
 # error.
 add_tar() {
   DIR=`mktemp -d "$TMP/tar.XXXXXXX"`
-  tar --warning=no-unknown-keyword -C "$DIR" $3 -xf "$1" --wildcards '*man/*'\
+  tar --warning=no-unknown-keyword --warning=no-alone-zero-block -C "$DIR" $3 -xf "$1" --wildcards '*man/*'\
     && ./add_dir.pl "$DIR" "$2"
   RET=$?
   rm -rf "$DIR"
