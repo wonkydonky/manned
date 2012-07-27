@@ -225,6 +225,7 @@ f2_2_8() {
 f3_0() {
   MIR="http://ftp-archive.freebsd.org/mirror/FreeBSD-Archive/old-releases/i386/3.0-RELEASE"
   echo "============ $MIR"
+  check_dist 38 "$MIR/bin/bin." "core-bin" "1998-10-16" es
   check_dist 38 "$MIR/des/des." "core-des-des" "1998-10-16" ab
   check_dist 38 "$MIR/des/krb." "core-des-krb" "1998-10-16" ae
   check_dist 38 "$MIR/manpages/manpages." "core-manpages" "1998-10-16" bb
@@ -236,6 +237,7 @@ f3_0() {
 f3_1() {
   MIR="http://ftp-archive.freebsd.org/mirror/FreeBSD-Archive/old-releases/i386/3.1-RELEASE"
   echo "============ $MIR"
+  check_dist 39 "$MIR/bin/bin." "core-bin" "1999-02-15" dx
   check_dist 39 "$MIR/des/des." "core-des-des" "1999-02-15" ab
   check_dist 39 "$MIR/des/krb." "core-des-krb" "1999-02-15" ae
   check_dist 39 "$MIR/manpages/manpages." "core-manpages" "1999-02-15" be
@@ -247,6 +249,7 @@ f3_1() {
 f3_2() {
   MIR="http://ftp-archive.freebsd.org/mirror/FreeBSD-Archive/old-releases/i386/3.2-RELEASE"
   echo "============ $MIR"
+  check_dist 40 "$MIR/bin/bin." "core-bin" "1999-05-18" eb
   check_dist 40 "$MIR/des/des." "core-des-des" "1999-05-18" ab
   check_dist 40 "$MIR/des/krb." "core-des-krb" "1999-05-18" ae
   check_dist 40 "$MIR/manpages/manpages." "core-manpages" "1999-05-18" be
@@ -258,6 +261,7 @@ f3_2() {
 f3_3() {
   MIR="http://ftp-archive.freebsd.org/mirror/FreeBSD-Archive/old-releases/i386/3.3-RELEASE"
   echo "============ $MIR"
+  check_dist 41 "$MIR/bin/bin." "core-bin" "1999-09-17" ec
   check_dist 41 "$MIR/des/des." "core-des-des" "1999-09-17" ab
   check_dist 41 "$MIR/des/krb." "core-des-krb" "1999-09-17" ae
   check_dist 41 "$MIR/manpages/manpages." "core-manpages" "1999-09-17" au
@@ -269,6 +273,7 @@ f3_3() {
 f3_4() {
   MIR="http://ftp-archive.freebsd.org/mirror/FreeBSD-Archive/old-releases/i386/3.4-RELEASE"
   echo "============ $MIR"
+  check_dist 42 "$MIR/bin/bin." "core-bin" "1999-12-20" ef
   check_dist 42 "$MIR/des/des." "core-des-des" "1999-12-20" ac
   check_dist 42 "$MIR/des/krb." "core-des-krb" "1999-12-20" ae
   check_dist 42 "$MIR/manpages/manpages." "core-manpages" "1999-12-20" av
@@ -276,6 +281,46 @@ f3_4() {
   check_dist 42 "$MIR/XF86335/Xman.tgz" "core-XF86335-Xman" "1999-08-31"
   check_dist 42 "$MIR/XF86335/Xset.tgz" "core-XF86335-Xset" "1999-08-31"
   check_pkgdir 42 "$MIR/packages"
+}
+
+f3_5() {
+  MIR="http://ftp-archive.freebsd.org/mirror/FreeBSD-Archive/old-releases/i386/3.5-RELEASE"
+  echo "============ $MIR"
+  check_dist 43 "$MIR/bin/bin." "core-bin" "2000-06-22" eg
+  check_dist 43 "$MIR/des/des." "core-des-des" "2000-06-22" ac
+  check_dist 43 "$MIR/des/krb." "core-des-krb" "2000-06-22" ae
+  check_dist 43 "$MIR/manpages/manpages." "core-manpages" "2000-06-22" av
+  check_dist 43 "$MIR/XF86336/Xfsrv.tgz" "core-XF86336-Xfsrv" "2000-01-08"
+  check_dist 43 "$MIR/XF86336/Xman.tgz" "core-XF86336-Xman" "2000-01-08"
+  check_dist 43 "$MIR/XF86336/Xset.tgz" "core-XF86336-Xset" "2000-01-08"
+  check_pkgdir 43 "$MIR/packages"
+}
+
+f3_5_1() {
+  MIR="http://ftp-archive.freebsd.org/mirror/FreeBSD-Archive/old-releases/i386/3.5.1-RELEASE"
+  echo "============ $MIR"
+  check_dist 44 "$MIR/bin/bin." "core-bin" "2000-07-20" eg
+  check_dist 44 "$MIR/des/des." "core-des-des" "2000-07-20" ac
+  check_dist 44 "$MIR/des/krb." "core-des-krb" "2000-07-20" ae
+  check_dist 44 "$MIR/manpages/manpages." "core-manpages" "2000-07-20" av
+  check_dist 44 "$MIR/XF86336/Xfsrv.tgz" "core-XF86336-Xfsrv" "2000-01-08"
+  check_dist 44 "$MIR/XF86336/Xman.tgz" "core-XF86336-Xman" "2000-01-08"
+  check_dist 44 "$MIR/XF86336/Xset.tgz" "core-XF86336-Xset" "2000-01-08"
+  check_pkgdir 44 "$MIR/packages"
+}
+
+f4_0() {
+  MIR="http://ftp-archive.freebsd.org/mirror/FreeBSD-Archive/old-releases/i386/4.0-RELEASE"
+  echo "============ $MIR"
+  check_dist 45 "$MIR/bin/bin." "core-bin" "2000-03-20" ev
+  check_dist 45 "$MIR/crypto/crypto." "core-crypto" "2000-03-20" aj
+  check_dist 45 "$MIR/crypto/krb4." "core-crypto-krb4" "2000-03-20" ae
+  check_dist 45 "$MIR/crypto/krb5." "core-crypto-krb5" "2000-03-20" ad
+  check_dist 45 "$MIR/games/games." "core-games" "2000-03-20" ak
+  check_dist 45 "$MIR/manpages/manpages." "core-manpages" "2000-03-20" aw
+  check_dist 45 "$MIR/XF86336/Xfsrv.tgz" "core-XF86336-Xfsrv" "2001-03-22"
+  check_dist 45 "$MIR/XF86336/Xman.tgz" "core-XF86336-Xman" "2001-03-22"
+  check_dist 45 "$MIR/XF86336/Xset.tgz" "core-XF86336-Xset" "2001-03-22"
 }
 
 
@@ -294,6 +339,9 @@ old() {
   f3_2
   f3_3
   f3_4
+  f3_5
+  f3_5_1
+  f4_0
 }
 
 "$@"

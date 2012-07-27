@@ -101,7 +101,10 @@ INSERT INTO systems (id, name, release, short, relorder) VALUES
   (39, 'FreeBSD',    '3.1',   'freebsd-3.1',     10),
   (40, 'FreeBSD',    '3.2',   'freebsd-3.2',     11),
   (41, 'FreeBSD',    '3.3',   'freebsd-3.3',     12),
-  (42, 'FreeBSD',    '3.4',   'freebsd-3.4',     13);
+  (42, 'FreeBSD',    '3.4',   'freebsd-3.4',     13),
+  (43, 'FreeBSD',    '3.5',   'freebsd-3.5',     14),
+  (44, 'FreeBSD',    '3.5.1', 'freebsd-3.5.1',   15),
+  (45, 'FreeBSD',    '4.0',   'freebsd-4.0',     16);
 
 
 
