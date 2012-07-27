@@ -95,7 +95,14 @@ INSERT INTO systems (id, name, release, short, relorder) VALUES
   (33, 'FreeBSD',    '2.2.2', 'freebsd-2.2.2',   4),
   (34, 'FreeBSD',    '2.2.5', 'freebsd-2.2.5',   5),
   (35, 'FreeBSD',    '2.2.6', 'freebsd-2.2.6',   6),
-  (36, 'FreeBSD',    '2.2.7', 'freebsd-2.2.7',   7);
+  (36, 'FreeBSD',    '2.2.7', 'freebsd-2.2.7',   7),
+  (37, 'FreeBSD',    '2.2.8', 'freebsd-2.2.8',   8),
+  (38, 'FreeBSD',    '3.0',   'freebsd-3.0',     9),
+  (39, 'FreeBSD',    '3.1',   'freebsd-3.1',     10),
+  (40, 'FreeBSD',    '3.2',   'freebsd-3.2',     11),
+  (41, 'FreeBSD',    '3.3',   'freebsd-3.3',     12),
+  (42, 'FreeBSD',    '3.4',   'freebsd-3.4',     13);
+
 
 
 -- Removes any path components and compression extensions from the filename.

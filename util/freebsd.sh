@@ -222,6 +222,62 @@ f2_2_8() {
   check_pkgdir 37 "$MIR/packages"
 }
 
+f3_0() {
+  MIR="http://ftp-archive.freebsd.org/mirror/FreeBSD-Archive/old-releases/i386/3.0-RELEASE"
+  echo "============ $MIR"
+  check_dist 38 "$MIR/des/des." "core-des-des" "1998-10-16" ab
+  check_dist 38 "$MIR/des/krb." "core-des-krb" "1998-10-16" ae
+  check_dist 38 "$MIR/manpages/manpages." "core-manpages" "1998-10-16" bb
+  check_dist 38 "$MIR/XF86332/Xfsrv.tgz" "core-XF86332-Xfsrv" "1998-09-28"
+  check_dist 38 "$MIR/XF86332/Xman.tgz" "core-XF86332-Xman" "1998-09-28"
+  check_dist 38 "$MIR/XF86332/Xset.tgz" "core-XF86332-Xset" "1998-09-28"
+}
+
+f3_1() {
+  MIR="http://ftp-archive.freebsd.org/mirror/FreeBSD-Archive/old-releases/i386/3.1-RELEASE"
+  echo "============ $MIR"
+  check_dist 39 "$MIR/des/des." "core-des-des" "1999-02-15" ab
+  check_dist 39 "$MIR/des/krb." "core-des-krb" "1999-02-15" ae
+  check_dist 39 "$MIR/manpages/manpages." "core-manpages" "1999-02-15" be
+  check_dist 39 "$MIR/XF86332/Xfsrv.tgz" "core-XF86332-Xfsrv" "1998-09-28"
+  check_dist 39 "$MIR/XF86332/Xman.tgz" "core-XF86332-Xman" "1998-09-28"
+  check_dist 39 "$MIR/XF86332/Xset.tgz" "core-XF86332-Xset" "1998-09-28"
+}
+
+f3_2() {
+  MIR="http://ftp-archive.freebsd.org/mirror/FreeBSD-Archive/old-releases/i386/3.2-RELEASE"
+  echo "============ $MIR"
+  check_dist 40 "$MIR/des/des." "core-des-des" "1999-05-18" ab
+  check_dist 40 "$MIR/des/krb." "core-des-krb" "1999-05-18" ae
+  check_dist 40 "$MIR/manpages/manpages." "core-manpages" "1999-05-18" be
+  check_dist 40 "$MIR/XF86333/Xfsrv.tgz" "core-XF86333-Xfsrv" "1998-11-14"
+  check_dist 40 "$MIR/XF86333/Xman.tgz" "core-XF86333-Xman" "1998-11-14"
+  check_dist 40 "$MIR/XF86333/Xset.tgz" "core-XF86333-Xset" "1998-11-14"
+}
+
+f3_3() {
+  MIR="http://ftp-archive.freebsd.org/mirror/FreeBSD-Archive/old-releases/i386/3.3-RELEASE"
+  echo "============ $MIR"
+  check_dist 41 "$MIR/des/des." "core-des-des" "1999-09-17" ab
+  check_dist 41 "$MIR/des/krb." "core-des-krb" "1999-09-17" ae
+  check_dist 41 "$MIR/manpages/manpages." "core-manpages" "1999-09-17" au
+  check_dist 41 "$MIR/XF86335/Xfsrv.tgz" "core-XF86335-Xfsrv" "1999-08-31"
+  check_dist 41 "$MIR/XF86335/Xman.tgz" "core-XF86335-Xman" "1999-08-31"
+  check_dist 41 "$MIR/XF86335/Xset.tgz" "core-XF86335-Xset" "1999-08-31"
+}
+
+f3_4() {
+  MIR="http://ftp-archive.freebsd.org/mirror/FreeBSD-Archive/old-releases/i386/3.4-RELEASE"
+  echo "============ $MIR"
+  check_dist 42 "$MIR/des/des." "core-des-des" "1999-12-20" ac
+  check_dist 42 "$MIR/des/krb." "core-des-krb" "1999-12-20" ae
+  check_dist 42 "$MIR/manpages/manpages." "core-manpages" "1999-12-20" av
+  check_dist 42 "$MIR/XF86335/Xfsrv.tgz" "core-XF86335-Xfsrv" "1999-08-31"
+  check_dist 42 "$MIR/XF86335/Xman.tgz" "core-XF86335-Xman" "1999-08-31"
+  check_dist 42 "$MIR/XF86335/Xset.tgz" "core-XF86335-Xset" "1999-08-31"
+  check_pkgdir 42 "$MIR/packages"
+}
+
 
 old() {
   f1_0
@@ -233,6 +289,11 @@ old() {
   f2_2_6
   f2_2_7
   f2_2_8
+  f3_0
+  f3_1
+  f3_2
+  f3_3
+  f3_4
 }
 
 "$@"
