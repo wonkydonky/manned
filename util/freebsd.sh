@@ -323,6 +323,179 @@ f4_0() {
   check_dist 45 "$MIR/XF86336/Xset.tgz" "core-XF86336-Xset" "2001-03-22"
 }
 
+f4_1() {
+  MIR="http://ftp-archive.freebsd.org/mirror/FreeBSD-Archive/old-releases/i386/4.1-RELEASE"
+  echo "============ $MIR"
+  check_dist 46 "$MIR/bin/bin." "core-bin" "2000-07-27" fb
+  check_dist 46 "$MIR/crypto/crypto." "core-crypto" "2000-07-27" aj
+  check_dist 46 "$MIR/crypto/krb4." "core-crypto-krb4" "2000-07-27" ae
+  check_dist 46 "$MIR/crypto/krb5." "core-crypto-krb5" "2000-07-27" ad
+  check_dist 46 "$MIR/games/games." "core-games" "2000-07-27" ak
+  check_dist 46 "$MIR/manpages/manpages." "core-manpages" "2000-07-27" ax
+  check_dist 46 "$MIR/XF86336/Xfsrv.tgz" "core-XF86336-Xfsrv" "2000-07-25"
+  check_dist 46 "$MIR/XF86336/Xman.tgz" "core-XF86336-Xman" "2000-07-25"
+  check_dist 46 "$MIR/XF86336/Xset.tgz" "core-XF86336-Xset" "2000-07-25"
+}
+
+f4_1_1() {
+  MIR="http://ftp-archive.freebsd.org/mirror/FreeBSD-Archive/old-releases/i386/4.1.1-RELEASE"
+  echo "============ $MIR"
+  check_dist 47 "$MIR/bin/bin." "core-bin" "2000-09-25" fc
+  check_dist 47 "$MIR/crypto/crypto." "core-crypto" "2000-09-25" ak
+  check_dist 47 "$MIR/crypto/krb4." "core-crypto-krb4" "2000-09-25" ae
+  check_dist 47 "$MIR/crypto/krb5." "core-crypto-krb5" "2000-09-25" ad
+  check_dist 47 "$MIR/games/games." "core-games" "2000-09-25" ak
+  check_dist 47 "$MIR/manpages/manpages." "core-manpages" "2000-09-25" ax
+  check_dist 47 "$MIR/XF86336/Xfsrv.tgz" "core-XF86336-Xfsrv" "2000-07-25"
+  check_dist 47 "$MIR/XF86336/Xman.tgz" "core-XF86336-Xman" "2000-07-25"
+  check_dist 47 "$MIR/XF86336/Xset.tgz" "core-XF86336-Xset" "2000-07-25"
+  check_pkgdir 47 "$MIR/packages"
+}
+
+f4_2() {
+  MIR="http://ftp-archive.freebsd.org/mirror/FreeBSD-Archive/old-releases/i386/4.2-RELEASE"
+  echo "============ $MIR"
+  check_dist 48 "$MIR/bin/bin." "core-bin" "2000-11-21" fc
+  check_dist 48 "$MIR/crypto/crypto." "core-crypto" "2000-11-21" al
+  check_dist 48 "$MIR/crypto/krb4." "core-crypto-krb4" "2000-11-21" ae
+  check_dist 48 "$MIR/crypto/krb5." "core-crypto-krb5" "2000-11-21" ad
+  check_dist 48 "$MIR/games/games." "core-games" "2000-11-21" ak
+  check_dist 48 "$MIR/manpages/manpages." "core-manpages" "2000-11-21" ax
+  check_dist 48 "$MIR/XF86336/Xfsrv.tgz" "core-XF86336-Xfsrv" "2000-07-25"
+  check_dist 48 "$MIR/XF86336/Xman.tgz" "core-XF86336-Xman" "2000-07-25"
+  check_dist 48 "$MIR/XF86336/Xset.tgz" "core-XF86336-Xset" "2000-07-25"
+  check_pkgdir 48 "$MIR/packages"
+}
+
+f4_3() {
+  MIR="http://ftp-archive.freebsd.org/mirror/FreeBSD-Archive/old-releases/i386/4.3-RELEASE"
+  echo "============ $MIR"
+  check_dist 49 "$MIR/bin/bin." "core-bin" "2001-04-20" fg
+  check_dist 49 "$MIR/crypto/crypto." "core-crypto" "2001-04-20" al
+  check_dist 49 "$MIR/crypto/krb4." "core-crypto-krb4" "2001-04-20" ae
+  check_dist 49 "$MIR/crypto/krb5." "core-crypto-krb5" "2001-04-20" ae
+  check_dist 49 "$MIR/games/games." "core-games" "2001-04-20" ak
+  check_dist 49 "$MIR/manpages/manpages." "core-manpages" "2001-04-20" ay
+  check_dist 49 "$MIR/XF86336/Xfsrv.tgz" "core-XF86336-Xfsrv" "2001-03-22"
+  check_dist 49 "$MIR/XF86336/Xman.tgz" "core-XF86336-Xman" "2001-03-22"
+  check_dist 49 "$MIR/XF86336/Xset.tgz" "core-XF86336-Xset" "2001-03-22"
+  check_pkgdir 49 "$MIR/packages"
+}
+
+f4_4() {
+  MIR="http://ftp-archive.freebsd.org/mirror/FreeBSD-Archive/old-releases/i386/4.4-RELEASE"
+  echo "============ $MIR"
+  check_dist 50 "$MIR/bin/bin." "core-bin" "2001-09-20" fk
+  check_dist 50 "$MIR/crypto/crypto." "core-crypto" "2001-09-20" ak
+  check_dist 50 "$MIR/crypto/krb4." "core-crypto-krb4" "2001-09-20" ae
+  check_dist 50 "$MIR/crypto/krb5." "core-crypto-krb5" "2001-09-20" ad
+  check_dist 50 "$MIR/games/games." "core-games" "2001-09-20" ak
+  check_dist 50 "$MIR/manpages/manpages." "core-manpages" "2001-09-20" az
+  check_dist 50 "$MIR/XF86336/Xfsrv.tgz" "core-XF86336-Xfsrv" "2001-09-05"
+  check_dist 50 "$MIR/XF86336/Xman.tgz" "core-XF86336-Xman" "2001-09-05"
+  check_dist 50 "$MIR/XF86336/Xset.tgz" "core-XF86336-Xset" "2001-09-05"
+  check_pkgdir 50 "$MIR/packages"
+}
+
+f4_5() {
+  MIR="http://ftp-archive.freebsd.org/mirror/FreeBSD-Archive/old-releases/i386/4.5-RELEASE"
+  echo "============ $MIR"
+  check_dist 51 "$MIR/bin/bin." "core-bin" "2002-01-29" fm
+  check_dist 51 "$MIR/crypto/crypto." "core-crypto" "2002-01-29" al
+  check_dist 51 "$MIR/crypto/krb4." "core-crypto-krb4" "2002-01-29" ae
+  check_dist 51 "$MIR/crypto/krb5." "core-crypto-krb5" "2002-01-29" ae
+  check_dist 51 "$MIR/games/games." "core-games" "2002-01-29" ak
+  check_dist 51 "$MIR/manpages/manpages." "core-manpages" "2002-01-29" az
+  check_dist 51 "$MIR/XF86336/Xfsrv.tgz" "core-XF86336-Xfsrv" "2002-01-08"
+  check_dist 51 "$MIR/XF86336/Xman.tgz" "core-XF86336-Xman" "2002-01-08"
+  check_dist 51 "$MIR/XF86336/Xset.tgz" "core-XF86336-Xset" "2002-01-08"
+  check_pkgdir 51 "$MIR/packages"
+}
+
+f4_6() {
+  MIR="http://ftp-archive.freebsd.org/mirror/FreeBSD-Archive/old-releases/i386/4.6-RELEASE"
+  echo "============ $MIR"
+  check_dist 52 "$MIR/bin/bin." "core-bin" "2002-06-15" fp
+  check_dist 52 "$MIR/crypto/crypto." "core-crypto" "2002-06-15" al
+  check_dist 52 "$MIR/crypto/krb4." "core-crypto-krb4" "2002-06-15" ae
+  check_dist 52 "$MIR/crypto/krb5." "core-crypto-krb5" "2002-06-15" ae
+  check_dist 52 "$MIR/games/games." "core-games" "2002-06-15" ak
+  check_dist 52 "$MIR/manpages/manpages." "core-manpages" "2002-06-15" az
+  check_pkgdir 52 "$MIR/packages"
+}
+
+f4_6_2() {
+  MIR="http://ftp-archive.freebsd.org/mirror/FreeBSD-Archive/old-releases/i386/4.6.2-RELEASE"
+  echo "============ $MIR"
+  check_dist 53 "$MIR/bin/bin." "core-bin" "2002-08-15" fq
+  check_dist 53 "$MIR/crypto/crypto." "core-crypto" "2002-08-15" am
+  check_dist 53 "$MIR/crypto/krb4." "core-crypto-krb4" "2002-08-15" ae
+  check_dist 53 "$MIR/crypto/krb5." "core-crypto-krb5" "2002-08-15" ae
+  check_dist 53 "$MIR/games/games." "core-games" "2002-08-15" ak
+  check_dist 53 "$MIR/manpages/manpages." "core-manpages" "2002-08-15" az
+  check_pkgdir 53 "$MIR/packages"
+}
+
+f4_7() {
+  MIR="http://ftp-archive.freebsd.org/mirror/FreeBSD-Archive/old-releases/i386/4.7-RELEASE"
+  echo "============ $MIR"
+  check_dist 54 "$MIR/bin/bin." "core-bin" "2002-10-10" fr
+  check_dist 54 "$MIR/crypto/crypto." "core-crypto" "2002-10-10" an
+  check_dist 54 "$MIR/crypto/krb4." "core-crypto-krb4" "2002-10-10" af
+  check_dist 54 "$MIR/crypto/krb5." "core-crypto-krb5" "2002-10-10" af
+  check_dist 54 "$MIR/games/games." "core-games" "2002-10-10" ak
+  check_dist 54 "$MIR/manpages/manpages." "core-manpages" "2002-10-10" bc
+  check_pkgdir 54 "$MIR/packages"
+}
+
+f4_8() {
+  MIR="http://ftp-archive.freebsd.org/mirror/FreeBSD-Archive/old-releases/i386/4.8-RELEASE"
+  echo "============ $MIR"
+  check_dist 55 "$MIR/bin/bin." "core-bin" "2003-04-03" ft
+  check_dist 55 "$MIR/crypto/crypto." "core-crypto" "2003-04-03" au
+  check_dist 55 "$MIR/crypto/krb4." "core-crypto-krb4" "2003-04-03" ag
+  check_dist 55 "$MIR/crypto/krb5." "core-crypto-krb5" "2003-04-03" af
+  check_dist 55 "$MIR/games/games." "core-games" "2003-04-03" ak
+  check_dist 55 "$MIR/manpages/manpages." "core-manpages" "2003-04-03" bd
+  check_pkgdir 55 "$MIR/packages"
+}
+
+f4_9() {
+  MIR="http://ftp-archive.freebsd.org/mirror/FreeBSD-Archive/old-releases/i386/4.9-RELEASE"
+  echo "============ $MIR"
+  check_dist 56 "$MIR/bin/bin." "core-bin" "2003-10-28" fv
+  check_dist 56 "$MIR/crypto/crypto." "core-crypto" "2003-10-28" au
+  check_dist 56 "$MIR/crypto/krb4." "core-crypto-krb4" "2003-10-28" ag
+  check_dist 56 "$MIR/crypto/krb5." "core-crypto-krb5" "2003-10-28" af
+  check_dist 56 "$MIR/games/games." "core-games" "2003-10-28" ak
+  check_dist 56 "$MIR/manpages/manpages." "core-manpages" "2003-10-28" bd
+  check_pkgdir 56 "$MIR/packages"
+}
+
+f4_10() {
+  MIR="http://ftp-archive.freebsd.org/mirror/FreeBSD-Archive/old-releases/i386/4.10-RELEASE"
+  echo "============ $MIR"
+  check_dist 57 "$MIR/bin/bin." "core-bin" "2004-05-27" fw
+  check_dist 57 "$MIR/crypto/crypto." "core-crypto" "2004-05-27" au
+  check_dist 57 "$MIR/crypto/krb4." "core-crypto-krb4" "2004-05-27" ag
+  check_dist 57 "$MIR/crypto/krb5." "core-crypto-krb5" "2004-05-27" af
+  check_dist 57 "$MIR/games/games." "core-games" "2004-05-27" ak
+  check_dist 57 "$MIR/manpages/manpages." "core-manpages" "2004-05-27" bd
+  check_pkgdir 57 "$MIR/packages"
+}
+
+f4_11() {
+  MIR="http://ftp-archive.freebsd.org/mirror/FreeBSD-Archive/old-releases/i386/4.11-RELEASE"
+  echo "============ $MIR"
+  check_dist 58 "$MIR/bin/bin." "core-bin" "2005-01-25" fx
+  check_dist 58 "$MIR/crypto/crypto." "core-crypto" "2005-01-25" au
+  check_dist 58 "$MIR/crypto/krb4." "core-crypto-krb4" "2005-01-25" ag
+  check_dist 58 "$MIR/crypto/krb5." "core-crypto-krb5" "2005-01-25" af
+  check_dist 58 "$MIR/games/games." "core-games" "2005-01-25" ak
+  check_dist 58 "$MIR/manpages/manpages." "core-manpages" "2005-01-25" be
+  check_pkgdir 58 "$MIR/packages"
+}
+
 
 old() {
   f1_0
@@ -342,6 +515,19 @@ old() {
   f3_5
   f3_5_1
   f4_0
+  f4_1
+  f4_1_1
+  f4_2
+  f4_3
+  f4_4
+  f4_5
+  f4_6
+  f4_6_2
+  f4_7
+  f4_8
+  f4_9
+  f4_10
+  f4_11
 }
 
 "$@"

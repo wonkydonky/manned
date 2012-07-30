@@ -104,7 +104,20 @@ INSERT INTO systems (id, name, release, short, relorder) VALUES
   (42, 'FreeBSD',    '3.4',   'freebsd-3.4',     13),
   (43, 'FreeBSD',    '3.5',   'freebsd-3.5',     14),
   (44, 'FreeBSD',    '3.5.1', 'freebsd-3.5.1',   15),
-  (45, 'FreeBSD',    '4.0',   'freebsd-4.0',     16);
+  (45, 'FreeBSD',    '4.0',   'freebsd-4.0',     16),
+  (46, 'FreeBSD',    '4.1',   'freebsd-4.1',     17),
+  (47, 'FreeBSD',    '4.1.1', 'freebsd-4.1.1',   18),
+  (48, 'FreeBSD',    '4.2',   'freebsd-4.2',     19),
+  (49, 'FreeBSD',    '4.3',   'freebsd-4.3',     20),
+  (50, 'FreeBSD',    '4.4',   'freebsd-4.4',     21),
+  (51, 'FreeBSD',    '4.5',   'freebsd-4.5',     22),
+  (52, 'Freebsd',    '4.6',   'freebsd-4.6',     23),
+  (53, 'FreeBSD',    '4.6.2', 'freebsd-4.6.2',   24),
+  (54, 'FreeBSD',    '4.7',   'freebsd-4.7',     25),
+  (55, 'FreeBSD',    '4.8',   'freebsd-4.8',     26),
+  (56, 'FreeBSD',    '4.9',   'freebsd-4.9',     27),
+  (57, 'FreeBSD',    '4.10',  'freebsd-4.10',    28),
+  (58, 'FreeBSD',    '4.11',  'freebsd-4.11',    29);
 
 
 
