@@ -62,14 +62,13 @@ check_pkg() { # <sysid> <base-url> <category> <filename> <name> <version>
 # (except All/) to find the actual packages and their category. Date of the
 # packages is extracted from the last modification time of the '+DESC' file in
 # each tarball.
-# TODO: Handle .tbz
 check_pkgdir() { # <sysid> <url>
   SYSID=$1
   URL=$2
   # Get the list of categories from the lighttpd directory index.
   $CURL "$URL/" | perl -lne 'm{href="([a-z0-9-]+)/">\1</a>/} && print $1' >"$TMP/categories"
   # Get the list of package names without version string.
-  $CURL "$URL/Latest/" | perl -lne 'm{href="([^ "]+)\.tgz">\1\.tgz</a>} && print $1' >"$TMP/pkgnames"
+  $CURL "$URL/Latest/" | perl -lne 'm{href="([^ "]+)(\.t[bg]z)">\1\2</a>} && print $1' >"$TMP/pkgnames"
   if [ \( ! -s "$TMP/categories" \) -o \( ! -s "$TMP/pkgnames" \) ]; then
     echo "== Error fetching package names or directory index."
     rm -f "$TMP/categories" "$TMP/pkgnames"
@@ -78,7 +77,7 @@ check_pkgdir() { # <sysid> <url>
 
   # Now check each category directory
   while read CAT; do
-    $CURL "$URL/$CAT/" | perl -lne 'm{href="([^ "]+)\.tgz">\1\.tgz</a>} && print $1' >"$TMP/pkglist"
+    $CURL "$URL/$CAT/" | perl -lne 'm{href="([^ "]+\.t[bg]z)">\1</a>} && print $1' >"$TMP/pkglist"
     if [ ! -s "$TMP/pkglist" ]; then
       echo "== Error fetching package index for /$CAT/"
       continue
@@ -96,11 +95,14 @@ check_pkgdir() { # <sysid> <url>
       open F, '<', $list or die $!;
       while(<F>) {
         chomp;
-        ($v,$n)=('',$_);
-        $v = $v ? "$1-$v" : $1 while(!$names{$_} && s/-([^-]+)$//);
-        warn "== Unknown package: $n\n" if !$_ || !$names{$_};
-        print "$n.tgz $_ $v" if $v && $_ && $names{$_}
-          && !$db->selectrow_arrayref(q{SELECT 1 FROM package WHERE system = ? AND name = ? AND version = ?}, {}, $sysid, $_, $v);
+        warn "Unknown extension for package: $_\n" if !/^(.+)\.(t[bg]z)$/;
+        ($c,$n,$e,$v)=($_,$1,$2,'');
+        $v = $v ? "$1-$v" : $1 while(!$names{$n} and $n =~ s/-([^-]+)$//);
+        if(!$n || !$names{$n} || !$v) {
+          warn "== Unknown package: $c\n";
+        } else {
+          print "$c $n $v" if !$db->selectrow_arrayref(q{SELECT 1 FROM package WHERE system = ? AND name = ? AND version = ?}, {}, $sysid, $n, $v);
+        }
       }
       close F;
 EOP
@@ -496,6 +498,74 @@ f4_11() {
   check_pkgdir 58 "$MIR/packages"
 }
 
+f5_0() {
+  MIR="http://ftp-archive.freebsd.org/mirror/FreeBSD-Archive/old-releases/i386/5.0-RELEASE"
+  echo "============ $MIR"
+  check_dist 59 "$MIR/crypto/crypto." "core-crypto" "2003-01-14" an
+  check_dist 59 "$MIR/crypto/krb4." "core-crypto-krb4" "2003-01-14" af
+  check_dist 59 "$MIR/crypto/krb5." "core-crypto-krb5" "2003-01-14" ag
+  check_dist 59 "$MIR/games/games." "core-games" "2003-01-14" ag
+  check_dist 59 "$MIR/manpages/manpages." "core-manpages" "2003-01-14" ay
+  check_pkgdir 59 "$MIR/packages"
+}
+
+f5_1() {
+  MIR="http://ftp-archive.freebsd.org/mirror/FreeBSD-Archive/old-releases/i386/5.1-RELEASE"
+  echo "============ $MIR"
+  check_dist 60 "$MIR/crypto/crypto." "core-crypto" "2003-06-09" ae
+  check_dist 60 "$MIR/crypto/krb5.aa" "core-crypto-krb5" "2003-06-09"
+  check_dist 60 "$MIR/games/games." "core-games" "2003-06-09" ab
+  check_dist 60 "$MIR/manpages/manpages." "core-manpages" "2003-06-09" ae
+  check_pkgdir 60 "$MIR/packages"
+}
+
+f5_2() {
+  MIR="http://ftp-archive.freebsd.org/mirror/FreeBSD-Archive/old-releases/i386/5.2-RELEASE"
+  echo "============ $MIR"
+  check_dist 61 "$MIR/crypto/crypto." "core-crypto" "2004-01-09" ae
+  check_dist 61 "$MIR/crypto/krb5.aa" "core-crypto-krb5" "2004-01-09"
+  check_dist 61 "$MIR/games/games." "core-games" "2004-01-09" ab
+  check_dist 61 "$MIR/manpages/manpages." "core-manpages" "2004-01-09" ae
+  check_pkgdir 61 "$MIR/packages"
+}
+
+f5_2_1() {
+  MIR="http://ftp-archive.freebsd.org/mirror/FreeBSD-Archive/old-releases/i386/5.2.1-RELEASE"
+  echo "============ $MIR"
+  check_dist 62 "$MIR/crypto/crypto." "core-crypto" "2004-02-25" ae
+  check_dist 62 "$MIR/crypto/krb5.aa" "core-crypto-krb5" "2004-02-25"
+  check_dist 62 "$MIR/games/games." "core-games" "2004-02-25" ab
+  check_dist 62 "$MIR/manpages/manpages." "core-manpages" "2004-02-25" ae
+  check_pkgdir 62 "$MIR/packages"
+}
+
+f5_3() {
+  MIR="http://ftp-archive.freebsd.org/mirror/FreeBSD-Archive/old-releases/i386/5.3-RELEASE"
+  echo "============ $MIR"
+  check_dist 63 "$MIR/base." "core-base" "2004-11-06" bg
+  check_dist 63 "$MIR/games/games." "core-games" "2004-11-06" ab
+  check_dist 63 "$MIR/manpages/manpages." "core-manpages" "2004-11-06" ae
+  check_pkgdir 63 "$MIR/packages"
+}
+
+f5_4() {
+  MIR="http://ftp-archive.freebsd.org/mirror/FreeBSD-Archive/old-releases/i386/5.4-RELEASE"
+  echo "============ $MIR"
+  check_dist 64 "$MIR/base." "core-base" "2005-05-09" bg
+  check_dist 64 "$MIR/games/games." "core-games" "2005-05-09" ab
+  check_dist 64 "$MIR/manpages/manpages." "core-manpages" "2005-05-09" ae
+  check_pkgdir 64 "$MIR/packages"
+}
+
+f5_5() {
+  MIR="http://ftp-archive.freebsd.org/mirror/FreeBSD-Archive/old-releases/i386/5.5-RELEASE"
+  echo "============ $MIR"
+  check_dist 65 "$MIR/base." "core-base" "2006-05-25" bg
+  check_dist 65 "$MIR/games/games." "core-games" "2006-05-25" ab
+  check_dist 65 "$MIR/manpages/manpages." "core-manpages" "2006-05-25" ae
+  check_pkgdir 65 "$MIR/packages"
+}
+
 
 old() {
   f1_0
@@ -528,6 +598,13 @@ old() {
   f4_9
   f4_10
   f4_11
+  f5_0
+  f5_1
+  f5_2
+  f5_2_1
+  f5_3
+  f5_4
+  f5_5
 }
 
 "$@"
