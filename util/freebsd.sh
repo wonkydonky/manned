@@ -542,7 +542,7 @@ f5_2_1() {
 f5_3() {
   MIR="http://ftp-archive.freebsd.org/mirror/FreeBSD-Archive/old-releases/i386/5.3-RELEASE"
   echo "============ $MIR"
-  check_dist 63 "$MIR/base." "core-base" "2004-11-06" bg
+  check_dist 63 "$MIR/base/base." "core-base" "2004-11-06" bg
   check_dist 63 "$MIR/games/games." "core-games" "2004-11-06" ab
   check_dist 63 "$MIR/manpages/manpages." "core-manpages" "2004-11-06" ae
   check_pkgdir 63 "$MIR/packages"
@@ -551,7 +551,7 @@ f5_3() {
 f5_4() {
   MIR="http://ftp-archive.freebsd.org/mirror/FreeBSD-Archive/old-releases/i386/5.4-RELEASE"
   echo "============ $MIR"
-  check_dist 64 "$MIR/base." "core-base" "2005-05-09" bg
+  check_dist 64 "$MIR/base/base." "core-base" "2005-05-09" bg
   check_dist 64 "$MIR/games/games." "core-games" "2005-05-09" ab
   check_dist 64 "$MIR/manpages/manpages." "core-manpages" "2005-05-09" ae
   check_pkgdir 64 "$MIR/packages"
@@ -560,10 +560,55 @@ f5_4() {
 f5_5() {
   MIR="http://ftp-archive.freebsd.org/mirror/FreeBSD-Archive/old-releases/i386/5.5-RELEASE"
   echo "============ $MIR"
-  check_dist 65 "$MIR/base." "core-base" "2006-05-25" bg
+  check_dist 65 "$MIR/base/base." "core-base" "2006-05-25" bg
   check_dist 65 "$MIR/games/games." "core-games" "2006-05-25" ab
   check_dist 65 "$MIR/manpages/manpages." "core-manpages" "2006-05-25" ae
   check_pkgdir 65 "$MIR/packages"
+}
+
+f6_0() {
+  MIR="http://ftp-archive.freebsd.org/mirror/FreeBSD-Archive/old-releases/i386/6.0-RELEASE"
+  echo "============ $MIR"
+  check_dist 66 "$MIR/base/base." "core-base" "2005-11-04" bp
+  check_dist 66 "$MIR/games/games." "core-games" "2005-11-04" ab
+  check_dist 66 "$MIR/manpages/manpages." "core-manpages" "2005-11-04" af
+  check_pkgdir 66 "$MIR/packages"
+}
+
+f6_1() {
+  MIR="http://ftp-archive.freebsd.org/mirror/FreeBSD-Archive/old-releases/i386/6.1-RELEASE"
+  echo "============ $MIR"
+  check_dist 67 "$MIR/base/base." "core-base" "2006-05-08" bd
+  check_dist 67 "$MIR/games/games." "core-games" "2006-05-08" ab
+  check_dist 67 "$MIR/manpages/manpages." "core-manpages" "2006-05-08" af
+  check_pkgdir 67 "$MIR/packages"
+}
+
+f6_2() {
+  MIR="http://ftp-archive.freebsd.org/mirror/FreeBSD-Archive/old-releases/i386/6.2-RELEASE"
+  echo "============ $MIR"
+  check_dist 68 "$MIR/base/base." "core-base" "2007-01-15" bd
+  check_dist 68 "$MIR/games/games." "core-games" "2007-01-15" ab
+  check_dist 68 "$MIR/manpages/manpages." "core-manpages" "2007-01-15" af
+  check_pkgdir 68 "$MIR/packages"
+}
+
+f6_3() {
+  MIR="http://ftp-archive.freebsd.org/mirror/FreeBSD-Archive/old-releases/i386/6.3-RELEASE"
+  echo "============ $MIR"
+  check_dist 69 "$MIR/base/base." "core-base" "2008-01-18" be
+  check_dist 69 "$MIR/games/games." "core-games" "2008-01-18" ab
+  check_dist 69 "$MIR/manpages/manpages." "core-manpages" "2008-01-18" af
+  check_pkgdir 69 "$MIR/packages"
+}
+
+f6_4() {
+  MIR="http://ftp-archive.freebsd.org/mirror/FreeBSD-Archive/old-releases/i386/6.4-RELEASE"
+  echo "============ $MIR"
+  check_dist 70 "$MIR/base/base." "core-base" "2008-11-28" be
+  check_dist 70 "$MIR/games/games." "core-games" "2008-11-28" ab
+  check_dist 70 "$MIR/manpages/manpages." "core-manpages" "2008-11-28" af
+  check_pkgdir 70 "$MIR/packages"
 }
 
 
@@ -605,6 +650,11 @@ old() {
   f5_3
   f5_4
   f5_5
+  f6_0
+  f6_1
+  f6_2
+  f6_3
+  f6_4
 }
 
 "$@"
