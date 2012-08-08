@@ -611,6 +611,51 @@ f6_4() {
   check_pkgdir 70 "$MIR/packages"
 }
 
+f7_0() {
+  MIR="http://ftp-archive.freebsd.org/mirror/FreeBSD-Archive/old-releases/i386/7.0-RELEASE"
+  echo "============ $MIR"
+  check_dist 71 "$MIR/base/base." "core-base" "2008-02-27" bh
+  check_dist 71 "$MIR/games/games." "core-games" "2008-02-27" ab
+  check_dist 71 "$MIR/manpages/manpages." "core-manpages" "2008-02-27" af
+  check_pkgdir 71 "$MIR/packages"
+}
+
+f7_1() {
+  MIR="http://ftp-archive.freebsd.org/mirror/FreeBSD-Archive/old-releases/i386/7.1-RELEASE"
+  echo "============ $MIR"
+  check_dist 72 "$MIR/base/base." "core-base" "2009-01-04" bi
+  check_dist 72 "$MIR/games/games." "core-games" "2009-01-04" ab
+  check_dist 72 "$MIR/manpages/manpages." "core-manpages" "2009-01-04" af
+  check_pkgdir 72 "$MIR/packages"
+}
+
+f7_2() {
+  MIR="http://ftp-archive.freebsd.org/mirror/FreeBSD-Archive/old-releases/i386/7.2-RELEASE"
+  echo "============ $MIR"
+  check_dist 73 "$MIR/base/base." "core-base" "2009-05-04" bi
+  check_dist 73 "$MIR/games/games." "core-games" "2009-05-04" ab
+  check_dist 73 "$MIR/manpages/manpages." "core-manpages" "2009-05-04" af
+  check_pkgdir 73 "$MIR/packages"
+}
+
+f7_3() {
+  MIR="http://ftp-archive.freebsd.org/mirror/FreeBSD-Archive/old-releases/i386/7.3-RELEASE"
+  echo "============ $MIR"
+  check_dist 74 "$MIR/base/base." "core-base" "2010-03-23" bi
+  check_dist 74 "$MIR/games/games." "core-games" "2010-03-23" ab
+  check_dist 74 "$MIR/manpages/manpages." "core-manpages" "2010-03-23" af
+  check_pkgdir 74 "$MIR/packages"
+}
+
+f7_4() {
+  MIR="http://ftp-archive.freebsd.org/mirror/FreeBSD-Archive/old-releases/i386/7.4-RELEASE"
+  echo "============ $MIR"
+  check_dist 75 "$MIR/base/base." "core-base" "2011-02-24" bi
+  check_dist 75 "$MIR/games/games." "core-games" "2011-02-24" ab
+  check_dist 75 "$MIR/manpages/manpages." "core-manpages" "2011-02-24" af
+  check_pkgdir 75 "$MIR/packages"
+}
+
 
 old() {
   f1_0
@@ -655,6 +700,11 @@ old() {
   f6_2
   f6_3
   f6_4
+  f7_0
+  f7_1
+  f7_2
+  f7_3
+  f7_4
 }
 
 "$@"
