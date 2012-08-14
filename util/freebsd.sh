@@ -18,7 +18,9 @@ check_dist() { # <sysid> <url-prefix> <pkgname> <date> <last-sequence>
   if [ -n "$5" ]; then
     add_splittar "$2" "$5" $PKGID -z
   else
-    $CURL "$2" | add_tar - $PKGID -z
+    COMP=-z
+    [ "${2##*.}" = "txz" ] && COMP=-J
+    $CURL "$2" | add_tar - $PKGID $COMP
   fi
 }
 
@@ -656,6 +658,50 @@ f7_4() {
   check_pkgdir 75 "$MIR/packages"
 }
 
+f8_0() {
+  MIR="http://ftp-archive.freebsd.org/mirror/FreeBSD-Archive/old-releases/i386/8.0-RELEASE"
+  echo "============ $MIR"
+  check_dist 76 "$MIR/base/base." "core-base" "2009-11-25" bl
+  check_dist 76 "$MIR/games/games." "core-games" "2009-11-25" ab
+  check_dist 76 "$MIR/manpages/manpages." "core-manpages" "2009-11-25" af
+  check_pkgdir 76 "$MIR/packages"
+}
+
+f8_1() {
+  MIR="http://ftp-archive.freebsd.org/mirror/FreeBSD-Archive/old-releases/i386/8.1-RELEASE"
+  echo "============ $MIR"
+  check_dist 77 "$MIR/base/base." "core-base" "2010-07-23" bl
+  check_dist 77 "$MIR/games/games." "core-games" "2010-07-23" ab
+  check_dist 77 "$MIR/manpages/manpages." "core-manpages" "2010-07-23" af
+  check_pkgdir 77 "$MIR/packages"
+}
+
+f8_2() {
+  MIR="http://ftp.dk.freebsd.org/pub/FreeBSD/releases/i386/8.2-RELEASE/"
+  echo "============ $MIR"
+  check_dist 78 "$MIR/base/base." "core-base" "2011-02-24" bm
+  check_dist 78 "$MIR/games/games." "core-games" "2011-02-24" ab
+  check_dist 78 "$MIR/manpages/manpages." "core-manpages" "2011-02-24" ag
+  check_pkgdir 78 "$MIR/packages"
+}
+
+f8_3() {
+  MIR="http://ftp.dk.freebsd.org/pub/FreeBSD/releases/i386/8.3-RELEASE/"
+  echo "============ $MIR"
+  check_dist 79 "$MIR/base/base." "core-base" "2012-04-18" bm
+  check_dist 79 "$MIR/games/games." "core-games" "2012-04-18" ab
+  check_dist 79 "$MIR/manpages/manpages." "core-manpages" "2012-04-18" ag
+  check_pkgdir 79 "$MIR/packages"
+}
+
+f9_0() {
+  MIR="http://ftp.dk.freebsd.org/pub/FreeBSD/releases/i386/9.0-RELEASE/"
+  echo "============ $MIR"
+  check_dist 80 "$MIR/base.txz" "core-base" "2012-01-12"
+  check_dist 80 "$MIR/games.txz" "core-games" "2012-01-12"
+  check_pkgdir 80 "$MIR/packages"
+}
+
 
 old() {
   f1_0
@@ -705,6 +751,11 @@ old() {
   f7_2
   f7_3
   f7_4
+  f8_0
+  f8_1
+  f8_2
+  f8_3
+  f9_0
 }
 
 "$@"
