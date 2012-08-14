@@ -1,0 +1,4 @@
+/lib/ManUtils/*
+!/lib/ManUtils/Build.PL
+!/lib/ManUtils/ManUtils.pm
+!/lib/ManUtils/ManUtils.xs
