@@ -155,13 +155,6 @@ sub about {
     <dt>Arch Linux</dt><dd>
      The core, extra and community repositories are fetched from a local
      Arch mirror. Indexing started around begin June 2012.</dd>
-    <dt>Ubuntu</dt><dd>
-     Historical releases were fetched from <a
-     href="http://old-releases.ubuntu.com/ubuntu/">http://old-releases.ubuntu.com/ubuntu/</a>,
-     supported releases from a local mirror.  All components (main, universe,
-     restricted and multiverse) from the $release, $release-updates and
-     $release-security repositories are indexed.  Backports are not included at
-     the moment. Indexing started around mid June 2012.</dd>
     <dt>Debian</dt><dd>
      Historical releases were fetched from <a
      href="http://archive.debian.org/debian/">http://archive.debian.org/debian/</a>
@@ -170,8 +163,26 @@ sub about {
      we're missing a few man pages because some packages were missing from the
      repository archives. For the other releases, all components (main, contrib
      and non-free) from the $release and $release-updates (where available)
-     repositories are indexed.
-    </dd>
+     repositories are indexed.</dd>
+    <dt>FreeBSD</dt><dd>
+     Historical releases were fetched from <a
+     href="http://ftp-archive.freebsd.org/mirror/FreeBSD-Archive/">http://ftp-archive.freebsd.org/mirror/FreeBSD-Archive/</a>.
+     The base installation tarballs are included in the database as packages
+     prefixed with <i>core-</i>. The package repositories have also been
+     indexed, except for 2.0.5 - 2.2.7 and 3.0 - 3.3 because those were not
+     available on the ftp archive. Only the -RELEASE repositories have been
+     included, which is generally a snapshot of the ports directory around the
+     time of the release. A few packages are missing because the indexing
+     script was unable to determine the package name and version for
+     everything. Additionally, the dates indicated for many packages is a bit
+     off, and the site doesn't handle this very well yet. :-(</dd>
+    <dt>Ubuntu</dt><dd>
+     Historical releases were fetched from <a
+     href="http://old-releases.ubuntu.com/ubuntu/">http://old-releases.ubuntu.com/ubuntu/</a>,
+     supported releases from a local mirror.  All components (main, universe,
+     restricted and multiverse) from the $release, $release-updates and
+     $release-security repositories are indexed.  Backports are not included at
+     the moment. Indexing started around mid June 2012.</dd>
    </dl><br />
    Only packages for a single architecture (i386 or i686) are scanned. To my
    knowledge, packages that come with different manuals for different
@@ -190,10 +201,10 @@ sub about {
    future. In the short term, this means all Fedora and OpenSUSE releases will
    get indexed. In the long term, many others may be added as well.
    <br /><br />
-   It would also be great to index a few non-Linux systems such as *BSD,
-   Solaris/Illumos and Mac OS X. Unfortunately, those don't always follow a
-   binary package based approach, or are otherwise less easy to properly index.
-   The FreeBSD ports look like a good future target, however.
+   It would also be great to index a few more non-Linux systems such as other
+   BSDs, Solaris/Illumos and Mac OS X. Unfortunately, those don't always follow
+   a binary package based approach, or are otherwise less easy to properly
+   index.
    <br /><br />
    In general, systems that follow an entirely source-based distribution
    approach can't be indexed without compiling everything. Since that is both
@@ -201,6 +212,22 @@ sub about {
    include manuals from such systems at the moment. So unless someone comes
    with a solution I hadn't thought of yet, there won't be any Gentoo manuals
    here. :-(
+  _
+  end;
+
+  h2 'Future plans';
+  p; lit <<'  _';
+   This site isn't nearly as awesome yet as it could be. Here's some ideas that
+   would be nice to have in the future:
+   <ul>
+    <li>Improved, more intelligent, search,</li>
+    <li><a href="/apropos.1">apropos(1)</a> emulation(?),</li>
+    <li>Diffs between various versions of a man page,</li>
+    <li>Anchor links within man pages, for easier linking to a section or paragraph,</li>
+    <li>Table of Contents for each man page,</li>
+    <li>Alternative formats (Text, PDF, more semantic HTML, etc),</li>
+    <li>A command-line client, like <a href="/man.1">man(1)</a> with manned.org as database backend.</li>
+   </ul>
   _
   end;
 
