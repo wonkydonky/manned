@@ -672,7 +672,7 @@ f8_1() {
   echo "============ $MIR"
   check_dist 77 "$MIR/base/base." "core-base" "2010-07-23" bl
   check_dist 77 "$MIR/games/games." "core-games" "2010-07-23" ab
-  check_dist 77 "$MIR/manpages/manpages." "core-manpages" "2010-07-23" af
+  check_dist 77 "$MIR/manpages/manpages." "core-manpages" "2010-07-23" ag
   check_pkgdir 77 "$MIR/packages"
 }
 
