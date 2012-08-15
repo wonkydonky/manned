@@ -3,10 +3,6 @@
 use strict;
 use warnings;
 use TUWF ':html', 'html_escape', ':xml';
-use IPC::Open2;
-use IO::Select;
-use Encode 'encode_utf8', 'decode_utf8';
-use Time::HiRes 'tv_interval', 'gettimeofday';
 use JSON::XS;
 
 use Cwd 'abs_path';
