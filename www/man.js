@@ -480,7 +480,7 @@ function navSerialize() {
     for(var j=0; j<VARS.mans[i][3].length; j++)
       if(j+1 < VARS.mans[i][3].length && VARS.mans[i][3][j+1][0] == VARS.mans[i][3][j][0] && (j == 0 || VARS.mans[i][3][j-1][0] != VARS.mans[i][3][j][0]))
         a.push(!!VARS.mans[i][3][j+1][3]);
-  return bsEncode(a);
+  return bsEncode(a).replace(/(.)a+$/, '$1');
 }
 
 // And the reverse of the above.
