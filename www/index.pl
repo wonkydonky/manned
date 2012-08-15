@@ -454,7 +454,7 @@ sub getman {
     : substr($a->{section},0,1) ne substr($b->{section},0,1)
       ? $a->{section} cmp $b->{section}
     # Prefer Arch over other systems
-    : $a->{system} != $b->{system}
+    : ($a->{system} != 1 || $b->{system} != 1) && $self->{sysbyid}{$a->{system}}{name} ne $self->{sysbyid}{$b->{system}}{name}
       ? ($a->{system} == 1 ? -1 : 1)
     # Prefer a later system release over an older one
     : $a->{system} != $b->{system} && $self->{sysbyid}{$a->{system}}{name} eq $self->{sysbyid}{$b->{system}}{name}
