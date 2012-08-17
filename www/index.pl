@@ -494,6 +494,10 @@ sub getman {
 sub man {
   my($self, $name, $hash) = @_;
 
+  # Firefox seems to escape [ and ] in URLs. It doesn't really have to...
+  $name =~ s/%5b/[/ig;
+  $name =~ s/%5d/]/ig;
+
   my $m = $self->dbManInfo(name => $name);
   return $self->resNotFound() if !@$m;
   my $man = getman($self, $name, $hash, $m);
