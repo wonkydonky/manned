@@ -42,6 +42,18 @@ TUWF::set(
 );
 
 
+# TODO: Abstract this into the systems table?
+$TUWF::OBJ->{pkglinks} = {
+  arch             => sub { "http://www.archlinux.org/packages/$_[0]{category}/i686/$_[0]{name}/" },
+  'debian-squeeze' => sub { "http://packages.debian.org/squeeze/$_[0]{name}" },
+  'ubuntu-hardy'   => sub { "http://packages.ubuntu.com/hardy/$_[0]{name}" },
+  'ubuntu-lucid'   => sub { "http://packages.ubuntu.com/lucid/$_[0]{name}" },
+  'ubuntu-natty'   => sub { "http://packages.ubuntu.com/natty/$_[0]{name}" },
+  'ubuntu-oneiric' => sub { "http://packages.ubuntu.com/oneiric/$_[0]{name}" },
+  'ubuntu-precise' => sub { "http://packages.ubuntu.com/precise/$_[0]{name}" },
+};
+
+
 TUWF::register(
   qr// => \&home,
   qr{info/about} => \&about,
@@ -362,6 +374,17 @@ sub browsepkg {
   my $title = "$sys->{name}".($sys->{release}?" $sys->{release}":"")." / $name $sel->{version}";
   $self->htmlHeader(title => $title);
   h1 $title;
+
+  my $lnk = $self->{pkglinks}{$sys->{short}};
+  if($lnk) {
+    $lnk = $lnk->($sel);
+    (my $domain = $lnk) =~ s{^https?://(?:[^/]+\.)?([^/\.]+\.[^/\.]+)/.+}{$1};
+    p;
+     br;
+     a href => $lnk, 'Package information';
+     i class => 'grayedout', " [$domain]";
+    end;
+  }
 
   # TODO: Link back to the system browsing page
 
