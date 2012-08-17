@@ -19,6 +19,7 @@ Requirements
   www/: (Website)
     TUWF
     JSON::XS
+    AnyEvent
 
   util/: (DB updating and package synchronisation stuff)
     bash (probably)
