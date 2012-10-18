@@ -51,6 +51,7 @@ $TUWF::OBJ->{pkglinks} = {
   'ubuntu-natty'   => sub { "http://packages.ubuntu.com/natty/$_[0]{name}" },
   'ubuntu-oneiric' => sub { "http://packages.ubuntu.com/oneiric/$_[0]{name}" },
   'ubuntu-precise' => sub { "http://packages.ubuntu.com/precise/$_[0]{name}" },
+  'ubuntu-quantal' => sub { "http://packages.ubuntu.com/quantal/$_[0]{name}" },
 };
 
 

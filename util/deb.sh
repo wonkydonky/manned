@@ -247,6 +247,12 @@ ubuntu_precise() {
   syncrepo 17 "http://nl.archive.ubuntu.com/ubuntu/" "precise-security" "main multiverse restricted universe"
 }
 
+ubuntu_quantal() {
+  syncrepo 81 "http://nl.archive.ubuntu.com/ubuntu/" "quantal" "main multiverse restricted universe"
+  syncrepo 81 "http://nl.archive.ubuntu.com/ubuntu/" "quantal-updates" "main multiverse restricted universe"
+  syncrepo 81 "http://nl.archive.ubuntu.com/ubuntu/" "quantal-security" "main multiverse restricted universe"
+}
+
 ubuntu_old() {
   ubuntu_warty
   ubuntu_hoary
@@ -267,6 +273,7 @@ ubuntu_active() {
   ubuntu_natty    # until 2012-10
   ubuntu_oneiric  # until 2013-04
   ubuntu_precise  # until 2017-04
+  ubuntu_quantal  # until 2014-04
 }
 
 ubuntu() {
