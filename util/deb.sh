@@ -265,12 +265,12 @@ ubuntu_old() {
   ubuntu_jaunty
   ubuntu_karmic
   ubuntu_maverick
+  ubuntu_natty
 }
 
 ubuntu_active() {
   ubuntu_hardy    # until 2013-04
   ubuntu_lucid    # until 2015-04
-  ubuntu_natty    # until 2012-10
   ubuntu_oneiric  # until 2013-04
   ubuntu_precise  # until 2017-04
   ubuntu_quantal  # until 2014-04

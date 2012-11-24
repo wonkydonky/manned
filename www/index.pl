@@ -48,7 +48,6 @@ $TUWF::OBJ->{pkglinks} = {
   'debian-squeeze' => sub { "http://packages.debian.org/squeeze/$_[0]{name}" },
   'ubuntu-hardy'   => sub { "http://packages.ubuntu.com/hardy/$_[0]{name}" },
   'ubuntu-lucid'   => sub { "http://packages.ubuntu.com/lucid/$_[0]{name}" },
-  'ubuntu-natty'   => sub { "http://packages.ubuntu.com/natty/$_[0]{name}" },
   'ubuntu-oneiric' => sub { "http://packages.ubuntu.com/oneiric/$_[0]{name}" },
   'ubuntu-precise' => sub { "http://packages.ubuntu.com/precise/$_[0]{name}" },
   'ubuntu-quantal' => sub { "http://packages.ubuntu.com/quantal/$_[0]{name}" },
