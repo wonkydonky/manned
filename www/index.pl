@@ -626,7 +626,7 @@ sub htmlFooter {
      lit 'All manual pages are copyrighted by their respective authors.
        | <a href="/info/about">About manned.org</a>
        | <a href="mailto:contact@manned.org">Contact</a>
-       | <a href="http://g.blicky.net/manned.git/">Source</a> (<a href="https://github.com/yorhel/manned">github</a>)';
+       | <a href="http://g.blicky.net/manned.git/">Source</a>';
     end;
     if($o{js}) {
       script type => 'text/javascript';
