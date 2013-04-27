@@ -140,7 +140,8 @@ INSERT INTO systems (id, name, release, short, relorder) VALUES
   (78, 'FreeBSD',    '8.2',   'freebsd-8.2',     49),
   (79, 'FreeBSD',    '8.3',   'freebsd-8.3',     50),
   (80, 'FreeBSD',    '9.0',   'freebsd-9.0',     51),
-  (81, 'Ubuntu',     '12.10', 'ubuntu-quantal',  16);
+  (81, 'Ubuntu',     '12.10', 'ubuntu-quantal',  16),
+  (82, 'Ubuntu',     '13.04', 'ubuntu-raring',   17);
 
 
 -- Removes any path components and compression extensions from the filename.

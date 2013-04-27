@@ -17,7 +17,7 @@ use ManUtils;
 TUWF::set(
   logfile => $ENV{TUWF_LOG},
   db_login => [undef, undef, undef],
-  debug => 1,
+  debug => 0,
   xml_pretty => 0,
   # Cache the system information
   pre_request_handler => sub {
@@ -51,6 +51,7 @@ $TUWF::OBJ->{pkglinks} = {
   'ubuntu-oneiric' => sub { "http://packages.ubuntu.com/oneiric/$_[0]{name}" },
   'ubuntu-precise' => sub { "http://packages.ubuntu.com/precise/$_[0]{name}" },
   'ubuntu-quantal' => sub { "http://packages.ubuntu.com/quantal/$_[0]{name}" },
+  'ubuntu-raring'  => sub { "http://packages.ubuntu.com/raring/$_[0]{name}" },
 };
 
 

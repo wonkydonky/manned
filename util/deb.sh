@@ -253,6 +253,12 @@ ubuntu_quantal() {
   syncrepo 81 "http://nl.archive.ubuntu.com/ubuntu/" "quantal-security" "main multiverse restricted universe"
 }
 
+ubuntu_raring() {
+  syncrepo 82 "http://nl.archive.ubuntu.com/ubuntu/" "raring" "main multiverse restricted universe"
+  syncrepo 82 "http://nl.archive.ubuntu.com/ubuntu/" "raring-updates" "main multiverse restricted universe"
+  syncrepo 82 "http://nl.archive.ubuntu.com/ubuntu/" "raring-security" "main multiverse restricted universe"
+}
+
 ubuntu_old() {
   ubuntu_warty
   ubuntu_hoary
@@ -274,6 +280,7 @@ ubuntu_active() {
   ubuntu_oneiric  # until 2013-04
   ubuntu_precise  # until 2017-04
   ubuntu_quantal  # until 2014-04
+  ubuntu_raring   # until 2014-01
 }
 
 ubuntu() {
