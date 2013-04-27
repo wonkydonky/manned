@@ -82,9 +82,8 @@ sub home {
    <br /><br />
    Manned.org aims to index all manual pages from a variety of systems, both
    old and new, and provides a convenient interface for looking up and viewing
-   the various versions of each man page. This site is still in its early life,
-   so we're actively adding new systems to the database and finding ways to
-   improve the online interface. <a href="/info/about">About manned.org &raquo;</a>
+   the various versions of each man page.
+   <a href="/info/about">About manned.org &raquo;</a>
   _
   end;
 
@@ -206,9 +205,10 @@ sub about {
 
   h2 'Other systems';
   p; lit <<'  _';
+   Although further development of this site is a bit stalled at the moment,
    I'd love to index the manuals of most major Linux distributions in the
-   future. In the short term, this means all Fedora and OpenSUSE releases will
-   get indexed. In the long term, many others may be added as well.
+   future. Fedora and OpenSUSE, in particular, are interesting targets to
+   index.
    <br /><br />
    It would also be great to index a few more non-Linux systems such as other
    BSDs, Solaris/Illumos and Mac OS X. Unfortunately, those don't always follow
