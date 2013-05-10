@@ -46,6 +46,7 @@ TUWF::set(
 $TUWF::OBJ->{pkglinks} = {
   arch             => sub { "http://www.archlinux.org/packages/$_[0]{category}/i686/$_[0]{name}/" },
   'debian-squeeze' => sub { "http://packages.debian.org/squeeze/$_[0]{name}" },
+  'debian-wheezy'  => sub { "http://packages.debian.org/wheezy/$_[0]{name}" },
   'ubuntu-hardy'   => sub { "http://packages.ubuntu.com/hardy/$_[0]{name}" },
   'ubuntu-lucid'   => sub { "http://packages.ubuntu.com/lucid/$_[0]{name}" },
   'ubuntu-oneiric' => sub { "http://packages.ubuntu.com/oneiric/$_[0]{name}" },

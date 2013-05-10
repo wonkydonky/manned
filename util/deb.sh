@@ -337,6 +337,12 @@ debian_squeeze() {
   syncrepo 28 "http://ftp.nl.debian.org/debian/" "squeeze-updates" "main contrib non-free"
 }
 
+debian_wheezy() {
+  syncrepo 83 "http://ftp.nl.debian.org/debian/" "wheezy" "main contrib non-free"
+  # No updates yet
+  #syncrepo 83 "http://ftp.nl.debian.org/debian/" "wheezy-updates" "main contrib non-free"
+}
+
 debian_old() {
   debian_buzz
   debian_rex
@@ -352,6 +358,7 @@ debian_old() {
 
 debian_active() {
   debian_squeeze
+  debian_wheezy
 }
 
 debian() {
