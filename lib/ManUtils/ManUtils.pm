@@ -93,7 +93,7 @@ sub fmt_block {
   my $c = shift;
   my $cv = fmt $c, \my $out, \my @err;
   $cv->recv;
-  warn "$_\n" for @err;
+  #warn "$_\n" for @err;
   $out;
 }
 
