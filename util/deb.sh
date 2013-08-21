@@ -272,12 +272,12 @@ ubuntu_old() {
   ubuntu_karmic
   ubuntu_maverick
   ubuntu_natty
+  ubuntu_hardy
+  ubuntu_oneiric
 }
 
 ubuntu_active() {
-  ubuntu_hardy    # until 2013-04
   ubuntu_lucid    # until 2015-04
-  ubuntu_oneiric  # until 2013-04
   ubuntu_precise  # until 2017-04
   ubuntu_quantal  # until 2014-04
   ubuntu_raring   # until 2014-01
@@ -339,8 +339,10 @@ debian_squeeze() {
 
 debian_wheezy() {
   syncrepo 83 "http://ftp.nl.debian.org/debian/" "wheezy" "main contrib non-free"
-  # No updates yet
-  #syncrepo 83 "http://ftp.nl.debian.org/debian/" "wheezy-updates" "main contrib non-free"
+  # The Contents-* files have moved...
+  syncrepo 83 "http://ftp.nl.debian.org/debian/" "wheezy-updates" "main" "dists/wheezy-updates/main/Contents-i386.gz"
+  syncrepo 83 "http://ftp.nl.debian.org/debian/" "wheezy-updates" "contrib" "dists/wheezy-updates/contrib/Contents-i386.gz"
+  syncrepo 83 "http://ftp.nl.debian.org/debian/" "wheezy-updates" "non-free" "dists/wheezy-updates/non-free/Contents-i386.gz"
 }
 
 debian_old() {
