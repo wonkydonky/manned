@@ -694,6 +694,15 @@ f8_3() {
   check_pkgdir 79 "$MIR/packages"
 }
 
+f8_4() {
+  MIR="http://ftp.dk.freebsd.org/pub/FreeBSD/releases/i386/8.4-RELEASE/"
+  echo "============ $MIR"
+  check_dist 84 "$MIR/base/base." "core-base" "2013-06-07" bq
+  check_dist 84 "$MIR/games/games." "core-games" "2013-06-07" ab
+  check_dist 84 "$MIR/manpages/manpages." "core-manpages" "2013-06-07" ag
+  check_pkgdir 84 "$MIR/packages"
+}
+
 f9_0() {
   MIR="http://ftp.dk.freebsd.org/pub/FreeBSD/releases/i386/9.0-RELEASE/"
   echo "============ $MIR"
@@ -755,6 +764,7 @@ old() {
   f8_1
   f8_2
   f8_3
+  f8_4
   f9_0
 }
 
