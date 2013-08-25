@@ -711,6 +711,14 @@ f9_0() {
   check_pkgdir 80 "$MIR/packages"
 }
 
+f9_1() {
+  MIR="http://ftp.dk.freebsd.org/pub/FreeBSD/releases/i386/9.1-RELEASE/"
+  echo "============ $MIR"
+  check_dist 85 "$MIR/base.txz" "core-base" "2012-12-30"
+  check_dist 85 "$MIR/games.txz" "core-games" "2012-12-30"
+  check_pkgdir 85 "$MIR/packages"
+}
+
 
 old() {
   f1_0
@@ -766,6 +774,7 @@ old() {
   f8_3
   f8_4
   f9_0
+  f9_1
 }
 
 "$@"
