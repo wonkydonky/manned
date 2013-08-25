@@ -469,15 +469,15 @@ sub getman {
     # Give lower priority to pages in a non-standard directory
     : !($a->{filename} =~ q{^/usr/share/man}) != !($b->{filename} =~ q{^/usr/share/man})
       ? ($a->{filename} =~ q{^/usr/share/man} ? -1 : 1)
-    # Lower sections > higher sections (because 'man' does this as well)
-    : substr($a->{section},0,1) ne substr($b->{section},0,1)
-      ? $a->{section} cmp $b->{section}
     # Prefer Arch over other systems
     : ($a->{system} != 1 || $b->{system} != 1) && $self->{sysbyid}{$a->{system}}{name} ne $self->{sysbyid}{$b->{system}}{name}
       ? ($a->{system} == 1 ? -1 : 1)
     # Prefer a later system release over an older one
     : $a->{system} != $b->{system} && $self->{sysbyid}{$a->{system}}{name} eq $self->{sysbyid}{$b->{system}}{name}
       ? $self->{sysbyid}{$b->{system}}{relorder} <=> $self->{sysbyid}{$a->{system}}{relorder}
+    # Lower sections > higher sections (because 'man' does this as well)
+    : substr($a->{section},0,1) ne substr($b->{section},0,1)
+      ? $a->{section} cmp $b->{section}
     # Sections without appendix before sections with appendix
     : $a->{section} ne $b->{section}
       ? $a->{section} cmp $b->{section}
