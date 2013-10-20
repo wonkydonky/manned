@@ -145,7 +145,8 @@ INSERT INTO systems (id, name, release, short, relorder) VALUES
   (83, 'Debian',     '7.0',   'debian-wheezy',   11),
   (84, 'FreeBSD',    '8.4',   'freebsd-8.4',     51),
   (85, 'FreeBSD',    '9.1',   'freebsd-9.1',     53),
-  (86, 'FreeBSD',    '9.2',   'freebsd-9.2',     54);
+  (86, 'FreeBSD',    '9.2',   'freebsd-9.2',     54),
+  (87, 'Ubuntu',     '13.10', 'ubuntu-saucy',    18);
 
 -- Removes any path components and compression extensions from the filename.
 CREATE OR REPLACE FUNCTION basename_from_filename(fn text) RETURNS text AS $$

@@ -259,6 +259,12 @@ ubuntu_raring() {
   syncrepo 82 "http://nl.archive.ubuntu.com/ubuntu/" "raring-security" "main multiverse restricted universe"
 }
 
+ubuntu_saucy() {
+  syncrepo 87 "http://nl.archive.ubuntu.com/ubuntu/" "saucy" "main multiverse restricted universe"
+  syncrepo 87 "http://nl.archive.ubuntu.com/ubuntu/" "saucy-updates" "main multiverse restricted universe"
+  syncrepo 87 "http://nl.archive.ubuntu.com/ubuntu/" "saucy-security" "main multiverse restricted universe"
+}
+
 ubuntu_old() {
   ubuntu_warty
   ubuntu_hoary
@@ -281,6 +287,7 @@ ubuntu_active() {
   ubuntu_precise  # until 2017-04
   ubuntu_quantal  # until 2014-04
   ubuntu_raring   # until 2014-01
+  ubuntu_saucy    # until 2014-07
 }
 
 ubuntu() {
