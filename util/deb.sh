@@ -265,6 +265,12 @@ ubuntu_saucy() {
   syncrepo 87 "http://nl.archive.ubuntu.com/ubuntu/" "saucy-security" "main multiverse restricted universe"
 }
 
+ubuntu_trusty() {
+  syncrepo 88 "http://nl.archive.ubuntu.com/ubuntu/" "trusty" "main multiverse restricted universe"
+  syncrepo 88 "http://nl.archive.ubuntu.com/ubuntu/" "trusty-updates" "main multiverse restricted universe"
+  syncrepo 88 "http://nl.archive.ubuntu.com/ubuntu/" "trusty-security" "main multiverse restricted universe"
+}
+
 ubuntu_old() {
   ubuntu_warty
   ubuntu_hoary
@@ -280,14 +286,15 @@ ubuntu_old() {
   ubuntu_natty
   ubuntu_hardy
   ubuntu_oneiric
+  ubuntu_raring
+  ubuntu_quantal
 }
 
 ubuntu_active() {
   ubuntu_lucid    # until 2015-04
   ubuntu_precise  # until 2017-04
-  ubuntu_quantal  # until 2014-04
-  ubuntu_raring   # until 2014-01
   ubuntu_saucy    # until 2014-07
+  ubuntu_trusty   # until 2019-04
 }
 
 ubuntu() {
