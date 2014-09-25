@@ -30,7 +30,7 @@ sub fmt {
   # doesn't '.so' it.
   $input =~ s/^\.so man.macros$//mg;
   # Other .so's should be handled by html()
-  $input =~ s/^\.so (.+)$/\[\[\[MANNEDINCLUDE $1\]\]\]/mg;
+  $input =~ s/^\.so (.+)$/.in -10\n.sp\n\[\[\[MANNEDINCLUDE $1\]\]\]/mg;
 
   # Disable hyphenation, since that screws up man page references. :-(
   $input = ".hy 0\n.de hy\n..\n$input";
