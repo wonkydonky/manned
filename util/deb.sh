@@ -288,12 +288,12 @@ ubuntu_old() {
   ubuntu_oneiric
   ubuntu_raring
   ubuntu_quantal
+  ubuntu_saucy
 }
 
 ubuntu_active() {
   ubuntu_lucid    # until 2015-04
   ubuntu_precise  # until 2017-04
-  ubuntu_saucy    # until 2014-07
   ubuntu_trusty   # until 2019-04
 }
 
