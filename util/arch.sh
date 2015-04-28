@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 # Usage: ./arch.sh
 # Synchronises the database with an Arch mirror, fetching any packages that

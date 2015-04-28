@@ -1,7 +1,7 @@
 .PHONY: ManUtils
 
 ManUtils: lib/ManUtils/Build
-	cd lib/ManUtils && ./Build install --install-base=inst
+	cd lib/ManUtils && perl Build.PL && ./Build install --install-base=inst
 
 lib/ManUtils/Build: lib/ManUtils/Build.PL
 	cd lib/ManUtils && perl Build.PL

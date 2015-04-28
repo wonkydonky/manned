@@ -43,16 +43,18 @@ TUWF::set(
 
 
 # TODO: Abstract this into the systems table?
-$TUWF::OBJ->{pkglinks} = {
-  arch             => sub { "http://www.archlinux.org/packages/$_[0]{category}/i686/$_[0]{name}/" },
-  'debian-squeeze' => sub { "http://packages.debian.org/squeeze/$_[0]{name}" },
-  'debian-wheezy'  => sub { "http://packages.debian.org/wheezy/$_[0]{name}" },
-  'ubuntu-lucid'   => sub { "http://packages.ubuntu.com/lucid/$_[0]{name}" },
-  'ubuntu-precise' => sub { "http://packages.ubuntu.com/precise/$_[0]{name}" },
-  'ubuntu-quantal' => sub { "http://packages.ubuntu.com/quantal/$_[0]{name}" },
-  'ubuntu-raring'  => sub { "http://packages.ubuntu.com/raring/$_[0]{name}" },
-  'ubuntu-saucy'   => sub { "http://packages.ubuntu.com/saucy/$_[0]{name}" },
-};
+$TUWF::OBJ->{pkglinks} = { };
+#  arch             => sub { "http://www.archlinux.org/packages/$_[0]{category}/i686/$_[0]{name}/" },
+#  'debian-squeeze' => sub { "http://packages.debian.org/squeeze/$_[0]{name}" },
+#  'debian-wheezy'  => sub { "http://packages.debian.org/wheezy/$_[0]{name}" },
+#  'ubuntu-lucid'   => sub { "http://packages.ubuntu.com/lucid/$_[0]{name}" },
+#  'ubuntu-precise' => sub { "http://packages.ubuntu.com/precise/$_[0]{name}" },
+#  'ubuntu-quantal' => sub { "http://packages.ubuntu.com/quantal/$_[0]{name}" },
+#  'ubuntu-raring'  => sub { "http://packages.ubuntu.com/raring/$_[0]{name}" },
+#  'ubuntu-saucy'   => sub { "http://packages.ubuntu.com/saucy/$_[0]{name}" },
+#  'ubuntu-trusty'  => sub { "http://packages.ubuntu.com/trusty/$_[0]{name}" },
+#  'ubuntu-utopic'  => sub { "http://packages.ubuntu.com/utopic/$_[0]{name}" },
+#};
 
 
 TUWF::register(
@@ -609,7 +611,7 @@ sub htmlHeader {
     div id => 'header';
      a href => '/', 'manned.org';
      form action => '/browse/search', method => 'get';
-      input type => 'text', name => 'q', id => 'q';
+      input type => 'text', name => 'q', id => 'q', tabindex => 1;
       input type => 'submit', value => ' ';
      end;
     end;

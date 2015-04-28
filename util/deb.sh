@@ -271,6 +271,18 @@ ubuntu_trusty() {
   syncrepo 88 "http://nl.archive.ubuntu.com/ubuntu/" "trusty-security" "main multiverse restricted universe"
 }
 
+ubuntu_utopic() {
+  syncrepo 89 "http://nl.archive.ubuntu.com/ubuntu/" "utopic" "main multiverse restricted universe"
+  syncrepo 89 "http://nl.archive.ubuntu.com/ubuntu/" "utopic-updates" "main multiverse restricted universe"
+  syncrepo 89 "http://nl.archive.ubuntu.com/ubuntu/" "utopic-security" "main multiverse restricted universe"
+}
+
+ubuntu_vivid() {
+  syncrepo 90 "http://nl.archive.ubuntu.com/ubuntu/" "vivid" "main multiverse restricted universe"
+  syncrepo 90 "http://nl.archive.ubuntu.com/ubuntu/" "vivid-updates" "main multiverse restricted universe"
+  syncrepo 90 "http://nl.archive.ubuntu.com/ubuntu/" "vivid-security" "main multiverse restricted universe"
+}
+
 ubuntu_old() {
   ubuntu_warty
   ubuntu_hoary
@@ -282,6 +294,7 @@ ubuntu_old() {
   ubuntu_intrepid
   ubuntu_jaunty
   ubuntu_karmic
+  ubuntu_lucid
   ubuntu_maverick
   ubuntu_natty
   ubuntu_hardy
@@ -292,9 +305,10 @@ ubuntu_old() {
 }
 
 ubuntu_active() {
-  ubuntu_lucid    # until 2015-04
   ubuntu_precise  # until 2017-04
   ubuntu_trusty   # until 2019-04
+  ubuntu_utopic   # until 2015-07
+  ubuntu_vivid    # until 2016-01
 }
 
 ubuntu() {
@@ -359,6 +373,15 @@ debian_wheezy() {
   syncrepo 83 "http://ftp.nl.debian.org/debian/" "wheezy-updates" "non-free" "dists/wheezy-updates/non-free/Contents-i386.gz"
 }
 
+debian_jessie() {
+  syncrepo 91 "http://ftp.nl.debian.org/debian/" "jessie" "main" "dists/jessie/main/Contents-i386.gz"
+  syncrepo 91 "http://ftp.nl.debian.org/debian/" "jessie" "contrib" "dists/jessie/contrib/Contents-i386.gz"
+  syncrepo 91 "http://ftp.nl.debian.org/debian/" "jessie" "non-free" "dists/jessie/non-free/Contents-i386.gz"
+  syncrepo 91 "http://ftp.nl.debian.org/debian/" "jessie-updates" "main" "dists/jessie-updates/main/Contents-i386.gz"
+  syncrepo 91 "http://ftp.nl.debian.org/debian/" "jessie-updates" "contrib" "dists/jessie-updates/contrib/Contents-i386.gz"
+  syncrepo 91 "http://ftp.nl.debian.org/debian/" "jessie-updates" "non-free" "dists/jessie-updates/non-free/Contents-i386.gz"
+}
+
 debian_old() {
   debian_buzz
   debian_rex
@@ -375,6 +398,7 @@ debian_old() {
 debian_active() {
   debian_squeeze
   debian_wheezy
+  debian_jessie
 }
 
 debian() {

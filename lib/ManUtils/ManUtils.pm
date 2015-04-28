@@ -35,6 +35,9 @@ sub fmt {
   # Disable hyphenation, since that screws up man page references. :-(
   $input = ".hy 0\n.de hy\n..\n$input";
 
+  # Emulate man-db's --nj option
+  $input = ".na\n.de ad\n..\n$input";
+
   $input = encode_utf8($input);
 
   # Call grog to figure out which preprocessors to use.

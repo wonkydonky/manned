@@ -1,3 +1,4 @@
+#!/bin/bash
 
 CURL="curl -fSs -A manual-page-crawler,info@manned.org --limit-rate 500k"
 PSQL="psql -U manned -Awtq"

@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 . ./common.sh
 
@@ -720,6 +720,14 @@ f9_1() {
 }
 
 f9_2() {
+  MIR="http://ftp.dk.freebsd.org/pub/FreeBSD/releases/i386/9.2-RELEASE/"
+  echo "============ $MIR"
+  check_dist 86 "$MIR/base.txz" "core-base" "2013-09-27"
+  check_dist 86 "$MIR/games.txz" "core-games" "2013-09-27"
+  check_pkgdir 86 "$MIR/packages"
+}
+
+f9_3() {
   MIR="http://ftp.dk.freebsd.org/pub/FreeBSD/releases/i386/9.2-RELEASE/"
   echo "============ $MIR"
   check_dist 86 "$MIR/base.txz" "core-base" "2013-09-27"
