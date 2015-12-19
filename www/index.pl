@@ -572,6 +572,7 @@ sub src {
 
   $self->setLastMod($m->[0]{released});
   $self->resHeader('Content-Type', 'text/plain; charset=UTF-8');
+  $self->resHeader('Content-Disposition', sprintf 'filename="%s.%s"', $m->[0]{name}, $m->[0]{section});
   my $c = $self->dbManContent($m->[0]{hash});
   lit $c;
 }
@@ -680,7 +681,7 @@ sub dbManInfo {
   my $s = shift;
   my %o = @_;
 
-  (my $oname = $o{name}||'') =~ s/\.([0-9n])$//;
+  (my $oname = $o{name}||'') =~ s/\.([0-9nk]|kde3)$//;
   my %where = (
     $o{name}      ? ('m.name IN(!l)' => [[ $o{name}, $oname ne $o{name} ? $oname : () ]]) : (),
     $o{package}   ? ('m.package = ?' => $o{package}) : (),
