@@ -283,6 +283,12 @@ ubuntu_vivid() {
   syncrepo 90 "http://nl.archive.ubuntu.com/ubuntu/" "vivid-security" "main multiverse restricted universe"
 }
 
+ubuntu_wily() {
+  syncrepo 92 "http://nl.archive.ubuntu.com/ubuntu/" "wily" "main multiverse restricted universe"
+  syncrepo 92 "http://nl.archive.ubuntu.com/ubuntu/" "wily-updates" "main multiverse restricted universe"
+  syncrepo 92 "http://nl.archive.ubuntu.com/ubuntu/" "wily-security" "main multiverse restricted universe"
+}
+
 ubuntu_old() {
   ubuntu_warty
   ubuntu_hoary
@@ -302,13 +308,14 @@ ubuntu_old() {
   ubuntu_raring
   ubuntu_quantal
   ubuntu_saucy
+  ubuntu_utopic
+  ubuntu_vivid
 }
 
 ubuntu_active() {
   ubuntu_precise  # until 2017-04
   ubuntu_trusty   # until 2019-04
-  ubuntu_utopic   # until 2015-07
-  ubuntu_vivid    # until 2016-01
+  ubuntu_wily     # until 2016-07
 }
 
 ubuntu() {
@@ -393,10 +400,10 @@ debian_old() {
   debian_sarge
   debian_etch
   debian_lenny
+  debian_squeeze
 }
 
 debian_active() {
-  debian_squeeze
   debian_wheezy
   debian_jessie
 }
