@@ -289,6 +289,12 @@ ubuntu_wily() {
   syncrepo 92 "http://nl.archive.ubuntu.com/ubuntu/" "wily-security" "main multiverse restricted universe"
 }
 
+ubuntu_xenial() {
+  syncrepo 93 "http://nl.archive.ubuntu.com/ubuntu/" "xenial" "main multiverse restricted universe"
+  syncrepo 93 "http://nl.archive.ubuntu.com/ubuntu/" "xenial-updates" "main multiverse restricted universe"
+  syncrepo 93 "http://nl.archive.ubuntu.com/ubuntu/" "xenial-security" "main multiverse restricted universe"
+}
+
 ubuntu_old() {
   ubuntu_warty
   ubuntu_hoary
@@ -316,6 +322,7 @@ ubuntu_active() {
   ubuntu_precise  # until 2017-04
   ubuntu_trusty   # until 2019-04
   ubuntu_wily     # until 2016-07
+  ubuntu_xenial   # until 2021-04
 }
 
 ubuntu() {
