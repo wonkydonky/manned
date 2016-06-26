@@ -42,21 +42,6 @@ TUWF::set(
 );
 
 
-# TODO: Abstract this into the systems table?
-$TUWF::OBJ->{pkglinks} = { };
-#  arch             => sub { "http://www.archlinux.org/packages/$_[0]{category}/i686/$_[0]{name}/" },
-#  'debian-squeeze' => sub { "http://packages.debian.org/squeeze/$_[0]{name}" },
-#  'debian-wheezy'  => sub { "http://packages.debian.org/wheezy/$_[0]{name}" },
-#  'ubuntu-lucid'   => sub { "http://packages.ubuntu.com/lucid/$_[0]{name}" },
-#  'ubuntu-precise' => sub { "http://packages.ubuntu.com/precise/$_[0]{name}" },
-#  'ubuntu-quantal' => sub { "http://packages.ubuntu.com/quantal/$_[0]{name}" },
-#  'ubuntu-raring'  => sub { "http://packages.ubuntu.com/raring/$_[0]{name}" },
-#  'ubuntu-saucy'   => sub { "http://packages.ubuntu.com/saucy/$_[0]{name}" },
-#  'ubuntu-trusty'  => sub { "http://packages.ubuntu.com/trusty/$_[0]{name}" },
-#  'ubuntu-utopic'  => sub { "http://packages.ubuntu.com/utopic/$_[0]{name}" },
-#};
-
-
 TUWF::register(
   qr// => \&home,
   qr{info/about} => \&about,
@@ -378,17 +363,6 @@ sub browsepkg {
   $self->htmlHeader(title => $title);
   h1 $title;
 
-  my $lnk = $self->{pkglinks}{$sys->{short}};
-  if($lnk) {
-    $lnk = $lnk->($sel);
-    (my $domain = $lnk) =~ s{^https?://(?:[^/]+\.)?([^/\.]+\.[^/\.]+)/.+}{$1};
-    p;
-     br;
-     a href => $lnk, 'Package information';
-     i class => 'grayedout', " [$domain]";
-    end;
-  }
-
   # TODO: Link back to the system browsing page
 
   h2 'Versions';
@@ -630,7 +604,7 @@ sub htmlFooter {
      lit 'All manual pages are copyrighted by their respective authors.
        | <a href="/info/about">About manned.org</a>
        | <a href="mailto:contact@manned.org">Contact</a>
-       | <a href="http://g.blicky.net/manned.git/">Source</a>';
+       | <a href="https://g.blicky.net/manned.git/">Source</a>';
     end;
     if($o{js}) {
       script type => 'text/javascript';

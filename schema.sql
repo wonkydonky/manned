@@ -1,7 +1,6 @@
 
 -- TODO: "system" -> "repository"?
 -- TODO: index of (reverse) man page references?
--- TODO: Probably want an index on man(name). Or try swapping column order in the unique index.
 -- TODO: Use some consistent naming of tables and columns
 
 
