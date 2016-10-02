@@ -1,9 +1,3 @@
-
--- TODO: "system" -> "repository"?
--- TODO: index of (reverse) man page references?
--- TODO: Use some consistent naming of tables and columns
-
-
 CREATE TABLE systems (
   id       integer PRIMARY KEY,  -- hardcoded ID.
   name     varchar NOT NULL,
@@ -12,50 +6,47 @@ CREATE TABLE systems (
   short    varchar NOT NULL
 );
 
-
 CREATE TABLE contents (
   hash    bytea      PRIMARY KEY,
   content varchar    NOT NULL
 );
 
-
--- Note: If there are multiple arches available for the same package, then
--- generally only a single one is chosen (not stored here which one).
--- Also, a package may be listed here even if it has no man pages indexed, in
--- order for the fetcher to determine whether it has already processed the
--- package or not. This doesn't mean all packages of a repository are listed
--- here. For example, the Arch fetcher checks the file list of a package before
--- considering to handle it.
-CREATE TABLE package (
+CREATE TABLE packages (
   id       SERIAL    PRIMARY KEY,
   system   integer   NOT NULL REFERENCES systems(id),
-  category varchar,            -- depends on system (e.g. "community" on Arch, "x11" on Debian)
+  category varchar,
   name     varchar   NOT NULL,
-  version  varchar   NOT NULL,
-  released date      NOT NULL,
-  UNIQUE(system, name, version)
+  UNIQUE(system, name, category) -- Note the order, lookups on (system,name) are common
 );
 
+CREATE TABLE package_versions (
+  id       SERIAL    PRIMARY KEY,
+  package  integer   NOT NULL REFERENCES packages(id),
+  version  varchar   NOT NULL,
+  released date      NOT NULL,
+  UNIQUE(package, version)
+);
 
 CREATE TABLE man (
-  package  integer   NOT NULL REFERENCES package(id),
-  name     varchar   NOT NULL, -- 'fopen', 'du', etc (TODO: An index on name_from_filename(filename) may also work)
-  section  varchar   NOT NULL, -- extracted from filename (TODO: Is this column really necessary?)
-  filename varchar   NOT NULL, -- full path + file name
-  locale   varchar,            -- parsed from the file name, NULL for the "main" man page (in the C or en_US locale)
+  package  integer   NOT NULL REFERENCES package_versions(id),
+  name     varchar   NOT NULL,
+  section  varchar   NOT NULL,
+  filename varchar   NOT NULL,
+  locale   varchar,
   hash     bytea     NOT NULL REFERENCES contents(hash),
   UNIQUE(package, filename)
 );
 
-
-CREATE INDEX ON man USING hash (hash);
+CREATE INDEX ON man (hash);
 CREATE INDEX ON man (name);
+
 
 
 CREATE TABLE man_index AS SELECT DISTINCT name, section FROM man;
 CREATE INDEX ON man_index USING btree(lower(name) text_pattern_ops);
 
 CREATE TABLE stats_cache AS SELECT count(distinct hash) AS hashes, count(distinct name) AS mans, count(*) AS files, count(distinct package) AS packages FROM man;
+
 
 
 INSERT INTO systems (id, name, release, short, relorder) VALUES
@@ -153,6 +144,7 @@ INSERT INTO systems (id, name, release, short, relorder) VALUES
   (92, 'Ubuntu',     '15.10', 'ubuntu-wily',     22),
   (93, 'Ubuntu',     '16.04', 'ubuntu-xenial',   23);
 
+
 -- Removes any path components and compression extensions from the filename.
 CREATE OR REPLACE FUNCTION basename_from_filename(fn text) RETURNS text AS $$
 DECLARE
@@ -178,16 +170,3 @@ $$ LANGUAGE SQL;
 CREATE OR REPLACE FUNCTION name_from_filename(text) RETURNS text AS $$
   SELECT regexp_replace(basename_from_filename($1), E'^(.+)\\.[^.]+$', E'\\1');
 $$ LANGUAGE SQL;
-
-
-
-
--- Some handy admin queries
-
---BEGIN;
---DELETE FROM man WHERE package IN(SELECT id FROM package WHERE name = '');
---DELETE FROM package WHERE name = '';
---DELETE FROM contents c WHERE NOT EXISTS(SELECT 1 FROM man m WHERE m.hash = c.hash);
---COMMIT;
-
---DELETE FROM package WHERE system = 18 AND NOT EXISTS(SELECT 1 FROM man WHERE id = package);

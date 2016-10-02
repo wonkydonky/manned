@@ -31,11 +31,10 @@ checkpkg() {
   DATE=`date -d "$DATE" +%F`
 
   # Insert package in the database
-  PKGID=`echo "INSERT INTO package (system, category, name, version, released) VALUES(:'sysid',:'cat',:'name',:'ver',:'rel') RETURNING id"\
-    | $PSQL -v "sysid=$SYSID" -v "cat=$SECTION" -v "name=$NAME" -v "ver=$VERSION" -v "rel=$DATE"`
+  add_pkginfo $SYSID $SECTION $NAME $VERSION $DATE
 
   # Extract and handle the man pages
-  if [ "$?" -eq 0 -a -n "$PKGID" ]; then
+  if [ "$?" -eq 1 -a -n "$PKGID" ]; then
     # Old format
     if [ "`head -c8 \"$FN\"`" = "0.939000" ]; then
       tail -n+3 "$FN" | tail -c+"`head -n2 \"$FN\" | tail -n1`" | tail -c+2 | add_tar - $PKGID -z
@@ -116,11 +115,13 @@ syncrepo() {
         if($p && $v && $s && $f) {
           $f =~ s{^(Debian-1.[12])/}{dists/$1/main/};
           print "$p $v $s $f" if $pkg{$p} && $pkg{$p} == 1
-            && !$db->selectrow_arrayref(q{SELECT 1 FROM package WHERE system = ? AND name = ? AND version = ?}, {}, $sysid, $p, $v);
+            && !$db->selectrow_arrayref(q{
+                SELECT 1 FROM packages p JOIN package_versions pv ON pv.package = p.id
+                  WHERE p.system = ? AND p.category = ? AND p.name = ? AND pv.version = ?}, {}, $sysid, $s, $p, $v);
           #warn "Duplicate package? $p\n" if $pkg{$p} && $pkg{$p} == 2;
           $pkg{$p} = 2;
         }
-        $p=$v=$f=undef
+        $p=$v=$f=$s=undef
       }
     }
     close F;

@@ -346,7 +346,7 @@ function bsDecode(s) {
 /* Structure of VARS.mans:
   [
     ["System", "Full name", "short", [
-        [ "package", "version", [
+        [ "category", "package", "version", [
             [ "section", "locale"||null ],
             ...
           ],
@@ -358,6 +358,8 @@ function bsDecode(s) {
     ],
     ...
   ]
+
+  The godawful navigation code desperately needs a rewrite.
 */
 
 navShowLocales  = false;
@@ -410,14 +412,14 @@ function navCreate(nav) {
 function navCreatePkg(nav, view, dd, sys, n) {
   var pkg = sys[3][n];
 
-  var isold = n > 0 && sys[3][n-1][0] == pkg[0];
-  if(isold && !pkg[3])
+  var isold = n > 0 && sys[3][n-1][0] == pkg[0] && sys[3][n-1][1] == pkg[1];;
+  if(isold && !pkg[4])
     return false;
 
   var mannum = 0;
   var pdd = tag('dd', null);
-  for(var i=0; i<pkg[2].length; i++) {
-    var man = pkg[2][i];
+  for(var i=0; i<pkg[3].length; i++) {
+    var man = pkg[3][i];
     var txt = man[0] + (man[1] ? '.'+man[1] : '');
     if(man[2] != VARS.hash && man[1])
       navHasLocale = true;
@@ -430,17 +432,17 @@ function navCreatePkg(nav, view, dd, sys, n) {
   }
 
   if(mannum > 0) {
-    dd.appendChild(tag('dt', tag('a', {href:'/browse/'+sys[2]+'/'+pkg[0]+'/'+pkg[1]}, pkg[0]),
-      isold || !sys[3][n+1] || sys[3][n+1][0] != pkg[0] ? null : tag('a',
-        {href:'#', _pkgn: pkg[0], _pkgi:n, 'class':'expand',
+    dd.appendChild(tag('dt', tag('a', {href:'/pkg/'+sys[2]+'/'+pkg[0]+'/'+pkg[1]+'/'+pkg[2]}, pkg[1]),
+      isold || !sys[3][n+1] || sys[3][n+1][0] != pkg[0] || sys[3][n+1][1] != pkg[1] ? null : tag('a',
+        {href:'#', _pkgn: pkg[0]+'-'+pkg[1], _pkgi:n, 'class':'expand',
          title: 'Show/hide historical versions of this package',
          onclick: function() {
-          for(var j=this._pkgi+1; j<sys[3].length && sys[3][j][0] == this._pkgn; j++)
-            sys[3][j][3] = !sys[3][j][3];
+          for(var j=this._pkgi+1; j<sys[3].length && sys[3][j][0]+'-'+sys[3][j][1] == this._pkgn; j++)
+            sys[3][j][4] = !sys[3][j][4];
           navCreate(nav);
           return false
-        }}, sys[3][n+1][3] ? expanded_icon : collapsed_icon),
-      tag('i', pkg[1])));
+        }}, sys[3][n+1][4] ? expanded_icon : collapsed_icon),
+      tag('i', pkg[0] + ' / ' + pkg[2])));
     dd.appendChild(pdd);
     return true;
   }
@@ -461,7 +463,7 @@ function navCreateLinks(nav) {
 
 
 // Serializes the current navigation view into a short string. The string is a
-// bsEncode()ed bit array, creates as follows:
+// bsEncode()ed bit array, created as follows:
 //   array.push(navShowLocales);
 //   for(each system that has an expand button)
 //     array.push(is the butten expanded or not);
@@ -478,8 +480,8 @@ function navSerialize() {
       a.push(!!VARS.mans[i+1][4]);
   for(var i=0; i<VARS.mans.length; i++)
     for(var j=0; j<VARS.mans[i][3].length; j++)
-      if(j+1 < VARS.mans[i][3].length && VARS.mans[i][3][j+1][0] == VARS.mans[i][3][j][0] && (j == 0 || VARS.mans[i][3][j-1][0] != VARS.mans[i][3][j][0]))
-        a.push(!!VARS.mans[i][3][j+1][3]);
+      if(j+1 < VARS.mans[i][3].length && VARS.mans[i][3][j+1][0] == VARS.mans[i][3][j][0] && VARS.mans[i][3][j+1][1] == VARS.mans[i][3][j][1] && (j == 0 || VARS.mans[i][3][j-1][0] != VARS.mans[i][3][j][0] || VARS.mans[i][3][j-1][1] != VARS.mans[i][3][j][1]))
+        a.push(!!VARS.mans[i][3][j+1][4]);
   return bsEncode(a).replace(/(.)a+$/, '$1');
 }
 
@@ -492,8 +494,8 @@ function navLoad(s) {
       VARS.mans[i][4] = i > 1 && VARS.mans[i-2][0] == VARS.mans[i-1][0] ? VARS.mans[i-1][4] : !!a.shift();
   for(var i=0; i<VARS.mans.length; i++)
     for(var j=0; j<VARS.mans[i][3].length; j++)
-      if(j > 0 && VARS.mans[i][3][j-1][0] == VARS.mans[i][3][j][0])
-        VARS.mans[i][3][j][3] = j > 1 && VARS.mans[i][3][j-2][0] == VARS.mans[i][3][j-1][0] ? VARS.mans[i][3][j-1][3] : !!a.shift();
+      if(j > 0 && VARS.mans[i][3][j-1][0] == VARS.mans[i][3][j][0] && VARS.mans[i][3][j-1][1] == VARS.mans[i][3][j][1])
+        VARS.mans[i][3][j][4] = j > 1 && VARS.mans[i][3][j-2][0] == VARS.mans[i][3][j-1][0] && VARS.mans[i][3][j-2][1] == VARS.mans[i][3][j-1][1] ? VARS.mans[i][3][j-1][4] : !!a.shift();
 }
 
 

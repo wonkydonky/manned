@@ -46,8 +46,23 @@ TUWF::register(
   qr// => \&home,
   qr{info/about} => \&about,
   qr{browse/search} => \&browsesearch,
-  qr{browse/([^/]+)} => \&browsesys,
-  qr{browse/([^/]+)/([^/]+)(?:/([^/]+))?} => \&browsepkg,
+
+  qr{pkg/([^/]+)} => \&pkg_list,
+  # pkg/$system/$category/$name (/$version); $category may contain a slash, too.
+  qr{pkg/([^/]+)/(.+)?} => \&pkg_info,
+
+  # Redirects for old URLs.
+  # /browse/<pkg> has been moved to /pkg/ with the package category added to the path
+  qr{browse/([^/]+)} => sub { $_[0]->resRedirect("/pkg/$_[1]", 'perm'); },
+  qr{browse/([^/]+)/([^/]+)(?:/([^/]+))?} => sub {
+    my($self, $sys, $name, $ver) = @_;
+    $sys = $self->{sysbyshort}{$sys};
+    return $self->resNotFound if !$sys;
+    my $pkgs = $self->dbPackageGet(sysid => $sys->{id}, name => $name, results => 1);
+    return $self->resNotFound if !@$pkgs;
+    $self->resRedirect("/pkg/$sys->{short}/$pkgs->[0]{category}/$name".($ver ? "/$ver" :''), 'perm');
+  },
+
   qr{xml/search\.xml} => \&xmlsearch,
   qr{([^/]+)/([0-9a-f]{8})} => \&man,
   qr{([^/]+)/([0-9a-f]{8})/src} => \&src,
@@ -82,13 +97,13 @@ sub home {
      $sys = $sys{$sys};
      (my $img = $sys->[0]{short}) =~ s/^(.+)-.+$/$1/;
      li;
-      a href => "/browse/$sys->[0]{short}" if @$sys == 1;
+      a href => "/pkg/$sys->[0]{short}" if @$sys == 1;
        span style => "background-image: url('images/$img.png')", '';
        b $sys->[0]{name};
        if(@$sys > 1) {
          my $i = 0;
          for(reverse @$sys) {
-           a href => "/browse/$_->{short}", ++$i > 3 ? (class => 'hidden') : (), $_->{release};
+           a href => "/pkg/$_->{short}", ++$i > 3 ? (class => 'hidden') : (), $_->{release};
            lit ' ';
          }
          a href => "#", class => 'more', 'more...' if $i > 3;
@@ -272,7 +287,7 @@ sub browsesearch {
 }
 
 
-sub browsesys {
+sub pkg_list {
   my($self, $short) = @_;
 
   my $sys = $self->{sysbyshort}{$short};
@@ -284,7 +299,7 @@ sub browsesys {
   );
   return $self->resNotFound if $f->{_err};
 
-  my $pkg = $self->dbPackageList(
+  my $pkg = $self->dbPackageGet(
     hasman => 1,
     sysid => $sys->{id},
     char => $f->{c} eq 'all' ? undef : $f->{c},
@@ -299,7 +314,7 @@ sub browsesys {
     use utf8;
     if($more) {
       p class => 'pagination';
-       a href => "/browse/$short?c=$f->{c};s=$pkg->[199]{name}", 'next »';
+       a href => "/pkg/$short?c=$f->{c};s=$pkg->[199]{name}", 'next »';
       end;
     }
   };
@@ -310,7 +325,7 @@ sub browsesys {
 
   p id => 'charselect';
    for('all', 0, 'a'..'z') {
-     a href => "/browse/$short?c=$_", $_?uc$_:'#' if $_ ne $f->{c};
+     a href => "/pkg/$short?c=$_", $_?uc$_:'#' if $_ ne $f->{c};
      b $_?uc$_:'#' if $_ eq $f->{c};
    }
   end;
@@ -320,7 +335,7 @@ sub browsesys {
   ul id => 'packages';
    for(@$pkg) {
      li;
-      a href => "/browse/$short/$_->{name}", $_->{name};
+      a href => "/pkg/$short/$_->{category}/$_->{name}", $_->{name};
       i ' '.$_->{category};
      end;
    }
@@ -330,14 +345,44 @@ sub browsesys {
 }
 
 
-sub browsepkg {
-  my($self, $short, $name, $ver) = @_;
+sub pkg_frompath {
+  my($self, $sys, $path) = @_;
+
+  # $path should be "$category/$name" or "$category/$name/$version", since
+  # $category may contain a slash, let's try both options.
+
+  # $category/$name
+  # e.g. contrib/games/alien
+  if($path =~ m{^(.+)/([^/]+)$}) {
+    my($category, $name) = ($1, $2);
+    my $pkg = $self->dbPackageGet(sysid => $sys, category => $category, name => $name, hasman => 1)->[0];
+    return ($pkg, '') if $pkg;
+  }
+
+  # $category/$name/$version
+  # e.g. contrib/games/alien/10.2
+  if($path =~ m{^(.+)/([^/]+)/([^/]+)$}) {
+    my($category, $name, $version) = ($1, $2, $3);
+    my $pkg = $self->dbPackageGet(sysid => $sys, category => $category, name => $name, hasman => 1)->[0];
+    return ($pkg, $version) if $pkg;
+  }
+
+  (undef, '');
+}
+
+
+sub pkg_info {
+  my($self, $short, $path) = @_;
 
   my $sys = $self->{sysbyshort}{$short};
   return $self->resNotFound if !$sys;
 
-  my $pkgs = $self->dbPackageGet($sys->{id}, $name);
-  my $sel = $ver ? (grep $_->{version} eq $ver, @$pkgs)[0] : $pkgs->[0];
+  my($pkg, $ver) = pkg_frompath($self, $sys->{id}, $path);
+  return $self->resNotFound if !$pkg;
+
+  my $vers = $self->dbPackageVersions($pkg->{id});
+
+  my $sel = $ver ? (grep $_->{version} eq $ver, @$vers)[0] : $vers->[0];
   return $self->resNotFound if !$sel;
 
   my $f = $self->formValidate({ get => 's', required => 0});
@@ -346,33 +391,30 @@ sub browsepkg {
   my $mans = $self->dbManInfo(package => $sel->{id}, results => 201, start => $f->{s}, sort => 'name');
   my $more = @$mans > 200 && pop @$mans;
 
+  # Latest version of this package determines last modification date of the page.
+  $self->setLastMod($vers->[0]{released});
+
   # TODO: A "previous" link would be nice...
   my $next = sub {
     use utf8;
     if($more) {
       p class => 'pagination';
-       a href => "/browse/$sys->{short}/$name/$sel->{version}?s=$mans->[199]{name}", 'next »';
+       a href => "/pkg/$sys->{short}/$pkg->{category}/$pkg->{name}/$sel->{version}?s=$mans->[199]{name}", 'next »';
       end;
     }
   };
 
-  # Latest version of this package determines last modification date of the page.
-  $self->setLastMod($pkgs->[0]{released});
-
-  my $title = "$sys->{name}".($sys->{release}?" $sys->{release}":"")." / $name $sel->{version}";
+  my $title = "$sys->{name}".($sys->{release}?" $sys->{release}":"")." / $pkg->{category} / $pkg->{name} $sel->{version}";
   $self->htmlHeader(title => $title);
   h1 $title;
 
-  # TODO: Link back to the system browsing page
-
   h2 'Versions';
   ul id => 'packages';
-   for(@$pkgs) {
+   for(@$vers) {
      li;
       txt "$_->{released} ";
-      a href => "/browse/$sys->{short}/$name/$_->{version}", $_->{version} if $_ != $sel;
+      a href => "/pkg/$sys->{short}/$pkg->{category}/$pkg->{name}/$_->{version}", $_->{version} if $_ != $sel;
       b " $_->{version}" if $_ == $sel;
-      i " $_->{category}";
      end;
    }
   end;
@@ -405,13 +447,13 @@ sub manjslist {
       do {
         my %pkgs;
         for(@{$sys{$_}}) {
-          my $pn = "$_->{package}-$_->{version}";
-          $pkgs{$pn} = [ $_->{package}, $_->{version}, [], $_->{released} ] if !$pkgs{$pn};
-          push @{$pkgs{$pn}[2]}, [ $_->{section}, $_->{locale}, substr $_->{hash}, 0, 8 ];
+          my $pn = "$_->{category}-$_->{package}-$_->{version}";
+          $pkgs{$pn} = [ $_->{category}, $_->{package}, $_->{version}, [], $_->{released} ] if !$pkgs{$pn};
+          push @{$pkgs{$pn}[3]}, [ $_->{section}, $_->{locale}, substr $_->{hash}, 0, 8 ];
         }
         [ grep
-          delete($_->[3]) && ($_->[2] = [sort { $a->[0] cmp $b->[0] || ($a->[1]||'') cmp ($b->[1]||'') } @{$_->[2]}]),
-          sort { $a->[0] cmp $b->[0] || $b->[3] cmp $a->[3] } values %pkgs ];
+          delete($_->[4]) && ($_->[3] = [sort { $a->[0] cmp $b->[0] || ($a->[1]||'') cmp ($b->[1]||'') } @{$_->[3]}]),
+          sort { $a->[0] cmp $b->[0] || $a->[1] cmp $b->[1] || $b->[4] cmp $a->[4] } values %pkgs ];
       }
     ],
     sort { my $x=$self->{sysbyid}{$a}; my $y=$self->{sysbyid}{$b}; $x->{name} cmp $y->{name} or $y->{relorder} <=> $x->{relorder} } keys %sys
@@ -650,7 +692,7 @@ sub dbManContent {
 }
 
 
-# Options: name, section, shorthash, locale, package, start, results, sort
+# Options: name, section, shorthash, package, start, results, sort
 sub dbManInfo {
   my $s = shift;
   my %o = @_;
@@ -662,21 +704,21 @@ sub dbManInfo {
     $o{section}   ? ('m.section = ?' => $o{section}) : (),
     $o{shorthash} ? (q{substring(m.hash from 1 for 4) = decode(?, 'hex')} => $o{shorthash}) : (),
     $o{hash}      ? (q{m.hash = decode(?, 'hex')} => $o{hash}) : (),
-    $o{locale}    ? ('m.locale = ?', $o{locale}) : exists $o{locale} ? ('m.locale IS NULL' => 1) : (),
     $o{start}     ? ('m.name > ?' => $o{start}) : (),
   );
 
   # TODO: Flags to indicate what to information to fetch
   return $s->dbAll(q{
-    SELECT p.system, p.category, p.name AS package, p.version, p.released, m.name, m.section, m.filename, m.locale, encode(m.hash, 'hex') AS hash
-      FROM package p
-      JOIN man m ON m.package = p.id
+    SELECT p.system, p.category, p.name AS package, pv.version, pv.released, m.name, m.section, m.filename, m.locale, encode(m.hash, 'hex') AS hash
+      FROM packages p
+      JOIN package_versions pv ON p.id = pv.package
+      JOIN man m ON m.package = pv.id
         !W
         !s
      LIMIT ?
   },
     \%where,
-    $o{sort} ? 'ORDER BY name, locale NULLS FIRST' : '',
+    $o{sort} ? 'ORDER BY name' : '',
     $o{results}||10000
   );
 }
@@ -705,29 +747,25 @@ sub dbSystemGet {
 }
 
 
-# TODO: Optimize
 # Options: sysid char hasman start results
-sub dbPackageList {
+sub dbPackageGet {
   my $s = shift;
   my %o = (results => 10, @_);
 
   my @where = (
     $o{sysid} ? ('system = ?' => $o{sysid}) : (),
+    $o{category} ? ('category = ?' => $o{category}) : (),
+    $o{name} ? ('name = ?' => $o{name}) : (),
     $o{start} ? ('name > ?' => $o{start}) : (),
-    defined($o{hasman}) ? ('!s EXISTS(SELECT 1 FROM man m WHERE m.package = p.id)' => $o{hasman}?'':'NOT') : (),
+    # This seems slow, perhaps cache?
+    defined($o{hasman}) ? ('!s EXISTS(SELECT 1 FROM package_versions pv WHERE pv.package = p.id AND EXISTS(SELECT 1 FROM man m WHERE m.package = pv.id))' => $o{hasman}?'':'NOT') : (),
     $o{char} ? ( 'LOWER(SUBSTR(name, 1, 1)) = ?' => $o{char} ) : (),
     defined($o{char}) && !$o{char} ? ( '(ASCII(name) < 97 OR ASCII(name) > 122) AND (ASCII(name) < 65 OR ASCII(name) > 90)' => 1 ) : (),
-    # Only get the latest version
-    # TODO: This is more efficient than using, e.g. SELECT DISTINCT to achieve
-    # the same effect. The downside of this solution is that packages of which
-    # the latest release does not include man pages are not listed, even if an
-    # earlier version does have mans.
-    'NOT EXISTS(SELECT 1 FROM package p2 WHERE p2.system = p.system AND p2.name = p.name AND p2.released > p.released)'
   );
 
   return $s->dbAll(q{
-      SELECT name, category
-        FROM package p
+      SELECT id, system, name, category
+        FROM packages p
           !W
     ORDER BY name
        LIMIT ?},
@@ -735,18 +773,16 @@ sub dbPackageList {
 }
 
 
-# TODO: Optimize?
-sub dbPackageGet {
-  my($s, $sysid, $name) = @_;
+sub dbPackageVersions {
+  my($s, $id) = @_;
 
   return $s->dbAll(q{
-      SELECT id, category, name, version, released
-        FROM package p
-       WHERE system = ?
-         AND name = ?
-         AND EXISTS(SELECT 1 FROM man m WHERE m.package = p.id)
+      SELECT id, version, released
+        FROM package_versions v
+       WHERE package = ?
+         AND EXISTS(SELECT 1 FROM man m WHERE m.package = v.id)
     ORDER BY released DESC},
-  $sysid, $name)
+  $id)
 }
 
 
