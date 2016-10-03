@@ -120,10 +120,8 @@ sub home {
    li; a href => 'http://linux.die.net/man/', 'Die.net'; end;
    li; a href => 'http://www.freebsd.org/cgi/man.cgi', 'FreeBSD.org Man Pages'; end;
    li; a href => 'http://www.openbsd.org/cgi-bin/man.cgi', 'OpenBSD Man Pages'; end;
-   li; a href => 'http://linuxmanpages.net/', 'Fedora Manuals'; end;
    li; a href => 'http://manpages.ubuntu.com/', 'Ubuntu Manuals'; end;
    li; a href => 'http://www.manpagez.com/', 'Manpagez.com'; txt ' (Mac OS X, has some texinfo documentation as well)'; end;
-   # li; a href => 'http://www.ma.utexas.edu/cgi-bin/man-cgi', 'ma.utexas.edu'; end; <- No idea what this has to offer when compared to the rest
   end;
   $self->htmlFooter;
 }
