@@ -264,7 +264,7 @@ sub browsesearch {
   my $q = $self->reqGet('q')||'';
   my $man = $self->dbSearch($q, 150);
 
-  return $self->resRedirect("/$man->[0]{name}.".substr($man->[0]{section},0,1), 'temp') if @$man == 1;
+  return $self->resRedirect("/$man->[0]{name}.$man->[0]{section}", 'temp') if @$man == 1;
 
   $self->htmlHeader(title => 'Search results for '.$q);
   h1 'Search results for '.$q;
@@ -273,7 +273,7 @@ sub browsesearch {
     ul id => 'searchres';
      for(@$man) {
        li;
-        a href => "/$_->{name}.".substr($_->{section},0,1), $_->{name};
+        a href => "/$_->{name}.$_->{section}", $_->{name};
         i " $_->{section}";
        end;
      }
@@ -464,13 +464,20 @@ sub manjslist {
 # Given the name and optionally the hash of a man page, check with a list of
 # man pages with the same name to select the right one for display.
 sub getman {
-  my($self, $name, $hash, $list) = @_;
+  my($self, $name, $hash) = @_;
 
-  my $sect = $name =~ /\.([0-9n])$/ ? $1 : undef;
+  # Fetch all files with $name and split off the section part if $name has one
+  my $list = $self->dbManInfo(name => $name);
+  my $sect;
+  if(!@$list && $name =~ s/\.([^\.]+)$//) {
+    $sect = $1;
+    $list = $self->dbManInfo(name => $name);
+  }
+  return (undef, undef) if !@$list;
 
   # If we already have a shorthash, just get the full hash
   if($hash) {
-    $_->{hash} =~ /^$hash/ && return $_ for (@$list);
+    $_->{hash} =~ /^$hash/ && return ($_, $list) for (@$list);
   }
 
   # If that failed, use some heuristics
@@ -506,7 +513,7 @@ sub getman {
 
   my $winner = $list->[0];
   $cmp->($winner, $_) > 0 and ($winner = $_) for (@$list);
-  return $winner;
+  ($winner, $list);
 }
 
 
@@ -517,9 +524,8 @@ sub man {
   $name =~ s/%5b/[/ig;
   $name =~ s/%5d/]/ig;
 
-  my $m = $self->dbManInfo(name => $name);
-  return $self->resNotFound() if !@$m;
-  my $man = getman($self, $name, $hash, $m);
+  my($man, $m) = getman($self, $name, $hash);
+  return $self->resNotFound() if !$man;
 
   my $view = $self->formValidate({get => 'v', regex => qr/^[a-z2-7]+$/});
   $view = $view->{_err} ? '' : $view->{v};
@@ -697,9 +703,8 @@ sub dbManInfo {
   my $s = shift;
   my %o = @_;
 
-  (my $oname = $o{name}||'') =~ s/\.([0-9nk]|kde3)$//;
   my %where = (
-    $o{name}      ? ('m.name IN(!l)' => [[ $o{name}, $oname ne $o{name} ? $oname : () ]]) : (),
+    $o{name}      ? ('m.name = ?'    => $o{name}) : (),
     $o{package}   ? ('m.package = ?' => $o{package}) : (),
     $o{section}   ? ('m.section = ?' => $o{section}) : (),
     $o{shorthash} ? (q{substring(m.hash from 1 for 4) = decode(?, 'hex')} => $o{shorthash}) : (),
