@@ -296,7 +296,7 @@ dsInit(byId('q'), '/xml/search.xml?q=', function(item, tr) {
   },
   function(item) {
     searchRedir = true;
-    location.href = '/'+item.getAttribute('name')+'.'+item.getAttribute('section').substr(0,1);
+    location.href = '/'+item.getAttribute('name')+'.'+item.getAttribute('section');
     return item.getAttribute('name')+'('+item.getAttribute('section')+')';
   },
   function() {

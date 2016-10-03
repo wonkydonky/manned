@@ -125,6 +125,7 @@ sub addman {
 
   my($enc, $dec) = decodeman($dat, $locale);
   print "Invalid encoding or empty file: $path\n" and return if !$enc;
+  print "Ignoring HTML-formatted page: $path\n" and return if $dec =~ /^\s*<(?:html|head|\!DOCTYPE)/;
 
   $db->do(q{INSERT INTO contents (hash, content) VALUES(decode(?, 'hex'),?)}, {}, $hash, $dec)
     if !$db->selectrow_arrayref(q{SELECT 1 FROM contents WHERE hash = decode(?, 'hex')}, {}, $hash);
