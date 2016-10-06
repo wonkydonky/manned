@@ -13,7 +13,7 @@ CREATE TABLE contents (
 
 CREATE TABLE packages (
   id       SERIAL    PRIMARY KEY,
-  system   integer   NOT NULL REFERENCES systems(id),
+  system   integer   NOT NULL REFERENCES systems(id) ON DELETE CASCADE,
   category varchar,
   name     varchar   NOT NULL,
   UNIQUE(system, name, category) -- Note the order, lookups on (system,name) are common
@@ -21,14 +21,14 @@ CREATE TABLE packages (
 
 CREATE TABLE package_versions (
   id       SERIAL    PRIMARY KEY,
-  package  integer   NOT NULL REFERENCES packages(id),
+  package  integer   NOT NULL REFERENCES packages(id) ON DELETE CASCADE,
   version  varchar   NOT NULL,
   released date      NOT NULL,
   UNIQUE(package, version)
 );
 
 CREATE TABLE man (
-  package  integer   NOT NULL REFERENCES package_versions(id),
+  package  integer   NOT NULL REFERENCES package_versions(id) ON DELETE CASCADE,
   name     varchar   NOT NULL,
   section  varchar   NOT NULL,
   filename varchar   NOT NULL,
