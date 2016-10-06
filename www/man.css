@@ -77,9 +77,20 @@ i.grayedout { color: #aaa; font-size: 13px; }
 #searchres i { color: #aaa; font-size: 13px; }
 #searchres a { padding-right: 2px }
 
-#manuals { margin: 20px 0; -webkit-column-width: 500px; -moz-column-width: 500px; column-width: 500px }
-#manuals li { display: block; }
-#manuals i { color: #aaa; font-size: 13px; }
+#pkgversions { margin-top: 10px }
+#pkgversions h2 { margin: 0 }
+#pkgversions { float: left; padding: 0 10px;  }
+#pkgversions ul { margin: 10px 0; padding-right: 10px; border-right: 1px dashed #468 }
+#pkgversions li { display: block; }
+#pkgversions i { color: #aaa; font-size: 13px; }
+#pkgversions a { padding-right: 2px }
+
+#pkgmans { margin-top: 10px }
+#pkgmans h2 { margin: 0 }
+#pkgmans { float: left }
+#pkgmans ul { margin: 10px 0 }
+#pkgmans li { display: block; }
+#pkgmans i { color: #aaa; font-size: 13px; }
 
 #footer { height: 60px; clear: both; padding: 4px 10px; color: #f8f8f8; margin: 0 0 -20px 0;
   border-top: 1px solid #888; font-size: 13px; background: url('images/gradients.png') 0 -37px repeat-x;

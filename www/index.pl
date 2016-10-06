@@ -392,43 +392,41 @@ sub pkg_info {
   # Latest version of this package determines last modification date of the page.
   $self->setLastMod($vers->[0]{released});
 
-  # TODO: A "previous" link would be nice...
-  my $next = sub {
-    use utf8;
-    if($more) {
-      p class => 'pagination';
-       a href => "/pkg/$sys->{short}/$pkg->{category}/$pkg->{name}/$sel->{version}?s=$mans->[199]{name}", 'next »';
-      end;
-    }
-  };
-
-  my $title = "$sys->{name}".($sys->{release}?" $sys->{release}":"")." / $pkg->{category} / $pkg->{name} $sel->{version}";
-  $self->htmlHeader(title => $title);
+  my $title = "$sys->{name}".($sys->{release}?" $sys->{release}":"")." / $pkg->{category} / $pkg->{name}";
+  $self->htmlHeader(title => "$title $sel->{version}");
   h1 $title;
 
-  h2 'Versions';
-  ul id => 'packages';
-   for(@$vers) {
-     li;
-      txt "$_->{released} ";
-      a href => "/pkg/$sys->{short}/$pkg->{category}/$pkg->{name}/$_->{version}", $_->{version} if $_ != $sel;
-      b " $_->{version}" if $_ == $sel;
-     end;
-   }
+  div id => 'pkgversions';
+   h2 'Versions';
+   ul;
+    for(@$vers) {
+      li;
+       a href => "/pkg/$sys->{short}/$pkg->{category}/$pkg->{name}/$_->{version}", $_->{version} if $_ != $sel;
+       b " $_->{version}" if $_ == $sel;
+       i " $_->{released}";
+      end;
+    }
+   end;
   end;
 
+  div id => 'pkgmans';
   h2 "Manuals for version $sel->{version}";
-  $next->();
-  ul id => 'manuals';
-   for(@$mans) {
-     li;
-      a href => "/$_->{name}/".substr($_->{hash},0,8), "$_->{name}($_->{section})";
-      b " $_->{locale}" if $_->{locale};
-      i " $_->{filename}";
+   ul;
+    for(@$mans) {
+      li;
+       a href => "/$_->{name}/".substr($_->{hash},0,8), "$_->{name}($_->{section})";
+       b " $_->{locale}" if $_->{locale};
+       i " $_->{filename}";
+      end;
+    }
+   end;
+   if($more) {
+     use utf8;
+     p class => 'pagination';
+      a href => "/pkg/$sys->{short}/$pkg->{category}/$pkg->{name}/$sel->{version}?s=$mans->[199]{name}", 'next »';
      end;
    }
   end;
-  $next->();
 
   $self->htmlFooter;
 }
@@ -624,7 +622,7 @@ sub htmlHeader {
 
   html;
    head;
-    Link rel => 'stylesheet', type => 'text/css', href => '/man.css';
+    Link rel => 'stylesheet', type => 'text/css', href => '/man.css?2';
     title $o{title}.' - manned.org';
    end 'head';
    body;
