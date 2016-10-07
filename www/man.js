@@ -84,6 +84,9 @@ function setContent() {
     if(arguments[i] != null)
       arguments[0].appendChild(tag(arguments[i]));
 }
+function getText(obj) {
+  return obj.textContent || obj.innerText || '';
+}
 function setText(obj, txt) {
   if(obj.textContent != null)
     obj.textContent = txt;
@@ -287,227 +290,194 @@ function dsResults(hr, obj) {
 
 
 
+
+
 /* What follows is specific to manned.org */
 
 // Search box
-searchRedir = false;
-dsInit(byId('q'), '/xml/search.xml?q=', function(item, tr) {
-    tr.appendChild(tag('td', item.getAttribute('name'), tag('i', '('+item.getAttribute('section')+')')));
-  },
-  function(item) {
-    searchRedir = true;
-    location.href = '/'+item.getAttribute('name')+'.'+item.getAttribute('section');
-    return item.getAttribute('name')+'('+item.getAttribute('section')+')';
-  },
-  function() {
-    if(!searchRedir) {
-      var frm=byId('q');
-      while(frm && frm.nodeName.toLowerCase() != 'form')
-        frm = frm.parentNode;
-      frm.submit();
+(function(){
+  searchRedir = false;
+  dsInit(byId('q'), '/xml/search.xml?q=', function(item, tr) {
+      tr.appendChild(tag('td', item.getAttribute('name'), tag('i', '('+item.getAttribute('section')+')')));
+    },
+    function(item) {
+      searchRedir = true;
+      location.href = '/'+item.getAttribute('name')+'.'+item.getAttribute('section');
+      return item.getAttribute('name')+'('+item.getAttribute('section')+')';
+    },
+    function() {
+      if(!searchRedir) {
+        var frm=byId('q');
+        while(frm && frm.nodeName.toLowerCase() != 'form')
+          frm = frm.parentNode;
+        frm.submit();
+      }
     }
-  }
-);
+  );
+})();
 
 
 
-// Efficiently pack an array of booleans into a string. (Uses something like
-// base32) Note: The resulting array after decoding may have a few more
-// elements than it had before decoding. These will be false.
-var bsCharacters = "abcdefghijklmnopqrstuvwxyz234567";
 
-function bsEncode(a) {
-  var v = 0;
-  var b = 0;
-  var r = '';
-  for(var i=0; i<a.length; i++) {
-    v = (v<<1) + (a[i]?1:0);
-    if(++b == 5) {
-      r += bsCharacters.charAt(v);
-      v = b = 0;
+
+// The tabs on man pages
+(function(){
+  var ul = byId('manbuttons');
+  if(!ul)
+    return;
+  var res = byId('manres');
+  ul = byName(ul, 'ul')[0];
+
+
+  var table = function(tbl, prop) {
+    var t = tag('table', prop);
+    for(row in tbl) {
+      row = tbl[row];
+      var r = tag('tr', {});
+      for(col in row) {
+        col = row[col];
+        r.appendChild(tag('td',
+          col.bold ? tag('b', col.name) :
+          col.href ? tag('a', {href:col.href}, col.name) : col.name
+        ));
+      }
+      t.appendChild(r);
     }
-  }
-  if(!a.length || b > 0)
-    r += bsCharacters.charAt(v<<(5-b));
-  return r;
-}
+    return t;
+  };
 
-function bsDecode(s) {
-  var a = [];
-  for(var i=0; i<s.length; i++) {
-    var n = s.charCodeAt(i);
-    n -= n >= 97 ? 97 : 24;
-    a.push(!!((n>>4)&1), !!((n>>3)&1), !!((n>>2)&1), !!((n>>1)&1), !!(n&1));
-  }
-  return a;
-}
+  var treeoldver = function() {
+    var lnk = this;
+    var ul = lnk;
+    var show = !lnk['data-shown'];
+    lnk['data-shown'] = show;
 
+    while(ul.nodeName.toLowerCase() != 'ul')
+      ul = ul.parentNode;
+    var l = ul.childNodes;
+    for(var i=0; i<l.length; i++) {
+      if(l[i].nodeName.toLowerCase() == 'li' && l[i]['data-oldver'])
+        setClass(l[i], 'hidden', !show);
+    }
 
-/* Structure of VARS.mans:
-  [
-    ["System", "Full name", "short", [
-        [ "category", "package", "version", [
-            [ "section", "locale"||null ],
-            ...
-          ],
-          oldvisible // <- this is only set by JS
-        ],
-        ...
-      ],
-      oldvisible // <- this is only set by JS
-    ],
-    ...
-  ]
-
-  The godawful navigation code desperately needs a rewrite.
-*/
-
-navShowLocales  = false;
-navHasLocale    = false;
-
-function navCreate(nav) {
-  setText(nav, '');
-
-  view = navSerialize();
-  navHasLocale = false;
-  var dl = tag('dl', null);
-
-  for(var i=0; i<VARS.mans.length; i++) {
-    var sys = VARS.mans[i];
-
-    var isold = i > 0 && VARS.mans[i-1][0] == sys[0];
-    if(typeof sys[4] === 'undefined')
-      sys[4] = !isold;
-
-    var pkgnum = 0;
-    var dd = tag('dd', null);
-
-    if(sys[4])
-      for(var j=0; j<sys[3].length; j++)
-        if(navCreatePkg(nav, view, dd, sys, j))
-          pkgnum++;
-
-    if(!isold || sys[4])
-      dl.appendChild(tag('dt', sys[1],
-        isold || !VARS.mans[i+1] || VARS.mans[i+1][0] != sys[0] ? null : tag('a',
-          {href:'#', _sysn: sys[0], _sysi:i, 'class':'expand',
-           title: "Show/hide historical releases.",
-           onclick: function() {
-            for(var j=this._sysi+1; j<VARS.mans.length && VARS.mans[j][0] == this._sysn; j++)
-              VARS.mans[j][4] = !VARS.mans[j][4];
-            navCreate(nav);
-            return false
-          }}, VARS.mans[i+1][4] ? expanded_icon : collapsed_icon)
-      ));
-
-    if(sys[4] && pkgnum > 0)
-      dl.appendChild(dd);
-  }
-
-  navCreateLinks(nav);
-  nav.appendChild(dl);
-}
-
-
-function navCreatePkg(nav, view, dd, sys, n) {
-  var pkg = sys[3][n];
-
-  var isold = n > 0 && sys[3][n-1][0] == pkg[0] && sys[3][n-1][1] == pkg[1];;
-  if(isold && !pkg[4])
+    setText(lnk, (show ? '- ' : '+ ')+lnk['data-hidnum']+' older versions');
     return false;
+  };
 
-  var mannum = 0;
-  var pdd = tag('dd', null);
-  for(var i=0; i<pkg[3].length; i++) {
-    var man = pkg[3][i];
-    var txt = man[0] + (man[1] ? '.'+man[1] : '');
-    if(man[2] != VARS.hash && man[1])
-      navHasLocale = true;
-    if(man[2] == VARS.hash || (navShowLocales || !man[1])) {
-      if(i > 0)
-        pdd.appendChild(tag(' '));
-      pdd.appendChild(man[2] == VARS.hash ? tag('b', txt) : tag('a', {href:'/'+VARS.name+'/'+man[2]+'?v='+view}, txt));
-      mannum++;
+  var treeexpand = function() {
+    var sub = byName(this.parentNode, 'ul')[0] || byName(this.parentNode, 'table')[0];
+    var exp = hasClass(sub, 'hidden');
+    setClass(sub, 'hidden', !exp);
+    setText(this, getText(this).replace(/^[^ ]+/, exp ? expanded_icon : collapsed_icon));
+    return false;
+  };
+
+  var treeitem = function(n) {
+    var icon = n.name ? (n.expand ? expanded_icon : collapsed_icon)+' ' : '';
+    return tag('li', n.hide ? {'class':'hidden', 'data-oldver':true} : {},
+       tag('a', {href:'#', onclick: treeexpand}, icon+n.name),
+       n.i ? tag('i', n.i) : null,
+       n.childs ? treelist(n.childs, n.expand ? {} : {'class':'hidden'}) : null,
+       n.table ? table(n.table, n.expand ? {} : {'class':'hidden'}) : null
+    );
+  };
+
+  var treelist = function(lst, prop) {
+    var ul = tag('ul', prop);
+    var hidden = 0;
+
+    for(i in lst) {
+      var n = lst[i];
+      if(n.hide)
+        hidden++;
+      ul.appendChild(treeitem(lst[i]));
     }
-  }
 
-  if(mannum > 0) {
-    dd.appendChild(tag('dt', tag('a', {href:'/pkg/'+sys[2]+'/'+pkg[0]+'/'+pkg[1]+'/'+pkg[2]}, pkg[1]),
-      isold || !sys[3][n+1] || sys[3][n+1][0] != pkg[0] || sys[3][n+1][1] != pkg[1] ? null : tag('a',
-        {href:'#', _pkgn: pkg[0]+'-'+pkg[1], _pkgi:n, 'class':'expand',
-         title: 'Show/hide historical versions of this package',
-         onclick: function() {
-          for(var j=this._pkgi+1; j<sys[3].length && sys[3][j][0]+'-'+sys[3][j][1] == this._pkgn; j++)
-            sys[3][j][4] = !sys[3][j][4];
-          navCreate(nav);
-          return false
-        }}, sys[3][n+1][4] ? expanded_icon : collapsed_icon),
-      tag('i', pkg[0] + ' / ' + pkg[2])));
-    dd.appendChild(pdd);
-    return true;
-  }
-  return false;
-}
+    if(hidden > 0)
+      ul.appendChild(tag('li', {'class':'oldver'},
+        tag('a', {href:'#', onclick: treeoldver, 'data-hidnum':hidden}, '+ '+hidden+' older versions')
+      ));
+    return ul;
+  };
 
+  var clearactive = function() {
+    setClass(res, 'hidden', true);
+    var l = byName(ul, 'a');
+    for(var i=0; i<l.length; i++) {
+      setClass(l[i], 'active', false);
+      if(l[i]['data-obj'])
+        setClass(l[i]['data-obj'], 'hidden', true);
+    }
+    return false;
+  };
 
-function navCreateLinks(nav) {
-  var t = (navShowLocales ? expanded_icon : collapsed_icon) + 'locales';
-  nav.appendChild(!navHasLocale ? tag('i', {'class':'global'}, t) : tag('a',
-    { 'class': 'global',
-      href:    '#',
-      title:   'Show/hide manuals in a non-standard locale.',
-      onclick: function() { navShowLocales = !navShowLocales; navCreate(nav); return false }
-    }, t
-  ));
-}
+  var loading = tag('div', {'class':'hidden'}, 'Loading...');
 
+  var buttonclick = function() {
+    var btn = this;
+    var isactive = hasClass(btn, 'active');
+    clearactive();
+    if(isactive)
+      return false;
 
-// Serializes the current navigation view into a short string. The string is a
-// bsEncode()ed bit array, created as follows:
-//   array.push(navShowLocales);
-//   for(each system that has an expand button)
-//     array.push(is the butten expanded or not);
-//   for(each system)
-//     for(each package that has an expand button)
-//       array.push(is the button expanded or not);
-// Obviously, this means that the serialized view depends on the number and
-// order of systems and packages. The order is stable, the number may change
-// with database updates.
-function navSerialize() {
-  var a = [navShowLocales];
-  for(var i=0; i<VARS.mans.length; i++)
-    if(i+1 < VARS.mans.length && VARS.mans[i+1][0] == VARS.mans[i][0] && (i == 0 || VARS.mans[i-1][0] != VARS.mans[i][0]))
-      a.push(!!VARS.mans[i+1][4]);
-  for(var i=0; i<VARS.mans.length; i++)
-    for(var j=0; j<VARS.mans[i][3].length; j++)
-      if(j+1 < VARS.mans[i][3].length && VARS.mans[i][3][j+1][0] == VARS.mans[i][3][j][0] && VARS.mans[i][3][j+1][1] == VARS.mans[i][3][j][1] && (j == 0 || VARS.mans[i][3][j-1][0] != VARS.mans[i][3][j][0] || VARS.mans[i][3][j-1][1] != VARS.mans[i][3][j][1]))
-        a.push(!!VARS.mans[i][3][j+1][4]);
-  return bsEncode(a).replace(/(.)a+$/, '$1');
-}
+    if(btn['data-obj']) {
+      setClass(btn['data-obj'], 'hidden', false);
+    } else {
+      setClass(loading, 'hidden', false);
+      ajax(btn['data-url'], function(r) {
+        setClass(loading, 'hidden', true);
+        r = JSON.parse(r.responseText);
+        btn['data-obj'] = tag('div', tag('p', btn['data-p']), treelist(r, {}));
+        res.appendChild(btn['data-obj']);
+      });
+    }
+    setClass(btn, 'active', true);
+    setClass(res, 'hidden', false);
+    return false;
+  };
 
-// And the reverse of the above.
-function navLoad(s) {
-  var a = bsDecode(s);
-  navShowLocales = !!a.shift();
-  for(var i=0; i<VARS.mans.length; i++)
-    if(i > 0 && VARS.mans[i-1][0] == VARS.mans[i][0])
-      VARS.mans[i][4] = i > 1 && VARS.mans[i-2][0] == VARS.mans[i-1][0] ? VARS.mans[i-1][4] : !!a.shift();
-  for(var i=0; i<VARS.mans.length; i++)
-    for(var j=0; j<VARS.mans[i][3].length; j++)
-      if(j > 0 && VARS.mans[i][3][j-1][0] == VARS.mans[i][3][j][0] && VARS.mans[i][3][j-1][1] == VARS.mans[i][3][j][1])
-        VARS.mans[i][3][j][4] = j > 1 && VARS.mans[i][3][j-2][0] == VARS.mans[i][3][j-1][0] && VARS.mans[i][3][j-2][1] == VARS.mans[i][3][j-1][1] ? VARS.mans[i][3][j-1][4] : !!a.shift();
-}
+  res.insertBefore(tag('a', {id:'closebtn', href:'#', onclick: clearactive}, 'X'), res.firstChild);
+  res.appendChild(loading);
 
+  (function(){
+    var name = ul.getAttribute('data-name');
+    var hash = ul.getAttribute('data-hash');
+    var section = ul.getAttribute('data-section');
+    var locale = ul.getAttribute('data-locale');
 
-if(byId('nav')) {
-  navLoad(VARS.view||'');
-  navCreate(byId('nav'));
-}
+    ul.appendChild(tag('li', byId('sectionselect')
+      ? tag('a', {href:'#', onclick: buttonclick, 'data-obj': byId('sectionselect')}, 'sections')
+      : tag('i', 'sections')
+    ));
+
+    ul.appendChild(tag('li', byId('langselect')
+      ? tag('a', {href:'#', onclick: buttonclick, 'data-obj': byId('langselect')}, 'translations')
+      : tag('i', 'translations')
+    ));
+
+    ul.appendChild(tag('li', ul.getAttribute('data-hasversions') > 0
+      ? tag('a', {href:'#', onclick: buttonclick,
+          'data-url': '/json/tree.json?name='+name+';section='+section+';locale='+locale+';cur='+hash,
+          'data-p': 'Different versions of this manual page are available.'},
+          'versions')
+      : tag('i', 'versions')
+    ));
+
+    ul.appendChild(tag('li', tag('a', {href:'#', onclick: buttonclick,
+      'data-url': '/json/tree.json?hash='+hash+';name='+name+';section='+section,
+      'data-p': 'This manual page was found in the following locations.'},
+      'locations')));
+  })();
+})();
+
 
 
 
 // The "more..." links on the homepage.
-if(byId('systems')) {
+(function(){
+  var sys = byId('systems');
+  if(!sys)
+    return;
   var f = function() {
     var l = byName(this.parentNode, 'a', 'hidden');
     for(var i=0; i<l.length; i++)
@@ -515,7 +485,7 @@ if(byId('systems')) {
     setClass(this, 'hidden', true);
     return false
   };
-  var l = byClass(byId('systems'), 'a', 'more');
+  var l = byClass(sys, 'a', 'more');
   for(var i=0; i<l.length; i++)
     l[i].onclick = f;
-}
+})();

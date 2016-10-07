@@ -67,10 +67,21 @@ TUWF::register(
     $self->resRedirect("/pkg/$sys->{short}/$pkgs->[0]{category}/$name".($ver ? "/$ver" :''), 'perm');
   },
 
-  qr{xml/search\.xml} => \&xmlsearch,
   qr{([^/]+)/([0-9a-f]{8})} => \&man,
   qr{([^/]+)/([0-9a-f]{8})/src} => \&src,
   qr{([^/]+)} => \&man,
+
+  # Redirect for a specific language for a man page.
+  # I'm not a fan of this solution; might drop it in the future.
+  qr{lang/([^/]+)/([^/]+)} => sub {
+    my($s, $l, $n) = @_;
+    my($m, undef) = $s->dbManPrefName($n, language => $l);
+    return $s->resNotFound if !$m;
+    $s->resRedirect("/$m->{name}/".substr($m->{hash}, 0, 8), 'temp');
+  },
+
+  qr{xml/search\.xml} => \&xmlsearch,
+  qr{json/tree\.json} => \&jsontree,
 );
 
 TUWF::run();
@@ -441,7 +452,7 @@ sub pkg_info {
   my $f = $self->formValidate({ get => 's', required => 0});
   return $self->resNotFound if $f->{_err};
 
-  my $mans = $self->dbManInfo(package => $sel->{id}, results => 201, start => $f->{s}, sort => 'name');
+  my $mans = $self->dbManInfo(package => $sel->{id}, results => 201, start => $f->{s}, sort => 'syspkgname');
   my $more = @$mans > 200 && pop @$mans;
 
   # Latest version of this package determines last modification date of the page.
@@ -520,28 +531,42 @@ sub man_redir {
 };
 
 
-sub manjslist {
-  my($self, $m) = @_;
+sub _man_langsect {
+  my($self, $man) = @_;
 
-  # The structure we generate is described in the JS code.
-  my %sys;
-  push @{$sys{$_->{system}}}, $_ for (@$m);
-  [
-    map [ $self->{sysbyid}{$_}{name}, $self->{sysbyid}{$_}{full}, $self->{sysbyid}{$_}{short},
-      do {
-        my %pkgs;
-        for(@{$sys{$_}}) {
-          my $pn = "$_->{category}-$_->{package}-$_->{version}";
-          $pkgs{$pn} = [ $_->{category}, $_->{package}, $_->{version}, [], $_->{released} ] if !$pkgs{$pn};
-          push @{$pkgs{$pn}[3]}, [ $_->{section}, $_->{locale}, substr $_->{hash}, 0, 8 ];
-        }
-        [ grep
-          delete($_->[4]) && ($_->[3] = [sort { $a->[0] cmp $b->[0] || ($a->[1]||'') cmp ($b->[1]||'') } @{$_->[3]}]),
-          sort { $a->[0] cmp $b->[0] || $a->[1] cmp $b->[1] || $b->[4] cmp $a->[4] } values %pkgs ];
-      }
-    ],
-    sort { my $x=$self->{sysbyid}{$a}; my $y=$self->{sysbyid}{$b}; $x->{name} cmp $y->{name} or $y->{relorder} <=> $x->{relorder} } keys %sys
-  ]
+  # TODO: This is ugly, especially because clicking on a translation or
+  # section, you can end up with a man page that is nowhere close to the man
+  # page you're currently reading. Opening a version selector box might be a
+  # better alternative.
+
+  my @sect = $self->dbManSections($man->{name});
+  if(@sect > 1) {
+    div id => 'sectionselect', class => 'hidden';
+     for (@sect) {
+       if($man->{section} eq $_) {
+         i $_;
+       } else {
+         a href => "/$man->{name}.$_", $_;
+       }
+       txt ' ';
+     }
+    end;
+  }
+
+  my @lang = $self->dbManLanguages($man->{name}, $man->{section});
+  if(@lang > 1) {
+    div id => 'langselect', class => 'hidden';
+     (my $cur = $man->{locale}||'') =~ s/\..*//;
+     for (@lang) {
+       if(($_||'') eq $cur) {
+         i $_ || 'default';
+       } else {
+         a href => $_ ? "/lang/$_/$man->{name}.$man->{section}" : "/$man->{name}.$man->{section}", $_ || 'default';
+       }
+       txt ' ';
+     }
+    end;
+  }
 }
 
 
@@ -560,63 +585,25 @@ sub man {
   }
   return $self->resNotFound() if !$man;
 
-  my $view = $self->formValidate({get => 'v', regex => qr/^[a-z2-7]+$/});
-  $view = $view->{_err} ? '' : $view->{v};
-
-  # To be really correct, the last modification time of this page should be the
-  # release date of the latest version of the man page, as that is displayed in
-  # the menu. But let's just consider the content of the page as more
-  # important, and use release date of the man page as last modification date.
   $self->setLastMod($man->{released});
-
   $self->htmlHeader(title => $name);
-  div id => 'nav', 'Sorry, this navigation menu won\'t display without Javascript. :-(';
-
-  h1;
-   txt $man->{name}.' ';
-   a href => "/$man->{name}/".substr($man->{hash}, 0, 8).'/src', 'source';
+  div id => 'manbuttons';
+   h1 $man->{name};
+   ul 'data-hash' => $man->{hash}, 'data-name' => $man->{name}, 'data-section' => $man->{section}, 'data-locale' => $man->{locale}||'',
+      'data-hasversions' => $self->dbManHasVersions($man->{name}, $man->{section}, $man->{locale}, $man->{hash});
+    li; a href => "/$man->{name}/".substr($man->{hash}, 0, 8).'/src', 'source'; end;
+    li; a href => "/$man->{name}/".substr($man->{hash}, 0, 8), 'permalink'; end;
+   end;
+  end;
+  div id => 'manres', class => 'hidden';
+   _man_langsect($self, $man);
   end;
 
   div id => 'contents';
    my $c = $self->dbManContent($man->{hash});
-   # TODO: Store/cache the result of fmt() in the database.
    pre; lit ManUtils::html(ManUtils::fmt_block $c); end;
   end;
-
-  div id => 'locations';
-   h2 'Locations of this man page';
-   table;
-    thead; Tr;
-     td 'System';
-     td 'Package';
-     td 'Version';
-     td 'Name';
-     td 'Filename';
-    end; end;
-    my @l = sort {
-         $self->{sysbyid}{$a->{system}}{name}     cmp $self->{sysbyid}{$b->{system}}{name}
-      || $self->{sysbyid}{$b->{system}}{relorder} <=> $self->{sysbyid}{$a->{system}}{relorder}
-      || $b->{released} cmp $a->{released}
-      || $a->{filename} cmp $b->{filename}
-    } @{$self->dbManInfo(hash => $man->{hash})};
-    for(@l) {
-      Tr;
-       td $self->{sysbyid}{$_->{system}}{full};
-       td "$_->{category}/$_->{package}";
-       td $_->{version};
-       td;
-        a href => "/$_->{name}", $_->{name} if $_->{name} ne $man->{name};
-        txt $_->{name} if $_->{name} eq $man->{name};
-        txt ".$_->{section}";
-       end;
-       td $_->{filename};
-      end;
-    }
-   end;
-  end;
-
-  my $m = $self->dbManInfo(name => $man->{name});
-  $self->htmlFooter(js => { hash => substr($man->{hash}, 0, 8), name => $man->{name}, view => $view, mans => manjslist($self, $m) });
+  $self->htmlFooter();
 }
 
 
@@ -645,6 +632,93 @@ sub xmlsearch {
   tag 'results';
    tag 'item', id => "$_->{name}.$_->{section}", %$_, undef for(@$man);
   end 'results';
+}
+
+
+sub jsontree {
+  my $self = shift;
+
+  my $f = $self->formValidate(
+    { get => 'name', required => 0, maxlength => 256 },
+    { get => 'section', required => 0, maxlength => 32 },
+    { get => 'locale', required => 0, default => '', maxlength => 32 },
+    { get => 'cur', required => 0, default => '', regex => qr/^[a-fA-F0-9]{40}$/ },
+    { get => 'hash', required => 0, default => '', regex => qr/^[a-fA-F0-9]{40}$/ },
+  );
+  return $self->resNotFound() if $f->{_err} || (!$f->{hash} && !($f->{section} && $f->{name}));
+
+  my $l = $self->dbManInfo(sort => 'syspkgname', $f->{hash}
+    ? (hash => $f->{hash})
+    : (name => $f->{name}, section => $f->{section}, locale => $f->{locale}));
+
+  # Convert the list into a tree
+  my $tree = [];
+  my($sys, $sysver, $pkg, $pkgver);
+  for my $m (@$l) {
+    my $sysname = $self->{sysbyid}{$m->{system}}{name};
+    if(!$sys || $sysname ne $sys->{name}) {
+      $sys = { name => $sysname, childs => [] };
+      $sysver = undef;
+      push @$tree, $sys;
+    }
+
+    my $sysversion = $self->{sysbyid}{$m->{system}}{release} || '';
+    if(!$sysver || $sysversion ne $sysver->{name}) {
+      $sysver = { name => $sysversion, childs => [] };
+      $pkg = undef;
+      push @{$sys->{childs}}, $sysver;
+    }
+
+    if(!$pkg || $m->{package} ne $pkg->{name}) {
+      $pkg = { name => $m->{package}, i => $m->{category}, table => [] };
+      $pkgver = undef;
+      push @{$sysver->{childs}}, $pkg;
+    }
+
+    push @{$pkg->{table}}, [
+      $pkgver && $pkgver eq $m->{version} ? {name=>''} :
+        {name => $m->{version}, href => "/pkg/$self->{sysbyid}{$m->{system}}{short}/$m->{category}/$m->{package}/$m->{version}"},
+      { name => "$m->{name}($m->{section})",
+        $f->{hash} || lc($m->{hash}) eq lc($f->{cur}) ? ()
+        : (href => sprintf('/%s/%s', $m->{name}, substr $m->{hash}, 0, 8))
+      },
+      { name => substr($m->{hash}, 0, 8),
+        $f->{hash} || lc($m->{hash}) eq lc($f->{cur}) ? ()
+        : (href => sprintf('/%s/%s', $m->{name}, substr $m->{hash}, 0, 8))
+      },
+      { name => $m->{filename} }
+    ];
+    $pkgver = $m->{version};
+  }
+
+  # Determine which elements to show/hide by default.
+  # It might make more sense to do this in JS, but since I am utterly
+  # incapable of writing maintainable JS I'm doing it here in order to keep the
+  # JS stupid and simple.
+  # TODO: Highlight systems/packages where the 'current' man page is?
+  for my $sys (@$tree) {
+    $sys->{expand} = 1 if $sys->{childs}[0]{name}; # Expand all systems that have named versions
+    $sys->{expand} = 1 if $f->{hash}; # Expand everything on 'location'
+
+    my $i = 0;
+    for my $sysver (@{$sys->{childs}}) {
+      $i++;
+      $sysver->{expand} = 1 if !$sysver->{name}; # Expand unnamed versions (since you can't click them)
+      $sysver->{expand} = 1 if $f->{hash}; # Expand everything on 'location'
+      $sysver->{hide} = 1 if $i > 3 && @{$sys->{childs}} > 5;    # Show only the first 3 versions
+
+      for my $pkg (@{$sysver->{childs}}) {
+        $pkg->{expand} = 1 if @{$sysver->{childs}} <= 3; # Expand everything if there's not too many things to expand
+        $pkg->{expand} = 1 if $f->{hash}; # Expand everything on 'location'
+
+        # TODO: Show/Hide duplicate hashes?
+      }
+    }
+  }
+
+  # Why JSON? Because TUWF::XML is pretty slow with many nodes
+  $self->resHeader('Content-Type' => 'application/json; charset=UTF-8');
+  lit(JSON::XS->new->ascii->encode($tree));
 }
 
 
@@ -694,13 +768,6 @@ sub htmlFooter {
        | <a href="mailto:contact@manned.org">Contact</a>
        | <a href="https://g.blicky.net/manned.git/">Source</a>';
     end;
-    if($o{js}) {
-      script type => 'text/javascript';
-       lit 'VARS = ';
-       lit(JSON::XS->new->ascii->encode($o{js}));
-       lit ';';
-      end;
-    }
     script type => 'text/javascript', src => '/man.js', '';
    end;
   end 'html';
@@ -746,26 +813,28 @@ sub dbManInfo {
   my %where = (
     $o{name}      ? ('m.name = ?'    => $o{name}) : (),
     $o{package}   ? ('m.package = ?' => $o{package}) : (),
-    $o{section}   ? ('m.section = ?' => $o{section}) : (),
+    defined($o{section}) ? ('m.section = ?' => $o{section}) : (),
+    $o{locale}    ? ('m.locale = ?'  => $o{locale}) : (),
+    defined($o{locale}) && !$o{locale}  ? ('m.locale IS NULL' => 1) : (),
     $o{shorthash} ? (q{substring(m.hash from 1 for 4) = decode(?, 'hex')} => $o{shorthash}) : (),
     $o{hash}      ? (q{m.hash = decode(?, 'hex')} => $o{hash}) : (),
     $o{start}     ? ('m.name > ?' => $o{start}) : (),
   );
 
-  # TODO: Flags to indicate what to information to fetch
+  $o{sort} ||= '';
+  my $order =
+    $o{sort} eq 'syspkgname' ? 'ORDER BY s.name, s.relorder DESC, p.name, v.released DESC, m.name, m.locale NULLS FIRST, m.filename' : '';
+
   return $s->dbAll(q{
-    SELECT p.system, p.category, p.name AS package, pv.version, pv.released, m.name, m.section, m.filename, m.locale, encode(m.hash, 'hex') AS hash
-      FROM packages p
-      JOIN package_versions pv ON p.id = pv.package
-      JOIN man m ON m.package = pv.id
+    SELECT p.system, p.category, p.name AS package, v.version, v.released, m.name, m.section, m.filename, m.locale, encode(m.hash, 'hex') AS hash
+      FROM man m
+      JOIN package_versions v ON v.id = m.package
+      JOIN packages p ON p.id = v.package
+      JOIN systems s ON s.id = p.system
         !W
         !s
      LIMIT ?
-  },
-    \%where,
-    $o{sort} ? 'ORDER BY name' : '',
-    $o{results}||10000
-  );
+  }, \%where, $order, $o{results}||10000);
 }
 
 
@@ -796,6 +865,7 @@ sub dbManPref {
     $o{sysid}   ? ('p.system = ?' => $o{sysid}) : (),
     $o{package} ? ('p.id = ?' => $o{package}) : (),
     $o{pkgver}  ? ('v.id = ?' => $o{pkgver}) : (),
+    $o{language}? (q{substring(locale from '^[^.]+') = ?} => $o{language}) : (),
   );
 
   # Criteria to determine a "preferred" man page:
@@ -851,6 +921,33 @@ sub dbManPrefName {
   $man = $s->dbManPref($name, $section, %o);
   return ($man, $section) if $man;
   return (undef, '');
+}
+
+
+# Returns 1 of there are alternative versions of the given man page.
+sub dbManHasVersions {
+  my($s, $name, $section, $locale, $hash) = @_;
+  return $s->dbRow(
+    q{SELECT 1 AS ok FROM man WHERE name = ? AND section = ? AND locale IS NOT DISTINCT FROM ? AND hash <> decode(?, 'hex') LIMIT 1},
+    $name, $section, $locale, $hash
+  )->{ok}||0;
+}
+
+
+# Returns all available languages for a man page
+sub dbManLanguages {
+  my($s, $name, $section) = @_;
+  return map $_->{lang}, @{$s->dbAll(q{SELECT DISTINCT substring(locale from '^[^.]+') AS lang
+     FROM man WHERE name = ? AND section = ?
+    ORDER BY substring(locale from '^[^.]+') NULLS FIRST
+  }, $name, $section)};
+}
+
+
+# Returns all available languages for a man page
+sub dbManSections {
+  my($s, $name) = @_;
+  return map $_->{section}, @{$s->dbAll(q{SELECT DISTINCT section FROM man WHERE name = ? ORDER BY section}, $name)};
 }
 
 
