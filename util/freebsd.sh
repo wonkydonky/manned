@@ -63,6 +63,7 @@ check_pkg() { # <sysid> <base-url> <category> <filename> <name> <version>
 # (except All/) to find the actual packages and their category. Date of the
 # packages is extracted from the last modification time of the '+DESC' file in
 # each tarball.
+# This is for FreeBSD pre-9.3
 check_pkgdir() { # <sysid> <url>
   SYSID=$1
   URL=$2
@@ -118,6 +119,54 @@ EOP
   done <"$TMP/categories"
 
   rm -f "$TMP/categories" "$TMP/pkgnames"
+}
+
+
+# For FreeBSD 9.3+
+check_pkg2() {
+  SYSID=$1
+  URL=$2
+  NAME=$3
+  CAT=$4
+  # Get the package version and file name from the index.
+  # Get the shortest file name, as, e.g. "apq" will also match "apq-mysql-...",
+  # this is yet another ugly heuristic...
+  REGNAME=`echo "$NAME" | sed 's/[.+]/\\\&/g'`
+  FN=`grep -o -E "[^+a-zA-Z0-9_.-]$REGNAME-"'([^ "]+)\.txz' "$TMP/index" | sed 's/^.//' | awk '{print length, $0}' | sort -n | head -n 1 | awk '{print $2}'`
+  VER=`echo "$FN" | sed "s/^$REGNAME-//" | sed 's/\.txz$//'`
+
+  echo "===> $NAME $VER"
+  $CURL "$URL/All/$FN" -o "$TMP/pkg.txz" || return 1
+
+  # Get the highest last modified time and use that as the package release
+  # date. Not super reliable, but for the lack of a simple alternative...
+  DATE=`tar -tPvf "$TMP/pkg.txz" | awk '{print $4}' | sort -r |head -n 1`
+
+  add_pkginfo $SYSID $CAT $NAME $VER $DATE
+  add_tar "$TMP/pkg.txz" $PKGID
+  rm -f "$TMP/pkg.txz"
+}
+
+
+# Fetch packages from the FreeBSD 9.3+ package repositories.
+check_pkgdir2() {
+  SYSID=$1
+  URL=$2
+  # Get meta-data from all packages
+  $CURL "$URL/packagesite.txz" | tar -C "$TMP" -xJf- packagesite.yaml || return 1
+  # And get the actual file index, because the metadata is not always correct.
+  # (In particular, the version in the metadata may not be the same as the
+  # version available in All/, so we use All/ to fetch the version & file name)
+  $CURL "$URL/All/" >"$TMP/index"
+
+  # This is NOT a very robust way of reading YAML, but happens to work on all packagesite.yaml's I saw
+  perl -lne '($n)=/"name":"([^ "]+)"/; ($c)=m{"origin":"([^ "/]+)/}; print "$n $c"' < "$TMP/packagesite.yaml" >"$TMP/pkglist"
+
+  while read NFO; do
+    check_pkg2 $SYSID $URL $NFO
+  done <"$TMP/pkglist"
+
+  rm -f "$TMP/packagesite.yaml" "$TMP/pkglist"
 }
 
 
@@ -728,6 +777,15 @@ f9_2() {
   check_pkgdir 86 "$MIR/packages"
 }
 
+f9_3() {
+  MIR="http://ftp.dk.freebsd.org/pub/FreeBSD/releases/i386/9.3-RELEASE/"
+  PKG="http://pkg.freebsd.org/freebsd:9:x86:32/release_3/"
+  echo "============ $MIR"
+  check_dist 94 "$MIR/base.txz" "core-base" "2014-07-20"
+  check_dist 94 "$MIR/games.txz" "core-games" "2014-07-20"
+  check_pkgdir2 94 "$PKG"
+}
+
 
 old() {
   f1_0
@@ -785,6 +843,7 @@ old() {
   f9_0
   f9_1
   f9_2
+  f9_3
 }
 
 "$@"
