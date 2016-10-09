@@ -457,62 +457,6 @@ sub manjslist {
 }
 
 
-# Given the name and optionally the hash of a man page, check with a list of
-# man pages with the same name to select the right one for display.
-sub getman {
-  my($self, $name, $hash) = @_;
-
-  # Fetch all files with $name and split off the section part if $name has one
-  my $list = $self->dbManInfo(name => $name);
-  my $sect;
-  if(!@$list && $name =~ s/\.([^\.]+)$//) {
-    $sect = $1;
-    $list = $self->dbManInfo(name => $name);
-  }
-  return (undef, undef) if !@$list;
-
-  # If we already have a shorthash, just get the full hash
-  if($hash) {
-    $_->{hash} =~ /^$hash/ && return ($_, $list) for (@$list);
-  }
-
-  # If that failed, use some heuristics
-  my $cmp = sub {
-    local($a,$b) = @_;
-    # English or non-locale packages always win
-    !(($a->{locale}||'') =~ /^(en|$)/) != !(($b->{locale}||'') =~ /^(en|$)/)
-      ? (($a->{locale}||'') =~ /^(en|$)/ ? -1 : 1)
-    # Newer versions of a package have higher priority
-    : $a->{system} == $b->{system} && $a->{package} eq $b->{package} && $a->{version} ne $b->{version}
-      ? $b->{released} cmp $a->{released}
-    # Section prefix match.
-    : $sect && !($a->{section} =~ /^\Q$sect/) != !($b->{section} =~ /^\Q$sect/)
-      ? ($a->{section} =~ /^\Q$sect/ ? -1 : 1)
-    # Give lower priority to pages in a non-standard directory
-    : !($a->{filename} =~ q{^/usr/share/man}) != !($b->{filename} =~ q{^/usr/share/man})
-      ? ($a->{filename} =~ q{^/usr/share/man} ? -1 : 1)
-    # Prefer Arch over other systems
-    : ($a->{system} != 1 || $b->{system} != 1) && $self->{sysbyid}{$a->{system}}{name} ne $self->{sysbyid}{$b->{system}}{name}
-      ? ($a->{system} == 1 ? -1 : 1)
-    # Prefer a later system release over an older one
-    : $a->{system} != $b->{system} && $self->{sysbyid}{$a->{system}}{name} eq $self->{sysbyid}{$b->{system}}{name}
-      ? $self->{sysbyid}{$b->{system}}{relorder} <=> $self->{sysbyid}{$a->{system}}{relorder}
-    # Lower sections > higher sections (because 'man' does this as well)
-    : substr($a->{section},0,1) ne substr($b->{section},0,1)
-      ? $a->{section} cmp $b->{section}
-    # Sections without appendix before sections with appendix
-    : $a->{section} ne $b->{section}
-      ? $a->{section} cmp $b->{section}
-    # Fallback to hash if nothing else matters (guarantees the order is at least stable)
-    : $a->{hash} cmp $b->{hash};
-  };
-
-  my $winner = $list->[0];
-  $cmp->($winner, $_) > 0 and ($winner = $_) for (@$list);
-  ($winner, $list);
-}
-
-
 sub man {
   my($self, $name, $hash) = @_;
 
@@ -520,7 +464,12 @@ sub man {
   $name =~ s/%5b/[/ig;
   $name =~ s/%5d/]/ig;
 
-  my($man, $m) = getman($self, $name, $hash);
+  my $man;
+  if($hash) {
+    $man = $self->dbManInfo(name => $name, shorthash => $hash)->[0];
+  } else {
+    ($man, undef) = $self->dbManPrefName($name);
+  }
   return $self->resNotFound() if !$man;
 
   my $view = $self->formValidate({get => 'v', regex => qr/^[a-z2-7]+$/});
@@ -578,6 +527,7 @@ sub man {
    end;
   end;
 
+  my $m = $self->dbManInfo(name => $man->{name});
   $self->htmlFooter(js => { hash => substr($man->{hash}, 0, 8), name => $man->{name}, view => $view, mans => manjslist($self, $m) });
 }
 
@@ -615,6 +565,12 @@ package TUWF::Object;
 
 use TUWF ':html', 'html_escape';
 use Time::Local 'timegm';
+
+sub escape_like {
+  (my $v = shift) =~ s/([_%])/\\$1/g;
+  $v;
+}
+
 
 sub htmlHeader {
   my $self = shift;
@@ -740,6 +696,73 @@ sub dbSearch {
     },
     $limit
   );
+}
+
+
+# Get the preferred man page for the given filters. Returns a row with the same fields as dbManInfo().
+sub dbManPref {
+  my($s, $name, $section, %o) = @_;
+  my %where = (
+    'm.name = ?' => $name,
+    $section    ? ('m.section LIKE ?' => escape_like($section).'%') : (),
+    $o{sysid}   ? ('p.system = ?' => $o{sysid}) : (),
+    $o{package} ? ('p.id = ?' => $o{package}) : (),
+    $o{pkgver}  ? ('v.id = ?' => $o{pkgver}) : (),
+  );
+
+  # Criteria to determine a "preferred" man page:
+  # 1. english:  English versions of a man page have preference over other locales
+  # 2. pkgver:   Newer versions of the same package have preference over older versions
+  # 3. stdloc:   Prefer man pages in standard locations
+  # 4. secmatch: Prefer an exact section match
+  # 5. arch:     Prefer Arch over other systems (because it tends to be the most up-to-date, and closest to upstreams)
+  # 6. sysrel:   Prefer a later system release over an older release
+  # 7. secorder: Lower sections before higher sections (because man does it this way, for some reason)
+  # 8. Fall back on hash comparison, to ensure the result is stable
+
+  $s->dbAll(q{
+    WITH unfiltered AS (
+      SELECT s AS sys, p AS pkg, v AS ver, m AS man
+        FROM man m
+        JOIN package_versions v ON v.id = m.package
+        JOIN packages p ON p.id = v.package
+        JOIN systems s ON s.id = p.system
+        !W
+    ), f_english AS(
+      SELECT * FROM unfiltered WHERE NOT EXISTS(SELECT 1 FROM unfiltered WHERE is_english_locale((man).locale)) OR is_english_locale((man).locale)
+    ), f_pkgver AS(
+      SELECT * FROM f_english a WHERE NOT EXISTS(SELECT 1 FROM f_english b WHERE (a.ver).package = (b.ver).package AND (a.ver).released < (b.ver).released)
+    ), f_stdloc AS(
+      SELECT * FROM f_pkgver WHERE NOT EXISTS(SELECT 1 FROM f_pkgver WHERE is_standard_man_location((man).filename)) OR is_standard_man_location((man).filename)
+    ), f_secmatch AS(
+      SELECT * FROM f_stdloc WHERE NOT EXISTS(SELECT 1 FROM f_stdloc WHERE (man).section = ?) OR (man).section = ?
+    ), f_arch AS(
+      SELECT * FROM f_secmatch WHERE NOT EXISTS(SELECT 1 FROM f_secmatch WHERE (sys).id = 1) OR (sys).id = 1
+    ), f_sysrel AS(
+      SELECT * FROM f_arch a WHERE NOT EXISTS(SELECT 1 FROM f_arch b WHERE (a.sys).name = (b.sys).name AND (a.sys).relorder < (b.sys).relorder)
+    ), f_secorder AS(
+      SELECT * FROM f_sysrel a WHERE NOT EXISTS(SELECT 1 FROM f_sysrel b WHERE (a.man).section > (b.man).section)
+    )
+    SELECT (pkg).system, (pkg).category, (pkg).name AS package, (ver).version, (ver).released,
+           (man).name, (man).section, (man).filename, (man).locale, encode((man).hash, 'hex') AS hash
+     FROM f_secorder ORDER BY (man).hash LIMIT 1
+  }, \%where, $section, $section)->[0];
+}
+
+
+# Given the name of a man page with optional section, find out the actual name
+# and section prefix of the man page and the preferred version.
+sub dbManPrefName {
+  my($s, $name, %o) = @_;
+
+  my $man = $s->dbManPref($name, '', %o);
+  return ($man, '') if $man;
+
+  return (undef, '') if $name !~ s/\.([^.]+)$//;
+  my $section = $1;
+  $man = $s->dbManPref($name, $section, %o);
+  return ($man, $section) if $man;
+  return (undef, '');
 }
 
 
