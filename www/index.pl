@@ -119,13 +119,14 @@ sub home {
 
   h2 'Other sites';
   ul id => 'external';
-   li; a href => 'http://man.cx/', 'Man.cx'; end;
-   li; a href => 'http://man.he.net/', 'Man.he.net'; end;
-   li; a href => 'http://linux.die.net/man/', 'Die.net'; end;
+   li; a href => 'http://man7.org/linux/man-pages/index.html', 'man7.org'; txt ' - Linux man pages from several upstream projects.'; end;
+   li; a href => 'http://man.cx/', 'man.cx'; txt ' - Man pages extracted from Debian testing.'; end;
+   li; a href => 'http://man.he.net/', 'man.he.net'; txt ' - Also seems to be from a Debian-like system.'; end;
+   li; a href => 'http://linux.die.net/man/', 'die.net'; txt ' - Seems to be based on an RPM-based Linux distribution.'; end;
+   li; a href => 'http://www.manpagez.com/', 'manpagez.com'; txt ' - Mac OS X, has some GTK-html and texinfo documentation as well.'; end;
    li; a href => 'http://www.freebsd.org/cgi/man.cgi', 'FreeBSD.org Man Pages'; end;
    li; a href => 'http://www.openbsd.org/cgi-bin/man.cgi', 'OpenBSD Man Pages'; end;
    li; a href => 'http://manpages.ubuntu.com/', 'Ubuntu Manuals'; end;
-   li; a href => 'http://www.manpagez.com/', 'Manpagez.com'; txt ' (Mac OS X, has some texinfo documentation as well)'; end;
   end;
   $self->htmlFooter;
 }
