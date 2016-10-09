@@ -777,9 +777,9 @@ sub dbSearch {
 
   return !$name ? [] : $s->dbAll(
     'SELECT name, section FROM man_index !W ORDER BY name, section LIMIT ?',
-    { # Don't use wildcards in this query, prevents index usage.
-      "lower(name) LIKE '\L$name\E%'" => 1,
-      $sect ? ("section ILIKE '\L$sect\E%'" => 1) : ()
+    {
+      'lower(name) LIKE ?' => escape_like(lc $name).'%',
+      $sect ? ('section ILIKE ?' => escape_like(lc $sect).'%') : (),
     },
     $limit
   );
