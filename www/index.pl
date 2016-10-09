@@ -166,7 +166,7 @@ sub about {
    <h3>Man pages</h3>
    <p>The following URLs are available to refer to an individual man page:</p>
    <dl>
-    <dt><code>/&lt;name>/&lt;8-hex-digit-hex></code></dt><dd>
+    <dt><code>/&lt;name>/&lt;8-hex-digits></code></dt><dd>
      This is the permalink format for a specific man page (e.g. <a href="/ls/910be0ed">/ls/910be0ed</a>).</dd>
     <dt><code>/&lt;name>[.&lt;section>]</code></dt><dd>
      Will try to get the latest and most-close-to-upstream version of a man
