@@ -19,6 +19,7 @@ TUWF::set(
   db_login => [undef, undef, undef],
   debug => 0,
   xml_pretty => 0,
+  log_slow_pages => 500,
   # Cache the system information
   pre_request_handler => sub {
     my $self = shift;
