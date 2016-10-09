@@ -49,7 +49,10 @@ TUWF::register(
 
   qr{pkg/([^/]+)} => \&pkg_list,
   # pkg/$system/$category/$name (/$version); $category may contain a slash, too.
-  qr{pkg/([^/]+)/(.+)?} => \&pkg_info,
+  qr{pkg/([^/]+)/(.+)} => \&pkg_info,
+
+  # Redirects for canonical URLs
+  qr{man/([^/]+)/(.+)} => \&man_redir,
 
   # Redirects for old URLs.
   # /browse/<pkg> has been moved to /pkg/ with the package category added to the path
@@ -154,11 +157,61 @@ sub about {
   _
   end;
 
+  h2 'URL format';
+  lit <<'  _';
+   <p>You can link to specific packages and man pages with several URL formats.
+   These URLs will keep working in the future, so you should not have to worry
+   about eventual dead links.</p>
+   <h3>Man pages</h3>
+   <p>The following URLs are available to refer to an individual man page:</p>
+   <dl>
+    <dt><code>/&lt;name>/&lt;8-hex-digit-hex></code></dt><dd>
+     This is the permalink format for a specific man page (e.g. <a href="/ls/910be0ed">/ls/910be0ed</a>).</dd>
+    <dt><code>/&lt;name>[.&lt;section>]</code></dt><dd>
+     Will try to get the latest and most-close-to-upstream version of a man
+     page (e.g. <a href="/socket">/socket</a> or <a
+     href="/socket.7">/socket.7</a>). Note that this may fetch the man page
+     from any available system, so may result in confusing scenarios for
+     system-specific documentation.</dd>
+    <dt><code>/man/&lt;system>/&lt;name>[.&lt;section>]</code></dt><dd>
+     Will get the latest version of a man page from the given system (e.g. <a
+     href="/man/ubuntu-xenial/rsync">/man/ubuntu-xenial/rsync</a>)</dd>
+    <dt><code>/man/&lt;system>/&lt;category>/&lt;package>/&lt;name>[.&lt;section>]</code></dt><dd>
+     Will get the latest version of a man page from the given package (e.g. <a
+     href="/man/ubuntu-xenial/net/rsync/rsync">/man/ubuntu-xenial/net/rsync/rsync</a>)</dd>
+    <dt><code>/man/&lt;system>/&lt;category>/&lt;package>/&lt;version>/&lt;name>[.&lt;section>]</code></dt><dd>
+     Will get the man page from a specific package version (e.g. <a
+     href="/man/ubuntu-xenial/net/rsync/3.1.1-3ubuntu1/rsync">/man/ubuntu-xenial/net/rsync/3.1.1-3ubuntu1/rsync</a>)</dd>
+   </dl>
+   <p>Currently, the last three URLs will perform a redirect to the
+   appropriate permalink URL, but this may change in the future.<br />
+   In all URLs where an optional <code>.&lt;section></code> can be provided,
+   the search is performed as a prefix match. For example, <a
+   href="/cat.3">/cat.3</a> will provide the <code>cat.3tcl</code> man page if
+   no exact <code>cat.3</code> version is available. Linking to the full
+   section name is also possible: <a href="/cat.3tcl">/cat.3tcl</a>. If no
+   section is given and multiple sections are available, the lowest section
+   number is chosen.</p>
+   <h3>Packages</h3>
+   <p>Linking to individual packages is also possible. These pages will show a
+   listing of all manual pages available in the given package.</p>
+   <dl>
+    <dt><code>/pkg/&lt;system>/&lt;category>/&lt;package></code></dt><dd>
+     For the latest version of a package (e.g. <a
+     href="/pkg/arch/core/coreutils">/pkg/arch/core/coreutils</a>).</dd>
+    <dt><code>/pkg/&lt;system>/&lt;category>/&lt;package>/&lt;version></code></dt><dd>
+     For a particular version of a package (e.g. <a
+     href="/pkg/arch/core/coreutils/8.25-2">/pkg/arch/core/coreutils/8.25-2</a>).</dd>
+   </dl>
+   <p>Note that this site only indexes packages that actually have manual
+   pages; Linking to a package that doesn't have any will result in a 404
+   page.</p>
+  _
+
   h2 'The indexing process';
   p; lit <<'  _';
    All man pages are fetched right from the (binary) packages available on the
    public repositories of Linux distributions. In particular:<br />
-   <br />
    <dl>
     <dt>Arch Linux</dt><dd>
      The core, extra and community repositories are fetched from a local
@@ -191,7 +244,7 @@ sub about {
      restricted and multiverse) from the $release, $release-updates and
      $release-security repositories are indexed.  Backports are not included at
      the moment. Indexing started around mid June 2012.</dd>
-   </dl><br />
+   </dl>
    Only packages for a single architecture (i386 or i686) are scanned. To my
    knowledge, packages that come with different manuals for different
    architectures either don't exist or are extremely rare. It does happen that
@@ -430,6 +483,39 @@ sub pkg_info {
 
   $self->htmlFooter;
 }
+
+
+sub man_redir {
+  my($self, $sys, $path) = @_;
+
+  # Path can be:
+  # 1. <name>
+  # 2. <category>/<package>/<name>
+  # 3. <category>/<package>/<version>/<name>
+
+  $sys = $self->{sysbyshort}{$sys};
+  return $self->resNotFound if !$sys;
+
+  my $man;
+  if($path !~ m{/}) { # (1)
+    ($man) = $self->dbManPrefName($path, sysid => $sys->{id});
+
+  } else {
+    $path =~ s{/([^/]+)$}{};
+    my $name = $1;
+
+    my($pkg, $ver) = pkg_frompath($self, $sys->{id}, $path); # Handles (2) and (3)
+    return $self->resNotFound if !$pkg;
+
+    my $verid = $ver && $self->dbPackageVersions($pkg->{id}, $ver)->[0]{id};
+    return $self->resNotFound if $ver && !$verid;
+
+    ($man) = $self->dbManPrefName($name, sysid => $sys->{id}, pkgid => $pkg->{id}, pkgver => $verid);
+  }
+  return $self->resNotFound if !$man;
+
+  $self->resRedirect("/$man->{name}/".substr($man->{hash}, 0, 8), 'temp');
+};
 
 
 sub manjslist {
@@ -798,15 +884,19 @@ sub dbPackageGet {
 
 
 sub dbPackageVersions {
-  my($s, $id) = @_;
+  my($s, $id, $version) = @_;
+
+  my %where = (
+    'package = ?' => $id,
+    $version ? ('version = ?' => $version) : (),
+    'EXISTS(SELECT 1 FROM man m WHERE m.package = v.id)' => 1,
+  );
 
   return $s->dbAll(q{
       SELECT id, version, released
-        FROM package_versions v
-       WHERE package = ?
-         AND EXISTS(SELECT 1 FROM man m WHERE m.package = v.id)
+        FROM package_versions v !W
     ORDER BY released DESC},
-  $id)
+  \%where)
 }
 
 
