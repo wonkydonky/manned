@@ -122,7 +122,7 @@ EOP
 }
 
 
-# For FreeBSD 9.3+
+# For FreeBSD 9.3
 check_pkg2() {
   SYSID=$1
   URL=$2
@@ -148,7 +148,7 @@ check_pkg2() {
 }
 
 
-# Fetch packages from the FreeBSD 9.3+ package repositories.
+# Fetch packages from the FreeBSD 9.3 package repositories.
 check_pkgdir2() {
   SYSID=$1
   URL=$2
@@ -164,6 +164,45 @@ check_pkgdir2() {
 
   while read NFO; do
     check_pkg2 $SYSID $URL $NFO
+  done <"$TMP/pkglist"
+
+  rm -f "$TMP/packagesite.yaml" "$TMP/pkglist" "$TMP/index"
+}
+
+
+# For FreeBSD 10.0+
+check_pkg3() {
+  SYSID=$1
+  URL=$2
+  NAME=$3
+  VER=$4
+  CAT=$5
+  FN=$6
+
+  echo "===> $NAME $VER"
+  $CURL "$URL/All/$FN" -o "$TMP/pkg.txz" || return 1
+
+  # Get the highest last modified time and use that as the package release
+  # date. Not super reliable, but for the lack of a simple alternative...
+  DATE=`tar -tPvf "$TMP/pkg.txz" | awk '{print $4}' | sort -r |head -n 1`
+
+  add_pkginfo $SYSID $CAT $NAME $VER $DATE
+  add_tar "$TMP/pkg.txz" $PKGID
+  rm -f "$TMP/pkg.txz"
+}
+
+
+# Fetch packages from the FreeBSD 10.0+ package repositories
+# (Same as FreeBSD 9.3, but without all the uglyness to guess versions, the packagesite.yaml file is correct this time)
+check_pkgdir3() {
+  SYSID=$1
+  URL=$2
+  $CURL "$URL/packagesite.txz" | tar -C "$TMP" -xJf- packagesite.yaml || return 1
+
+  perl -lne '($n)=/"name":"([^ "]+)"/; ($v)=/"version":"([^ "]+)"/; ($c)=m{"origin":"([^ "/]+)}; ($f)=m{"path":"All/([^ "]+)"}; print "$n $v $c $f"' < "$TMP/packagesite.yaml" >"$TMP/pkglist"
+
+  while read NFO; do
+    check_pkg3 $SYSID $URL $NFO
   done <"$TMP/pkglist"
 
   rm -f "$TMP/packagesite.yaml" "$TMP/pkglist"
@@ -786,6 +825,15 @@ f9_3() {
   check_pkgdir2 94 "$PKG"
 }
 
+f10_0() {
+  MIR="http://ftp-archive.freebsd.org/mirror/FreeBSD-Archive/old-releases/i386/10.0-RELEASE/"
+  PKG="http://pkg.freebsd.org/freebsd:10:x86:32/release_0/"
+  echo "============ $MIR"
+  check_dist 95 "$MIR/base.txz" "core-base" "2014-01-20"
+  check_dist 95 "$MIR/games.txz" "core-games" "2014-01-20"
+  check_pkgdir3 95 "$PKG"
+}
+
 
 old() {
   f1_0
@@ -844,6 +892,7 @@ old() {
   f9_1
   f9_2
   f9_3
+  f10_0
 }
 
 "$@"

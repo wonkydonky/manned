@@ -143,7 +143,8 @@ INSERT INTO systems (id, name, release, short, relorder) VALUES
   (91, 'Debian',     '8.0',   'debian-jessie',   12),
   (92, 'Ubuntu',     '15.10', 'ubuntu-wily',     22),
   (93, 'Ubuntu',     '16.04', 'ubuntu-xenial',   23),
-  (94, 'FreeBSD',    '9.3',   'freebsd-9.3',     55);
+  (94, 'FreeBSD',    '9.3',   'freebsd-9.3',     55),
+  (95, 'FreeBSD',    '10.0',  'freebsd-10.0',    56);
 
 
 -- Removes any path components and compression extensions from the filename.
