@@ -146,7 +146,8 @@ INSERT INTO systems (id, name, release, short, relorder) VALUES
   (94, 'FreeBSD',    '9.3',   'freebsd-9.3',     55),
   (95, 'FreeBSD',    '10.0',  'freebsd-10.0',    56),
   (96, 'FreeBSD',    '10.1',  'freebsd-10.1',    57),
-  (97, 'FreeBSD',    '10.2',  'freebsd-10.2',    58);
+  (97, 'FreeBSD',    '10.2',  'freebsd-10.2',    58),
+  (98, 'FreeBSD',    '10.3',  'freebsd-10.3',    59);
 
 
 -- Removes any path components and compression extensions from the filename.
