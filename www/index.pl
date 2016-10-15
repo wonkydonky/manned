@@ -48,6 +48,14 @@ TUWF::register(
   qr{info/about} => \&about,
   qr{browse/search} => \&browsesearch,
 
+  # These have to go before the other mappings, to ensure that links work for
+  # man pages called 'pkg' or 'man'. This also means that we can't have a
+  # system named 8 hex digits, but at least that's easy to guarantee. :)
+  qr{([^/]+)/([0-9a-f]{8})} => \&man,
+  qr{([^/]+)/([0-9a-f]{8})/src} => \&src,
+  # We don't have any other single-component paths
+  qr{([^/]+)} => \&man,
+
   qr{pkg/([^/]+)} => \&pkg_list,
   # pkg/$system/$category/$name (/$version); $category may contain a slash, too.
   qr{pkg/([^/]+)/(.+)} => \&pkg_info,
@@ -66,10 +74,6 @@ TUWF::register(
     return $self->resNotFound if !@$pkgs;
     $self->resRedirect("/pkg/$sys->{short}/$pkgs->[0]{category}/$name".($ver ? "/$ver" :''), 'perm');
   },
-
-  qr{([^/]+)/([0-9a-f]{8})} => \&man,
-  qr{([^/]+)/([0-9a-f]{8})/src} => \&src,
-  qr{([^/]+)} => \&man,
 
   # Redirect for a specific language for a man page.
   # I'm not a fan of this solution; might drop it in the future.
