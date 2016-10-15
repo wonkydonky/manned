@@ -138,9 +138,12 @@ sub home {
    li; a href => 'http://man.cx/', 'man.cx'; txt ' - Man pages extracted from Debian testing.'; end;
    li; a href => 'http://man.he.net/', 'man.he.net'; txt ' - Also seems to be from a Debian-like system.'; end;
    li; a href => 'http://linux.die.net/man/', 'die.net'; txt ' - Seems to be based on an RPM-based Linux distribution.'; end;
+   li; a href => 'http://manpages.org/', 'manpages.org'; txt ' - Lots of mostly-nicely formatted man pages, no clue about source.'; end;
    li; a href => 'http://www.manpagez.com/', 'manpagez.com'; txt ' - Mac OS X, has some GTK-html and texinfo documentation as well.'; end;
+   li; a href => 'https://www.dragonflybsd.org/cgi/web-man', 'DragonFlyBSD Man Pages'; end;
    li; a href => 'http://www.freebsd.org/cgi/man.cgi', 'FreeBSD.org Man Pages'; end;
    li; a href => 'http://www.openbsd.org/cgi-bin/man.cgi', 'OpenBSD Man Pages'; end;
+   li; a href => 'http://netbsd.gw.com/cgi-bin/man-cgi', 'NetBSD Man Pages'; end;
    li; a href => 'http://manpages.ubuntu.com/', 'Ubuntu Manuals'; end;
   end;
   $self->htmlFooter;
