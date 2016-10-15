@@ -479,10 +479,11 @@ function dsResults(hr, obj) {
   if(!sys)
     return;
   var f = function() {
-    var l = byName(this.parentNode, 'a', 'hidden');
-    for(var i=0; i<l.length; i++)
-      setClass(l[i], 'hidden', false);
-    setClass(this, 'hidden', true);
+    var l = byName(this.parentNode, 'a');
+    var show = hasClass(l[3], 'hidden');
+    for(var i=3; i<l.length-1; i++)
+      setClass(l[i], 'hidden', !show);
+    setText(this, show ? '...less' : 'more...');
     return false
   };
   var l = byClass(sys, 'a', 'more');
