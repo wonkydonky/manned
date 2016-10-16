@@ -100,7 +100,7 @@ static void flushinclude(ctx_t *x) {
   char *s = x->line;
 
   s[x->linelen-3] = 0;
-  s += 17;
+  s += 16;
   char *fn = strrchr(s, '/');
   fn = fn ? fn+1 : s;
   sv_catpv(x->dest, "&gt;&gt; Included manual page: <a href=\"/");
@@ -133,7 +133,7 @@ static void flushline(ctx_t *x) {
   char *s = x->line, *es = x->line;
 
   // Special-case [[[MANNEDINCLUDE ..]]] directive
-  if(x->linelen > 20 && *s == '[' && strncmp(s, "[[[MANNEDINCLUDE ", 17) == 0 && strcmp("]]]", s+x->linelen-3) == 0) {
+  if(x->linelen > 20 && *s == '[' && strncmp(s, "[[[MANNEDINCLUDE", 16) == 0 && strcmp("]]]", s+x->linelen-3) == 0) {
     flushinclude(x);
     goto end;
   }
