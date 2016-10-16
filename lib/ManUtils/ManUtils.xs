@@ -169,9 +169,8 @@ static void flushline(ctx_t *x) {
 
     // HTTP(s) URL.
     // This is just a simple q{https?://[^ ][.,;"\)>]?( |$)} match, doesn't
-    // always work right:
-    // - troff.1: ⟨http://www.gnu.org/copyleft/fdl.html⟩.    <- yes, that's an Unicode character.
-    // - roff.7: Has quite a few issues with wrapped URLs and situations similar to the above.
+    // always work right, e.g.:
+    // - https://manned.org/spu_run/414316a1 -> URL wrapped to new line
     // Note: Don't use strncmp() before manually checking for 'http'. The parse
     // time is otherwise increased by a factor 2.
     if(s[0] == 'h' && s[1] == 't' && s[2] == 't' && s[3] == 'p' && (strncmp(s, "http://", 7) == 0 || strncmp(s, "https://", 8) == 0)) {
@@ -188,6 +187,18 @@ static void flushline(ctx_t *x) {
           sp[1] = endchr;
           endchr = *sp;
           *(sp--) = 0;
+        }
+        // Also catch a Unicode '⟩', which is how groff sometimes ends a .UR, e.g.:
+        // - https://manned.org/troff/c4467840
+        // - https://manned.org/pass/78413b49
+        // - https://manned.org/empathy-accounts/8c05b2c1
+        // - https://manned.org/urn/8cb83e85
+        // - https://manned.org/wine/4a699a22
+        if(*sp == '\xa9' && *(sp-1) == '\x9f' && *(sp-2) == '\xe2') {
+          sp[1] = endchr;
+          sp -= 3;
+          endchr = sp[1];
+          sp[1] = 0;
         }
         sv_catpvf(x->dest, "<a href=\"%s\" rel=\"nofollow\">%s</a>", s, s);
         *(++sp) = endchr;

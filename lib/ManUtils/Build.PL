@@ -5,6 +5,7 @@ use Module::Build;
 Module::Build->new(
   dist_name => 'ManUtils',
   dist_version_from => 'ManUtils.pm',
+  dist_abstract => 'Utils for manned.org',
   pm_files => {
     'ManUtils.pm' => 'lib/ManUtils.pm',
   },
