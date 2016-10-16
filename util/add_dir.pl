@@ -154,9 +154,23 @@ find sub {
   return warn "abs_path($File::Find::name): $!\n" if !$path;
   return warn "$vpath ($path) points outside of the tar directory!\n" if $path !~ s/^\Q$dir\E//;
   # Note: fltk also creates pre-formatted pages in /cat$sectre/, but those are ignored.
-  # TODO: Also ignore html and INDEX sections
+
   return warn "Ignoring $vpath\n" if $vpath !~ m{man(?:/([^/]+))?/man[0-9n]/([^/]+)$};
-  addman $pkgid, $vpath, $2, $1;
+  my($locale, $fn) = ($1, $2);
+  return warn "Ignoring $vpath\n" if
+       $fn =~ /^Makefile\.(in|am)$/
+    || $fn =~ /^\.cvsignore(\.gz)?$/
+    || $fn !~ /\./ # Also excludes INDEX files
+    || $fn eq 'man.tmp';
+
+  $locale = undef if $locale && (
+       $locale eq '5man'
+    || $locale eq 'c'
+    || $locale =~ /^man.?$/
+    || $locale =~ /^Man-Part[12]/
+  );
+
+  addman $pkgid, $vpath, $fn, $locale;
   $found++;
 }, $dir;
 
