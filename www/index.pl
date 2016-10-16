@@ -79,6 +79,7 @@ TUWF::register(
   # I'm not a fan of this solution; might drop it in the future.
   qr{lang/([^/]+)/([^/]+)} => sub {
     my($s, $l, $n) = @_;
+    $n = _normalizename($n);
     my($m, undef) = $s->dbManPrefName($n, language => $l);
     return $s->resNotFound if !$m;
     $s->resRedirect("/$m->{name}/".substr($m->{hash}, 0, 8), 'temp');
@@ -577,12 +578,21 @@ sub _man_langsect {
 }
 
 
+sub _normalizename {
+  local $_ = shift;
+  # Firefox seems to escape [ and ] in URLs. It doesn't really have to...
+  s/%5b/[/ig;
+  s/%5d/]/ig;
+  # Man pages with spaces in the path, eww
+  s/%20/ /g;
+  $_;
+}
+
+
 sub man {
   my($self, $name, $hash) = @_;
 
-  # Firefox seems to escape [ and ] in URLs. It doesn't really have to...
-  $name =~ s/%5b/[/ig;
-  $name =~ s/%5d/]/ig;
+  $name = _normalizename($name);
 
   my $man;
   if($hash) {
@@ -616,6 +626,8 @@ sub man {
 
 sub src {
   my($self, $name, $hash) = @_;
+
+  $name = _normalizename($name);
 
   my $m = $self->dbManInfo(name => $name, shorthash => $hash);
   return $self->resNotFound if !@$m;
