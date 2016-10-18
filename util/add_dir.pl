@@ -155,7 +155,7 @@ find sub {
   return warn "$vpath ($path) points outside of the tar directory!\n" if $path !~ s/^\Q$dir\E//;
   # Note: fltk also creates pre-formatted pages in /cat$sectre/, but those are ignored.
 
-  return warn "Ignoring $vpath\n" if $vpath !~ m{man(?:/([^/]+))?/man[0-9n]/([^/]+)$};
+  return warn "Ignoring $vpath\n" if $vpath !~ m{man(?:/([^/]+))?/man./([^/]+)$};
   my($locale, $fn) = ($1, $2);
   return warn "Ignoring $vpath\n" if
        $fn =~ /^Makefile\.(in|am)$/

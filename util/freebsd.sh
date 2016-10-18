@@ -861,6 +861,14 @@ f10_3() {
   check_pkgdir3 98 "$PKG"
 }
 
+f11_0() {
+  MIR="http://ftp.dk.freebsd.org/pub/FreeBSD/releases/i386/11.0-RELEASE/"
+  PKG="http://pkg.freebsd.org/freebsd:11:x86:32/release_0/"
+  echo "============ $MIR"
+  check_dist 99 "$MIR/base.txz" "core-base" "2016-10-10"
+  check_pkgdir3 99 "$PKG"
+}
+
 
 old() {
   f1_0
@@ -923,6 +931,7 @@ old() {
   f10_1
   f10_2
   f10_3
+  f11_0
 }
 
 "$@"
