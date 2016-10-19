@@ -296,6 +296,12 @@ ubuntu_xenial() {
   syncrepo 93 "http://nl.archive.ubuntu.com/ubuntu/" "xenial-security" "main multiverse restricted universe"
 }
 
+ubuntu_yakkety() {
+  syncrepo 100 "http://nl.archive.ubuntu.com/ubuntu/" "yakkety" "main multiverse restricted universe"
+  syncrepo 100 "http://nl.archive.ubuntu.com/ubuntu/" "yakkety-updates" "main multiverse restricted universe"
+  syncrepo 100 "http://nl.archive.ubuntu.com/ubuntu/" "yakkety-security" "main multiverse restricted universe"
+}
+
 ubuntu_old() {
   ubuntu_warty
   ubuntu_hoary
@@ -324,6 +330,7 @@ ubuntu_active() {
   ubuntu_trusty   # until 2019-04
   ubuntu_wily     # until 2016-07
   ubuntu_xenial   # until 2021-04
+  ubuntu_yakkety  # until 2017-07
 }
 
 ubuntu() {
