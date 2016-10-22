@@ -1,0 +1,10 @@
+[package]
+name = "indexer"
+version = "0.1.0"
+authors = ["Yorhel <git@yorhel.nl>"]
+
+[dependencies]
+regex = "0.1.77"
+log = "0.3.6"
+env_logger = "0.3.5"
+libarchive = { git = "https://github.com/17dec/libarchive-rust" }
