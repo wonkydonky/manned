@@ -137,6 +137,7 @@ sub home {
   h2 'Other sites';
   ul id => 'external';
    li; a href => 'http://man7.org/linux/man-pages/index.html', 'man7.org'; txt ' - Linux man pages from several upstream projects.'; end;
+   li; a href => 'http://manpag.es/', 'ManPag.es'; txt ' - Man pages from several Linux distributions.'; end;
    li; a href => 'http://man.cx/', 'man.cx'; txt ' - Man pages extracted from Debian testing.'; end;
    li; a href => 'http://man.he.net/', 'man.he.net'; txt ' - Also seems to be from a Debian-like system.'; end;
    li; a href => 'http://linux.die.net/man/', 'die.net'; txt ' - Seems to be based on an RPM-based Linux distribution.'; end;
