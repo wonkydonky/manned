@@ -7,4 +7,6 @@ authors = ["Yorhel <git@yorhel.nl>"]
 regex = "0.1.77"
 log = "0.3.6"
 env_logger = "0.3.5"
-libarchive = { git = "https://github.com/17dec/libarchive-rust" }
+lazy_static = "0.2.1"
+libc = "0.2.17"
+libarchive3-sys = "0.1.2"

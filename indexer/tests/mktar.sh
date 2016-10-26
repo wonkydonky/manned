@@ -4,6 +4,19 @@
 # way.  The tests will fail quite badly if hardlink.6 is considered the
 # "original" version.
 
+
+mkdir simple
+echo Hi >simple/file
+ln -s file simple/link
+ln simple/file simple/hardlink
+mkfifo simple/fifo
+badfn=`echo 'Héllö.txt' | iconv -t ISO-8859-1`
+touch $badfn
+tar -czf simpletest.tar.gz simple $badfn
+rm -rf $badfn simple
+
+
+
 mkdir man
 cd man
 
