@@ -4,6 +4,7 @@ use strict;
 use warnings;
 use TUWF ':html', 'html_escape', ':xml';
 use JSON::XS;
+use POSIX 'ceil';
 
 use Cwd 'abs_path';
 our $ROOT;
@@ -443,6 +444,27 @@ sub pkg_frompath {
 }
 
 
+sub paginate {
+  my($url, $count, $perpage, $p) = @_;
+  return if $count <= $perpage;
+
+  my $l = sub {
+    my $c = shift;
+    a href => sprintf('%s%d', $url, $c), $c if $c != $p;
+    b $c if $c == $p;
+  };
+
+  my $lp = ceil($count/$perpage);
+  p class => 'paginate';
+   $l->(1) if $p > 1+4;
+   b '...' if $p > 1+5;
+   $l->($_) for (($p > 4 ? $p-4 : 1)..($p+4 > $lp ? $lp : $p+4));
+   b '...' if $p < $lp-5;
+   $l->($lp) if $p < $lp-4;
+  end;
+}
+
+
 sub pkg_info {
   my($self, $short, $path) = @_;
 
@@ -457,11 +479,12 @@ sub pkg_info {
   my $sel = $ver ? (grep $_->{version} eq $ver, @$vers)[0] : $vers->[0];
   return $self->resNotFound if !$sel;
 
-  my $f = $self->formValidate({ get => 's', required => 0});
+  my $f = $self->formValidate({ get => 'p', required => 0, default => 1, template => 'uint', min => 1, max => 100});
   return $self->resNotFound if $f->{_err};
 
-  my $mans = $self->dbManInfo(package => $sel->{id}, results => 201, start => $f->{s}, sort => 'syspkgname');
-  my $more = @$mans > 200 && pop @$mans;
+  my $mans = $self->dbManInfo(package => $sel->{id}, results => 200, page => $f->{p}, sort => 'syspkgname');
+  my $more = 1;
+  my $count = $self->dbManInfo(package => $sel->{id}, countonly => 1)->[0]{count};
 
   # Latest version of this package determines last modification date of the page.
   $self->setLastMod($vers->[0]{released});
@@ -485,6 +508,7 @@ sub pkg_info {
 
   div id => 'pkgmans';
   h2 "Manuals for version $sel->{version}";
+   paginate "/pkg/$sys->{short}/$pkg->{category}/$pkg->{name}/$sel->{version}?p=", $count, 200, $f->{p};
    ul;
     for(@$mans) {
       li;
@@ -494,12 +518,7 @@ sub pkg_info {
       end;
     }
    end;
-   if($more) {
-     use utf8;
-     p class => 'pagination';
-      a href => "/pkg/$sys->{short}/$pkg->{category}/$pkg->{name}/$sel->{version}?s=$mans->[199]{name}", 'next »';
-     end;
-   }
+   paginate "/pkg/$sys->{short}/$pkg->{category}/$pkg->{name}/$sel->{version}?p=", $count, 200, $f->{p};
   end;
 
   $self->htmlFooter;
@@ -759,7 +778,7 @@ sub htmlHeader {
 
   html;
    head;
-    Link rel => 'stylesheet', type => 'text/css', href => '/man.css?2';
+    Link rel => 'stylesheet', type => 'text/css', href => '/man.css?4';
     title $o{title}.' - manned.org';
    end 'head';
    body;
@@ -824,10 +843,15 @@ sub dbManContent {
 }
 
 
-# Options: name, section, shorthash, package, start, results, sort
+# Options: name, section, shorthash, package, start, results, sort, countonly
 sub dbManInfo {
   my $s = shift;
-  my %o = @_;
+  my %o = (
+      sort => '',
+      page => 1,
+      results => 10_000,
+      @_
+  );
 
   my %where = (
     $o{name}      ? ('m.name = ?'    => $o{name}) : (),
@@ -840,20 +864,22 @@ sub dbManInfo {
     $o{start}     ? ('m.name > ?' => $o{start}) : (),
   );
 
-  $o{sort} ||= '';
   my $order =
     $o{sort} eq 'syspkgname' ? 'ORDER BY s.name, s.relorder DESC, p.name, v.released DESC, m.name, m.locale NULLS FIRST, m.filename' : '';
 
-  return $s->dbAll(q{
-    SELECT p.system, p.category, p.name AS package, v.version, v.released, m.name, m.section, m.filename, m.locale, encode(m.hash, 'hex') AS hash
+  my $select = $o{countonly} ? 'COUNT(*) as count'
+    : "p.system, p.category, p.name AS package, v.version, v.released, m.name, m.section, m.filename, m.locale, encode(m.hash, 'hex') AS hash";
+
+  my($r, $np) = $s->dbPage(\%o, q{
+    SELECT !s
       FROM man m
       JOIN package_versions v ON v.id = m.package
       JOIN packages p ON p.id = v.package
       JOIN systems s ON s.id = p.system
         !W
         !s
-     LIMIT ?
-  }, \%where, $order, $o{results}||10000);
+  }, $select, \%where, $order);
+  wantarray ? ($r, $np) : $r;
 }
 
 

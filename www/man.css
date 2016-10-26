@@ -25,10 +25,15 @@ code { font-family: "Lucida Console", Monospace; font-size: 12px; background-col
 #body { padding: 10px 10px 20px 10px; background: #fff }
 
 #systems a,
-#charselect a { color: #048; font-family: "Verdana"; font-weight: normal; text-decoration: none; padding: 3px 5px; border-radius: 4px; }
+#charselect a,
+.paginate a { color: #048; font-family: "Verdana"; font-weight: normal; text-decoration: none; padding: 3px 5px; border-radius: 4px; }
+
+#charselect b,
+.paginate b { font-family: "Verdana"; padding: 3px }
 
 #systems a:hover,
-#charselect a:hover { background: #cde; }
+#charselect a:hover,
+.paginate a:hover { background: #cde; }
 
 i.grayedout { color: #aaa; font-size: 13px; }
 
@@ -43,10 +48,7 @@ i.grayedout { color: #aaa; font-size: 13px; }
 #systems b { font-size: 24px; display: block }
 
 #charselect { float: right }
-#charselect b { padding: 3px }
 .pagination { display: block; margin: 10px; width: 100%; text-align: center }
-
-#external { list-style-type: none }
 
 #packages { margin: 20px 0; -webkit-column-width: 300px; -moz-column-width: 300px; column-width: 300px }
 #packages li { display: block; }
@@ -69,8 +71,9 @@ i.grayedout { color: #aaa; font-size: 13px; }
 #pkgmans { margin-top: 10px }
 #pkgmans h2 { margin: 0 }
 #pkgmans { float: left }
+#pkgmans .paginate { margin: 10px 0 }
 #pkgmans ul { margin: 10px 0 }
-#pkgmans li { display: block; }
+#pkgmans li { display: block }
 #pkgmans i { color: #aaa; font-size: 13px; }
 
 #manbuttons h1 { display: inline; margin: 0 20px 0 0; vertical-align: middle }
