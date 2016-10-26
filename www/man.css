@@ -35,6 +35,8 @@ code { font-family: "Lucida Console", Monospace; font-size: 12px; background-col
 #charselect a:hover,
 .paginate a:hover { background: #cde; }
 
+#external { list-style-type: none }
+
 i.grayedout { color: #aaa; font-size: 13px; }
 
 #about { max-width: 900px }
