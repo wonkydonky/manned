@@ -4,6 +4,8 @@ extern crate env_logger;
 extern crate regex;
 extern crate libarchive3_sys;
 extern crate libc;
+extern crate ring;
+extern crate encoding;
 
 mod archive;
 mod archread;

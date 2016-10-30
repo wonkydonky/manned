@@ -1,9 +1,11 @@
 #!/bin/sh
 
 # The order of inserting the files into the tar is not fully deterministic this
-# way.  The tests will fail quite badly if hardlink.6 is considered the
+# way.  The tests will fail quite badly if a hardlink is considered the
 # "original" version.
 
+
+# simpletest.tar.gz
 
 mkdir simple
 echo Hi >simple/file
@@ -16,6 +18,13 @@ tar -czf simpletest.tar.gz simple $badfn
 rm -rf $badfn simple
 
 
+
+# rawtest.gz.xz.bzip2
+
+echo "File contents!" | gzip | xz | bzip2 >rawtest.gz.xz.bzip2
+
+
+# testarchive.tar.xz
 
 mkdir man
 cd man

@@ -26,6 +26,7 @@ pub struct Archive<'a> {
     rd: &'a mut Read,
     buf: Vec<u8>,
     err: Option<Error>,
+    eof: bool,
 }
 
 
@@ -33,6 +34,8 @@ pub struct ArchiveEntry<'a> {
     a: Box<Archive<'a>>,
     e: *mut ffi::Struct_archive_entry,
 }
+
+pub struct RawEntry<'a>(Box<Archive<'a>>);
 
 
 #[derive(Debug,PartialEq,Eq)]
@@ -65,7 +68,7 @@ impl<'a> Archive<'a> {
         let bufsize = 64*1024;
         let mut buf = Vec::with_capacity(bufsize);
         unsafe { buf.set_len(bufsize) };
-        let mut ret = Box::new(Archive { a: a, rd: rd, buf: buf, err: None });
+        let mut ret = Box::new(Archive { a: a, rd: rd, buf: buf, err: None, eof: false });
 
         let aptr: *mut c_void = &mut *ret as *mut Archive as *mut c_void;
         let r = unsafe { ffi::archive_read_open(a, aptr, None, Some(archive_read_cb), None) };
@@ -76,10 +79,18 @@ impl<'a> Archive<'a> {
     }
 
     fn error(&mut self) -> Error {
-        // TODO: Do something with the description
-        self.err.take().unwrap_or_else(||
-            Error::from_raw_os_error(unsafe { ffi::archive_errno(self.a) })
-        )
+        self.err.take().unwrap_or_else(|| {
+            let err = Error::from_raw_os_error(unsafe { ffi::archive_errno(self.a) });
+            let desc = unsafe { ffi::archive_error_string(self.a) };
+            if desc.is_null() {
+                return err;
+            }
+            if let Ok(s) = str::from_utf8(unsafe { CStr::from_ptr(desc) }.to_bytes()) {
+                Error::new(err.kind(), s)
+            } else {
+                err
+            }
+        })
     }
 
     fn entry(self: Box<Self>) -> Result<Option<ArchiveEntry<'a>>> {
@@ -87,6 +98,7 @@ impl<'a> Archive<'a> {
             a: self,
             e: ptr::null_mut()
         };
+        ent.a.eof = false;
         let res = unsafe { ffi::archive_read_next_header(ent.a.a, &mut ent.e) };
         match res {
             ffi::ARCHIVE_EOF => Ok(None),
@@ -96,9 +108,15 @@ impl<'a> Archive<'a> {
     }
 
     fn read(&mut self, buf: &mut [u8]) -> Result<usize> {
+        // libarchive tends to throw an error if you try to read after an EOF; handle that case
+        // here.
+        if self.eof {
+            return Ok(0);
+        }
         let cbuf = buf.as_mut_ptr() as *mut c_void;
         let n = unsafe { ffi::archive_read_data(self.a, cbuf, buf.len()) };
         if n >= 0 {
+            self.eof = n == 0;
             Ok(n as usize)
         } else {
             Err(self.error())
@@ -113,6 +131,27 @@ impl<'a> Archive<'a> {
             a
         };
         try!(Self::new(rd, a)).entry()
+    }
+
+    pub fn open_raw(rd: &mut Read) -> Result<RawEntry> {
+        let a  = unsafe {
+            let a = ffi::archive_read_new();
+            ffi::archive_read_support_filter_all(a);
+            ffi::archive_read_support_format_raw(a);
+            ffi::archive_read_support_format_empty(a);
+            a
+        };
+        let mut a = try!(Self::new(rd, a));
+        let mut e: *mut ffi::Struct_archive_entry = ptr::null_mut();
+        let res = unsafe { ffi::archive_read_next_header(a.a, &mut e) };
+        match res {
+            ffi::ARCHIVE_FATAL => Err(a.error()),
+            ffi::ARCHIVE_EOF => {
+                a.eof = true;
+                Ok(RawEntry(a))
+            },
+            _ => Ok(RawEntry(a))
+        }
     }
 }
 
@@ -197,6 +236,13 @@ impl<'a> Read for ArchiveEntry<'a> {
 }
 
 
+impl<'a> Read for RawEntry<'a> {
+    fn read(&mut self, buf: &mut [u8]) -> Result<usize> {
+        self.0.read(buf)
+    }
+}
+
+
 // We can't provide an Iterator object for ArchiveEntries because Rust doesn't support streaming
 // iterators. Let's instead provide a walk function for convenience.
 // cb should return Ok(true) to continue, Ok(false) to break
@@ -223,22 +269,28 @@ mod tests {
     use std::fs::File;
 
     #[test]
-    fn invalid_archive() {
+    fn invalid() {
         let mut r = std::io::repeat(0x0a).take(64*1024);
         let ent = Archive::open_archive(&mut r);
         assert!(ent.is_err());
     }
 
     #[test]
-    fn zerolength_archive() {
+    fn zerolength() {
         let mut r = std::io::empty();
-        let ent = Archive::open_archive(&mut r);
-        // I expected an error here rather than None, whatever.
-        assert!(ent.unwrap().is_none());
+        {
+            let ent = Archive::open_archive(&mut r);
+            assert!(ent.unwrap().is_none());
+        }
+        {
+            let mut ent = Archive::open_raw(&mut r).unwrap();
+            let mut v = Vec::new();
+            assert_eq!(ent.read_to_end(&mut v).unwrap(), 0);
+        }
     }
 
     #[test]
-    fn read() {
+    fn archive() {
         let mut f = File::open("tests/simpletest.tar.gz").unwrap();
         let mut ent = Archive::open_archive(&mut f).unwrap().unwrap();
 
@@ -269,5 +321,23 @@ mod tests {
         t(&mut ent, None, 0, FileType::File, "");
 
         assert!(ent.next().unwrap().is_none());
+    }
+
+    #[test]
+    fn raw() {
+        let mut f = File::open("tests/rawtest.gz.xz.bzip2").unwrap();
+        let mut r = Archive::open_raw(&mut f).unwrap();
+        let mut c = String::new();
+        r.read_to_string(&mut c).unwrap();
+        assert_eq!(&c, "File contents!\n");
+    }
+
+    #[test]
+    fn raw_passthrough() {
+        let mut r = std::io::Cursor::new(&b"This is an uncompressed text file"[..]);
+        let mut ent = Archive::open_raw(&mut r).unwrap();
+        let mut s = String::new();
+        ent.read_to_string(&mut s).unwrap();
+        assert_eq!(&s, "This is an uncompressed text file");
     }
 }
