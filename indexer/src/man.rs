@@ -18,7 +18,7 @@ const MIN_MAN_SIZE: u64 = 9;
 
 // Checks a path for a man page candidate. Returns None if it doesn't seem like a man page
 // location, otherwise Some((manPageName, Section, Locale)).
-fn parse_path(path: &str) -> Option<(&str, &str, &str)> {
+pub fn parse_path(path: &str) -> Option<(&str, &str, &str)> {
     // Roughly: man[/locale]/man1/manpage.section[.compression]+
     lazy_static! {
         static ref RE: Regex = Regex::new(r"(?x)
@@ -112,8 +112,8 @@ fn codec_from_tag(data: &Vec<u8>) -> Option<EncodingRef> {
         // latin-1 isn't in the whatwg spec under that name
         "latin-1" => Some(all::WINDOWS_1252),
 
-        // Waaaaaaaaah we can't decode this :(
-        "armscii-8" => None,
+        // armscii isn't in the whatwg spec at all
+        "armscii-8" => Some(all::ARMSCII_8),
 
         // Anything else should be found by its whatwg label.
         x => match encoding_from_whatwg_label(x) {
