@@ -2,7 +2,7 @@
 
 . ./common.sh
 
-./arch.sh
+./index.sh daily
 ./deb.sh ubuntu_active
 ./deb.sh debian_active
 echo "============ Updating SQL indices"
