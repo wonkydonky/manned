@@ -57,6 +57,7 @@ fn insert_pkg(tr: &postgres::transaction::Transaction, opt: &PkgOpt) -> Option<i
 
 fn insert_man_row(tr: &postgres::GenericConnection, verid: i32, path: &str, enc: &str, hash: &[u8]) {
     let (name, sect, locale) = man::parse_path(path).unwrap();
+    let locale = if locale == "" { None } else { Some(locale) };
     if let Err(e) = tr.execute(
         "INSERT INTO man (package, name, filename, locale, hash, section, encoding) VALUES ($1, $2, '/'||$3, $4, $5, $6, $7)",
         &[&verid, &name, &path, &locale, &hash, &sect, &enc]
