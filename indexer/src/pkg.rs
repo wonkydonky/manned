@@ -1,6 +1,7 @@
 use std;
 use std::io::Read;
 use postgres;
+use hyper;
 
 use archive;
 use archread;
@@ -8,11 +9,12 @@ use man;
 use archive::Archive;
 
 pub struct PkgOpt<'a> {
+    pub force: bool,
     pub sys: i32,
     pub cat: &'a str,
     pub pkg: &'a str,
     pub ver: &'a str,
-    pub date: &'a str,
+    pub date: &'a str, // TODO: Option to extract date from package metadata itself
     pub file: &'a str
 }
 
@@ -30,17 +32,26 @@ fn insert_pkg(tr: &postgres::transaction::Transaction, opt: &PkgOpt) -> Option<i
         Ok(r) => r.get(0).get(0),
     };
 
-    // TODO: option to overwrite an existing package version
-    let q = "INSERT INTO package_versions (package, version, released) VALUES($1, $2, $3::text::date) RETURNING id";
-    let verid: i32 = match tr.query(q, &[&pkgid, &opt.ver, &opt.date]) {
-        Err(e) => {
-            error!("Can't insert package version in database: {}", e);
-            return None;
-        },
-        Ok(r) => r.get(0).get(0),
-    };
-    trace!("Package pkgid {} verid {}", pkgid, verid);
-    Some(verid)
+    let q = "SELECT id FROM package_versions WHERE package = $1 AND version = $2 AND released = $3::text::date";
+    let res = tr.query(q, &[&pkgid, &opt.ver, &opt.date]).unwrap();
+
+    let verid : i32;
+    if res.is_empty() {
+        let q = "INSERT INTO package_versions (package, version, released) VALUES($1, $2, $3::text::date) RETURNING id";
+        verid = tr.query(q, &[&pkgid, &opt.ver, &opt.date]).unwrap().get(0).get(0);
+        trace!("New package pkgid {} verid {}", pkgid, verid);
+        Some(verid)
+
+    } else if opt.force {
+        verid = res.get(0).get(0);
+        trace!("Overwriting package pkgid {} verid {}", pkgid, verid);
+        tr.query("DELETE FROM man WHERE package = $1", &[&verid]).unwrap();
+        Some(verid)
+
+    } else {
+        info!("Package already in database, pkgid {} verid {}", pkgid, res.get(0).get::<usize,i32>(0));
+        None
+    }
 }
 
 
@@ -50,7 +61,7 @@ fn insert_man_row(tr: &postgres::GenericConnection, verid: i32, path: &str, hash
     if let Err(e) = tr.execute(
         "INSERT INTO man (package, name, filename, locale, hash, section) VALUES ($1, $2, '/'||$3, $4, $5, $6)",
         &[&verid, &name, &path, &locale, &hash, &sect]
-        ) {
+    ) {
         // I think this can only happen if archread gives us the same file twice, which really
         // shouldn't happen. But I'd rather continue with an error logged than panic.
         error!("Can't insert verid {} fn {}: {}", verid, path, e);
@@ -64,11 +75,12 @@ fn insert_man(tr: &postgres::GenericConnection, verid: i32, paths: &[&str], ent:
         Ok(x) => x,
     };
 
-    // TODO: Overwrite entry if the contents are different? It's possible that earlier decoding
+    // Overwrite entry if the contents are different. It's possible that earlier decoding
     // implementations didn't properly detect the encoding. (On the other hand, due to differences
-    // in filenames it's also possible that THIS decoding step went wrong. Ugh)
+    // in filenames it's also possible that THIS decoding step went wrong, but that's slightly less
+    // likely)
     tr.execute(
-        "INSERT INTO contents (hash, content) VALUES($1, $2) ON CONFLICT (hash) DO NOTHING",
+        "INSERT INTO contents (hash, content) VALUES($1, $2) ON CONFLICT (hash) DO UPDATE SET content = $2",
         &[&dig.as_ref(), &cont]
     ).unwrap();
 
@@ -94,11 +106,24 @@ fn insert_link(tr: &postgres::GenericConnection, verid: i32, src: &str, dest: &s
 fn with_pkg<T,F>(file: &str, cb: F) -> std::io::Result<T>
     where F: FnOnce(Option<archive::ArchiveEntry>) -> std::io::Result<T>
 {
-    // TODO: Support streaming from URLs
-    // TODO: How does .deb support fit into this? (Or anything else with metadata)
-    let mut f = try!(std::fs::File::open(file));
-    let ent = try!(Archive::open_archive(&mut f));
-    cb(ent)
+    // TODO: .deb support
+
+    if file.starts_with("http://") || file.starts_with("https://") {
+        let mut res = try!(
+            hyper::Client::new().get(file).send()
+                .map_err(|e| std::io::Error::new(std::io::ErrorKind::Other, format!("Hyper: {}", e)))
+        );
+        if !res.status.is_success() {
+            return Err(std::io::Error::new(std::io::ErrorKind::Other, format!("HTTP: {}", res.status) ));
+        }
+        let ent = try!(Archive::open_archive(&mut res));
+        cb(ent)
+
+    } else {
+        let mut res = try!(std::fs::File::open(file));
+        let ent = try!(Archive::open_archive(&mut res));
+        cb(ent)
+    }
 }
 
 
@@ -121,7 +146,7 @@ fn index_pkg(tr: &postgres::GenericConnection, opt: &PkgOpt, verid: i32) -> std:
 
 
 pub fn pkg(conn: &postgres::GenericConnection, opt: PkgOpt) {
-    info!("Handling pkg: {} / {} / {} - {} @ {} in {}", opt.sys, opt.cat, opt.pkg, opt.ver, opt.date, opt.file);
+    info!("Handling pkg: {} / {} / {} - {} @ {} @ {}", opt.sys, opt.cat, opt.pkg, opt.ver, opt.date, opt.file);
 
     let tr = conn.transaction().unwrap();
     tr.set_rollback();

@@ -8,6 +8,7 @@ extern crate libc;
 extern crate ring;
 extern crate encoding;
 extern crate postgres;
+extern crate hyper;
 
 mod archive;
 mod archread;
@@ -29,9 +30,9 @@ fn main() {
     let arg = clap_app!(indexer =>
         (about: "Manned.org man page indexer")
         (@arg v: -v +multiple "Increase verbosity")
-        (@arg host: -h +required +takes_value "PostgreSQL connection string")
         (@subcommand pkg =>
             (about: "Index a single package")
+            (@arg force: --force "Overwrite existing indexed package")
             (@arg sys: --sys +required +takes_value "System short-name")
             (@arg cat: --cat +required +takes_value "Package category")
             (@arg pkg: --pkg +required +takes_value "Package name")
@@ -52,7 +53,11 @@ fn main() {
         .filter(Some("postgres"), if verbose >= 4 { log::LogLevelFilter::Trace } else { log::LogLevelFilter::Info })
         .init().unwrap();
 
-    let db = match postgres::Connection::connect(arg.value_of("host").unwrap(), postgres::TlsMode::None) {
+    let dbhost = match std::env::var("MANNED_PG") {
+        Ok(x) => x,
+        Err(_) => { error!("MANNED_PG not set."); return }
+    };
+    let db = match postgres::Connection::connect(&dbhost[..], postgres::TlsMode::None) {
         Ok(x) => x,
         Err(x) => { error!("Can't connect to postgres: {}", x); return },
     };
@@ -60,6 +65,7 @@ fn main() {
 
     if let Some(matches) = arg.subcommand_matches("pkg") {
         pkg::pkg(&db, pkg::PkgOpt {
+            force: matches.is_present("force"),
             sys: sysbyshort(&db, matches.value_of("sys").unwrap()),
             cat: matches.value_of("cat").unwrap(),
             pkg: matches.value_of("pkg").unwrap(),
