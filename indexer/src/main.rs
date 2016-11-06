@@ -42,6 +42,7 @@ fn main() {
             (@arg pkg: --pkg +required +takes_value "Package name")
             (@arg ver: --ver +required +takes_value "Package version")
             (@arg date: --date +required +takes_value "Package release date")
+            (@arg arch: --arch +takes_value "Architecture")
             (@arg FILE: +required "Package file")
         )
         (@subcommand arch =>
@@ -81,6 +82,7 @@ fn main() {
             pkg: matches.value_of("pkg").unwrap(),
             ver: matches.value_of("ver").unwrap(),
             date: matches.value_of("date").unwrap(),
+            arch: matches.value_of("arch"),
             file: open::Path{ path: matches.value_of("FILE").unwrap(), cache: false, canbelocal: true},
         });
     }

@@ -24,16 +24,18 @@ CREATE TABLE package_versions (
   package  integer   NOT NULL REFERENCES packages(id) ON DELETE CASCADE,
   version  varchar   NOT NULL,
   released date      NOT NULL,
+  arch     varchar,
   UNIQUE(package, version)
 );
 
 CREATE TABLE man (
   package  integer   NOT NULL REFERENCES package_versions(id) ON DELETE CASCADE,
   name     varchar   NOT NULL,
-  section  varchar   NOT NULL,
   filename varchar   NOT NULL,
   locale   varchar,
   hash     bytea     NOT NULL REFERENCES contents(hash),
+  section  varchar   NOT NULL,
+  encoding varchar,
   UNIQUE(package, filename)
 );
 

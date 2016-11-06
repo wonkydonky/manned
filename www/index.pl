@@ -238,7 +238,9 @@ sub about {
    <dl>
     <dt>Arch Linux</dt><dd>
      The core, extra and community repositories are fetched from a local
-     Arch mirror. Indexing started around begin June 2012.</dd>
+     Arch mirror. Indexing started around begin June 2012. The i686
+     architecture was indexed until November 6th, 2016, packages after that
+     were fetched from from x86_64.</dd>
     <dt>Debian</dt><dd>
      Historical releases were fetched from <a
      href="http://archive.debian.org/debian/">http://archive.debian.org/debian/</a>
@@ -268,13 +270,12 @@ sub about {
      $release-security repositories are indexed.  Backports are not included at
      the moment. Indexing started around mid June 2012.</dd>
    </dl>
-   Only packages for a single architecture (i386 or i686) are scanned. To my
+   Only packages for a single architecture (i386 or amd64) are scanned.  To my
    knowledge, packages that come with different manuals for different
    architectures either don't exist or are extremely rare. It does happen that
    some packages are not available for all architectures.  Usually, though,
-   every package is at least available for i386/i686, so hopefully we're not
-   missing out on much.
-   <br /><br />
+   every package is at least available for the most popular architecture, so
+   hopefully we're not missing out on much.  <br /><br />
    The repositories are scanned for new packages on a daily basis.
   _
   end;

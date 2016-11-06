@@ -14,6 +14,7 @@ pub struct PkgOpt<'a> {
     pub pkg: &'a str,
     pub ver: &'a str,
     pub date: &'a str, // TODO: Option to extract date from package metadata itself
+    pub arch: Option<&'a str>,
     pub file: open::Path<'a>
 }
 
@@ -36,8 +37,8 @@ fn insert_pkg(tr: &postgres::transaction::Transaction, opt: &PkgOpt) -> Option<i
 
     let verid : i32;
     if res.is_empty() {
-        let q = "INSERT INTO package_versions (package, version, released) VALUES($1, $2, $3::text::date) RETURNING id";
-        verid = tr.query(q, &[&pkgid, &opt.ver, &opt.date]).unwrap().get(0).get(0);
+        let q = "INSERT INTO package_versions (package, version, released, arch) VALUES($1, $2, $3::text::date, $4) RETURNING id";
+        verid = tr.query(q, &[&pkgid, &opt.ver, &opt.date, &opt.arch]).unwrap().get(0).get(0);
         info!("New package pkgid {} verid {}", pkgid, verid);
         Some(verid)
 
@@ -54,12 +55,11 @@ fn insert_pkg(tr: &postgres::transaction::Transaction, opt: &PkgOpt) -> Option<i
 }
 
 
-fn insert_man_row(tr: &postgres::GenericConnection, verid: i32, path: &str, hash: &[u8]) {
-    // TODO: Store 'encoding' in the database
+fn insert_man_row(tr: &postgres::GenericConnection, verid: i32, path: &str, enc: &str, hash: &[u8]) {
     let (name, sect, locale) = man::parse_path(path).unwrap();
     if let Err(e) = tr.execute(
-        "INSERT INTO man (package, name, filename, locale, hash, section) VALUES ($1, $2, '/'||$3, $4, $5, $6)",
-        &[&verid, &name, &path, &locale, &hash, &sect]
+        "INSERT INTO man (package, name, filename, locale, hash, section, encoding) VALUES ($1, $2, '/'||$3, $4, $5, $6, $7)",
+        &[&verid, &name, &path, &locale, &hash, &sect, &enc]
     ) {
         // I think this can only happen if archread gives us the same file twice, which really
         // shouldn't happen. But I'd rather continue with an error logged than panic.
@@ -84,20 +84,21 @@ fn insert_man(tr: &postgres::GenericConnection, verid: i32, paths: &[&str], ent:
     ).unwrap();
 
     for path in paths {
-        insert_man_row(tr, verid, path, dig.as_ref());
+        insert_man_row(tr, verid, path, enc, dig.as_ref());
         debug!("Inserted man page: {} ({})", path, enc);
     }
 }
 
 
 fn insert_link(tr: &postgres::GenericConnection, verid: i32, src: &str, dest: &str) {
-    let hash = tr.query("SELECT hash FROM man WHERE package = $1 AND filename = '/'||$2", &[&verid, &dest]).unwrap();
-    if hash.is_empty() { /* Can happen if man::decode() failed previously. */
+    let res = tr.query("SELECT hash, encoding FROM man WHERE package = $1 AND filename = '/'||$2", &[&verid, &dest]).unwrap();
+    if res.is_empty() { /* Can happen if man::decode() failed previously. */
         error!("Link to unindexed man page: {} -> {}", src, dest);
         return;
     }
-    let hash: Vec<u8> = hash.get(0).get(0);
-    insert_man_row(tr, verid, src, &hash);
+    let hash: Vec<u8> = res.get(0).get(0);
+    let enc: String = res.get(0).get(1);
+    insert_man_row(tr, verid, src, &enc, &hash);
     debug!("Inserted man link: {} -> {}", src, dest);
 }
 

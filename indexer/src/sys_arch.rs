@@ -15,6 +15,7 @@ struct Meta {
     name: String,
     version: String,
     date: String,
+    arch: Option<String>,
 }
 
 
@@ -43,6 +44,7 @@ fn read_desc(rd: &mut archive::ArchiveEntry) -> Result<Option<Meta>> {
     let mut name = None;
     let mut version = None;
     let mut builddate = None;
+    let mut arch = None;
 
     for kv in RE.captures_iter(&data) {
         let key = kv.at(1).unwrap();
@@ -53,6 +55,7 @@ fn read_desc(rd: &mut archive::ArchiveEntry) -> Result<Option<Meta>> {
             "NAME"      => name      = Some(val),
             "VERSION"   => version   = Some(val),
             "BUILDDATE" => builddate = i64::from_str(val).ok(),
+            "ARCH"      => arch      = Some(val),
             _ => {},
         }
     }
@@ -63,6 +66,7 @@ fn read_desc(rd: &mut archive::ArchiveEntry) -> Result<Option<Meta>> {
             name: name.unwrap().to_string(),
             version: version.unwrap().to_string(),
             date: NaiveDateTime::from_timestamp(builddate.unwrap(), 0).format("%Y-%m-%d").to_string(),
+            arch: arch.map(str::to_string),
         }))
     } else {
         warn!("Metadata missing from package description: {}", path);
@@ -71,11 +75,10 @@ fn read_desc(rd: &mut archive::ArchiveEntry) -> Result<Option<Meta>> {
 }
 
 
-// TODO: Switch to x86_64 instead of i686
 pub fn sync(pg: &postgres::GenericConnection, sys: i32, mirror: &str, repo: &str) {
     info!("Reading packages from {} {}", mirror, repo);
 
-    let path = format!("{}/{}/os/i686/{1:}.files.tar.gz", mirror, repo);
+    let path = format!("{}/{}/os/x86_64/{1:}.files.tar.gz", mirror, repo);
     let path = open::Path{ path: &path, cache: true, canbelocal: false };
     let mut index = match path.open() {
         Err(e) => { error!("Can't read package index: {}", e); return },
@@ -103,7 +106,7 @@ pub fn sync(pg: &postgres::GenericConnection, sys: i32, mirror: &str, repo: &str
             hasman = false;
             let m = meta.take().unwrap();
 
-            let p = format!("{}/{}/os/i686/{}", mirror, repo, m.filename);
+            let p = format!("{}/{}/os/x86_64/{}", mirror, repo, m.filename);
             pkg::pkg(pg, pkg::PkgOpt{
                 force: false,
                 sys: sys,
@@ -111,6 +114,7 @@ pub fn sync(pg: &postgres::GenericConnection, sys: i32, mirror: &str, repo: &str
                 pkg: &m.name,
                 ver: &m.version,
                 date: &m.date,
+                arch: m.arch.as_ref().map(|e| &e[..]),
                 file: open::Path{
                     path: &p,
                     cache: false,
