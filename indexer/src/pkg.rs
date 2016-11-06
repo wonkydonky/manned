@@ -1,12 +1,11 @@
 use std;
 use std::io::Read;
 use postgres;
-use hyper;
 
-use archive;
+use open;
 use archread;
 use man;
-use archive::Archive;
+use archive::{Archive,ArchiveEntry};
 
 pub struct PkgOpt<'a> {
     pub force: bool,
@@ -15,7 +14,7 @@ pub struct PkgOpt<'a> {
     pub pkg: &'a str,
     pub ver: &'a str,
     pub date: &'a str, // TODO: Option to extract date from package metadata itself
-    pub file: &'a str
+    pub file: open::Path<'a>
 }
 
 
@@ -32,19 +31,19 @@ fn insert_pkg(tr: &postgres::transaction::Transaction, opt: &PkgOpt) -> Option<i
         Ok(r) => r.get(0).get(0),
     };
 
-    let q = "SELECT id FROM package_versions WHERE package = $1 AND version = $2 AND released = $3::text::date";
-    let res = tr.query(q, &[&pkgid, &opt.ver, &opt.date]).unwrap();
+    let q = "SELECT id FROM package_versions WHERE package = $1 AND version = $2";
+    let res = tr.query(q, &[&pkgid, &opt.ver]).unwrap();
 
     let verid : i32;
     if res.is_empty() {
         let q = "INSERT INTO package_versions (package, version, released) VALUES($1, $2, $3::text::date) RETURNING id";
         verid = tr.query(q, &[&pkgid, &opt.ver, &opt.date]).unwrap().get(0).get(0);
-        trace!("New package pkgid {} verid {}", pkgid, verid);
+        info!("New package pkgid {} verid {}", pkgid, verid);
         Some(verid)
 
     } else if opt.force {
         verid = res.get(0).get(0);
-        trace!("Overwriting package pkgid {} verid {}", pkgid, verid);
+        info!("Overwriting package pkgid {} verid {}", pkgid, verid);
         tr.query("DELETE FROM man WHERE package = $1", &[&verid]).unwrap();
         Some(verid)
 
@@ -103,50 +102,29 @@ fn insert_link(tr: &postgres::GenericConnection, verid: i32, src: &str, dest: &s
 }
 
 
-fn with_pkg<T,F>(file: &str, cb: F) -> std::io::Result<T>
-    where F: FnOnce(Option<archive::ArchiveEntry>) -> std::io::Result<T>
-{
-    // TODO: .deb support
-
-    if file.starts_with("http://") || file.starts_with("https://") {
-        let mut res = try!(
-            hyper::Client::new().get(file).send()
-                .map_err(|e| std::io::Error::new(std::io::ErrorKind::Other, format!("Hyper: {}", e)))
-        );
-        if !res.status.is_success() {
-            return Err(std::io::Error::new(std::io::ErrorKind::Other, format!("HTTP: {}", res.status) ));
-        }
-        let ent = try!(Archive::open_archive(&mut res));
-        cb(ent)
-
-    } else {
-        let mut res = try!(std::fs::File::open(file));
-        let ent = try!(Archive::open_archive(&mut res));
-        cb(ent)
-    }
-}
-
-
 fn index_pkg(tr: &postgres::GenericConnection, opt: &PkgOpt, verid: i32) -> std::io::Result<()> {
-    let indexfunc = |paths: &[&str], ent: &mut archive::ArchiveEntry| {
+    let indexfunc = |paths: &[&str], ent: &mut ArchiveEntry| {
         insert_man(tr, verid, paths, ent);
         Ok(()) /* Don't propagate errors, continue handling other man pages */
     };
 
-    let missed = try!(
-        with_pkg(opt.file, |ent| { archread::FileList::read(ent, man::ismanpath, &indexfunc) })
-    ).links(|src, dest| { insert_link(tr, verid, src, dest) });
+    let mut rd = try!(opt.file.open());
+    let missed = try!(archread::FileList::read(
+            try!(Archive::open_archive(&mut rd)),
+            man::ismanpath, &indexfunc))
+        .links(|src, dest| { insert_link(tr, verid, src, dest) });
 
     if let Some(missed) = missed {
         warn!("Some links were missed, reading package again");
-        try!(with_pkg(opt.file, |ent| { missed.read(ent, indexfunc) }))
+        let mut rd = try!(opt.file.open());
+        try!(missed.read(try!(Archive::open_archive(&mut rd)), indexfunc));
     }
     Ok(())
 }
 
 
 pub fn pkg(conn: &postgres::GenericConnection, opt: PkgOpt) {
-    info!("Handling pkg: {} / {} / {} - {} @ {} @ {}", opt.sys, opt.cat, opt.pkg, opt.ver, opt.date, opt.file);
+    info!("Handling pkg: {} / {} / {} - {} @ {} @ {}", opt.sys, opt.cat, opt.pkg, opt.ver, opt.date, opt.file.path);
 
     let tr = conn.transaction().unwrap();
     tr.set_rollback();

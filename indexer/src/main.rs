@@ -9,11 +9,15 @@ extern crate ring;
 extern crate encoding;
 extern crate postgres;
 extern crate hyper;
+extern crate url;
+extern crate chrono;
 
 mod archive;
 mod archread;
 mod man;
+mod open;
 mod pkg;
+mod sys_arch;
 
 
 // Convenience function to get a system id by short-name. Panics if the system doesn't exist.
@@ -39,6 +43,12 @@ fn main() {
             (@arg ver: --ver +required +takes_value "Package version")
             (@arg date: --date +required +takes_value "Package release date")
             (@arg FILE: +required "Package file")
+        )
+        (@subcommand arch =>
+            (about: "Index an Arch Linux repository")
+            (@arg sys: --sys +required +takes_value "System short-name")
+            (@arg mirror: --mirror +required +takes_value "Mirror URL")
+            (@arg repo: --repo +required +takes_value "Repository name")
         )
     ).get_matches();
 
@@ -71,7 +81,15 @@ fn main() {
             pkg: matches.value_of("pkg").unwrap(),
             ver: matches.value_of("ver").unwrap(),
             date: matches.value_of("date").unwrap(),
-            file: matches.value_of("FILE").unwrap()
+            file: open::Path{ path: matches.value_of("FILE").unwrap(), cache: false, canbelocal: true},
         });
+    }
+
+    if let Some(matches) = arg.subcommand_matches("arch") {
+        sys_arch::sync(&db,
+            sysbyshort(&db, matches.value_of("sys").unwrap()),
+            matches.value_of("mirror").unwrap(),
+            matches.value_of("repo").unwrap()
+        );
     }
 }
