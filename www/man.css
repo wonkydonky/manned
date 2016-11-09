@@ -104,8 +104,13 @@ i.grayedout { color: #aaa; font-size: 13px; }
 #manres table { margin: 2px 10px; }
 #manres table tr td:nth-child(1) { min-width: 80px }
 
-#langselect, #sectionselect { padding-left: 50px }
-#langselect a, #sectionselect a, #langselect i, #sectionselect i { padding: 3px 5px }
+#nav { background: #f0f8ff; color: #036; float: right; padding: 8px; width: 250px; margin-bottom: 10px; border-radius: 8px; }
+#nav b { text-transform: uppercase; font-size: 13px }
+#nav p { margin: 3px 5px 20px 5px }
+#nav p a, #nav p i { padding: 3px 5px; font-size: 13px; font-style: normal; text-decoration: none;}
+#nav p a:hover, #nav p i {  background: #cde; border-radius: 5px }
+#nav ul { list-style-type: none; margin: 3px 10px 0 20px }
+#nav ul li a { overflow: hidden; margin-left: -10px; text-decoration: none; text-transform: capitalize }
 
 #contents { margin: 10px 0 0 0 }
 
@@ -115,7 +120,7 @@ i.grayedout { color: #aaa; font-size: 13px; }
 #footer a:hover { background: none; }
 
 pre, pre * { font-family: "Lucida Console", Monospace; font-size: 15px }
-pre b { color: #369; font-weight: normal; }
+pre b, pre a { color: #369; font-weight: normal; text-decoration: none }
 
 #ds_box { position: absolute; top: 0; border: 1px solid $border$; border-top: none; background: #f0f8ff; cursor: pointer; z-index: 2 }
 #ds_box b { padding: 2px 0 0 10px; font-size: 12px; }

@@ -445,16 +445,6 @@ function dsResults(hr, obj) {
     var section = ul.getAttribute('data-section');
     var locale = ul.getAttribute('data-locale');
 
-    ul.appendChild(tag('li', byId('sectionselect')
-      ? tag('a', {href:'#', onclick: buttonclick, 'data-obj': byId('sectionselect')}, 'sections')
-      : tag('i', 'sections')
-    ));
-
-    ul.appendChild(tag('li', byId('langselect')
-      ? tag('a', {href:'#', onclick: buttonclick, 'data-obj': byId('langselect')}, 'translations')
-      : tag('i', 'translations')
-    ));
-
     ul.appendChild(tag('li', ul.getAttribute('data-hasversions') > 0
       ? tag('a', {href:'#', onclick: buttonclick,
           'data-url': '/json/tree.json?name='+name+';section='+section+';locale='+locale+';cur='+hash,

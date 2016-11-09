@@ -560,42 +560,60 @@ sub man_redir {
 };
 
 
-sub _man_langsect {
-  my($self, $man) = @_;
+sub _man_nav {
+  my($self, $man, $toc) = @_;
+
+  my @sect = $self->dbManSections($man->{name});
+  my @lang = $self->dbManLanguages($man->{name}, $man->{section});
+  return if !@sect && !@lang && !@$toc;
 
   # TODO: This is ugly, especially because clicking on a translation or
   # section, you can end up with a man page that is nowhere close to the man
   # page you're currently reading. Opening a version selector box might be a
   # better alternative.
 
-  my @sect = $self->dbManSections($man->{name});
-  if(@sect > 1) {
-    div id => 'sectionselect', class => 'hidden';
-     for (@sect) {
-       if($man->{section} eq $_) {
-         i $_;
-       } else {
-         a href => "/$man->{name}.$_", $_;
-       }
-       txt ' ';
-     }
-    end;
-  }
+  div id => 'nav';
 
-  my @lang = $self->dbManLanguages($man->{name}, $man->{section});
-  if(@lang > 1) {
-    div id => 'langselect', class => 'hidden';
-     (my $cur = $man->{locale}||'') =~ s/\..*//;
-     for (@lang) {
-       if(($_||'') eq $cur) {
-         i $_ || 'default';
-       } else {
-         a href => $_ ? "/lang/$_/$man->{name}.$man->{section}" : "/$man->{name}.$man->{section}", $_ || 'default';
-       }
-       txt ' ';
-     }
-    end;
-  }
+   if(@sect > 1) {
+     b 'Sections';
+     p;
+      for (@sect) {
+        if($man->{section} eq $_) {
+          i $_;
+        } else {
+          a href => "/$man->{name}.$_", $_;
+        }
+        txt ' ';
+      }
+     end;
+   }
+
+   if(@lang > 1) {
+     b 'Languages';
+     p;
+      (my $cur = $man->{locale}||'') =~ s/\..*//;
+      for (@lang) {
+        if(($_||'') eq $cur) {
+          i $_ || 'default';
+        } else {
+          a href => $_ ? "/lang/$_/$man->{name}.$man->{section}" : "/$man->{name}.$man->{section}", $_ || 'default';
+        }
+        txt ' ';
+      }
+     end;
+   }
+
+   if(@$toc > 1) {
+     b 'Table of Contents';
+     ul;
+      for (0..$#$toc) {
+        li;
+         a href => sprintf('#head%d', $_+1), lc $toc->[$_];
+        end;
+      }
+     end;
+   }
+  end;
 }
 
 
@@ -634,12 +652,21 @@ sub man {
    end;
   end;
   div id => 'manres', class => 'hidden';
-   _man_langsect($self, $man);
   end;
 
+  my $c = $self->dbManContent($man->{hash});
+  my $fmt = ManUtils::html(ManUtils::fmt_block $c);
+  my @toc;
+  $fmt =~ s{\n<b>(.+?)<\/b>\n}{
+    push @toc, $1;
+    my $c = @toc;
+    qq{\n<a href="#head$c" id="head$c">$1</a>\n}
+  }eg;
+
+  _man_nav($self, $man, \@toc);
+
   div id => 'contents';
-   my $c = $self->dbManContent($man->{hash});
-   pre; lit ManUtils::html(ManUtils::fmt_block $c); end;
+   pre; lit $fmt; end;
   end;
   $self->htmlFooter();
 }
