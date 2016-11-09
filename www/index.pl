@@ -641,8 +641,17 @@ sub man {
   }
   return $self->resNotFound() if !$man;
 
+  my $fmt = ManUtils::html(ManUtils::fmt_block $self->dbManContent($man->{hash}));
+  my @toc;
+  $fmt =~ s{\n<b>(.+?)<\/b>\n}{
+    push @toc, $1;
+    my $c = @toc;
+    qq{\n<a href="#head$c" id="head$c">$1</a>\n}
+  }eg;
+
   $self->setLastMod($man->{released});
   $self->htmlHeader(title => $name);
+  _man_nav($self, $man, \@toc);
   div id => 'manbuttons';
    h1 $man->{name};
    ul 'data-hash' => $man->{hash}, 'data-name' => $man->{name}, 'data-section' => $man->{section}, 'data-locale' => $man->{locale}||'',
@@ -653,17 +662,6 @@ sub man {
   end;
   div id => 'manres', class => 'hidden';
   end;
-
-  my $c = $self->dbManContent($man->{hash});
-  my $fmt = ManUtils::html(ManUtils::fmt_block $c);
-  my @toc;
-  $fmt =~ s{\n<b>(.+?)<\/b>\n}{
-    push @toc, $1;
-    my $c = @toc;
-    qq{\n<a href="#head$c" id="head$c">$1</a>\n}
-  }eg;
-
-  _man_nav($self, $man, \@toc);
 
   div id => 'contents';
    pre; lit $fmt; end;
