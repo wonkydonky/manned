@@ -310,7 +310,6 @@ sub about {
     <li><a href="/apropos.1">apropos(1)</a> emulation(?),</li>
     <li>Diffs between various versions of a man page,</li>
     <li>Anchor links within man pages, for easier linking to a section or paragraph,</li>
-    <li>Table of Contents for each man page,</li>
     <li>Alternative formats (Text, PDF, more semantic HTML, etc),</li>
     <li>A command-line client, like <a href="/man.1">man(1)</a> with manned.org as database backend.</li>
    </ul>
