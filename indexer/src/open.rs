@@ -7,7 +7,7 @@ use hyper;
 
 
 const CACHE_PATH: &'static str = "/var/tmp/manned-indexer";
-const CACHE_TIME: u64 = 24*3600;
+const CACHE_TIME: u64 = 23*3600;
 
 
 pub struct Path<'a> {

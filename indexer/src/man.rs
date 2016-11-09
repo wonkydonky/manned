@@ -152,8 +152,12 @@ fn codec_from_path(path: &str) -> Option<EncodingRef> {
 
         (_,    Some("euckr")) => return Some(all::WINDOWS_949),
 
-        ("ja", Some("jis7")) |
-        ("ja", Some("pck")) => return None, /* WAT? TODO: DO SOMETHING WITH THESE */
+        /* Not sure if PCK is just an alias for SJIS or if there's more of a difference, but it
+         * certainly looks like a SJIS-like encoding. */
+        ("ja", Some("pck")) => return Some(all::WINDOWS_31J),
+
+        /* This is apparently some variant of ISO-2022-JP */
+        ("ja", Some("jis7")) => return Some(all::ISO_2022_JP),
 
         (_,    Some(x)) => match encoding_from_whatwg_label(x) {
             Some(x) => return Some(x),
