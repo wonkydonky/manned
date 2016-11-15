@@ -10,6 +10,7 @@ const CACHE_PATH: &'static str = "/var/tmp/manned-indexer";
 const CACHE_TIME: u64 = 23*3600;
 
 
+#[derive(Clone,Copy)]
 pub struct Path<'a> {
     pub path: &'a str,
     pub cache: bool,

@@ -46,6 +46,14 @@ pub enum FileType {
     Other, // Also includes Link(<non-utf8-path>)
 }
 
+// Top-level formats, as in ARCHIVE_FORMAT_*
+#[derive(Debug,PartialEq,Eq)]
+pub enum Format {
+    Tar,
+    Ar,
+    Other, // Ultra lazyness
+}
+
 
 unsafe extern "C" fn archive_read_cb(_: *mut ffi::Struct_archive, data: *mut c_void, buf: *mut *const c_void) -> ssize_t {
     let arch: &mut Archive = &mut *(data as *mut Archive);
@@ -189,6 +197,19 @@ impl<'a> ArchiveEntry<'a> {
         unsafe { ffi::archive_entry_size(self.e) as usize }
     }
 
+    pub fn format(&self) -> Format {
+        // Interestingly, archive_format() is a property of the entry itself, not of the top-level
+        // archive. Hence it requires archive_read_next_header() and hence it's better placed as
+        // part of this ArchiveEntry object rather than the Archive object.
+        // ...that said, the top-level format isn't likely to change, it's the lower 16 bits that
+        // might be different.
+        match unsafe { ffi::archive_format(self.a.a) } >> 16 {
+            0x3 => Format::Tar,
+            0x7 => Format::Ar,
+            _   => Format::Other,
+        }
+    }
+
     fn symlink(&self) -> Option<String> {
         let c_str: &CStr = unsafe {
             let ptr = ffi::archive_entry_symlink(self.e);
@@ -295,6 +316,7 @@ mod tests {
         let mut ent = Archive::open_archive(&mut f).unwrap().unwrap();
 
         let t = |e:&mut ArchiveEntry, path, size, ft, cont| {
+            assert_eq!(e.format(), Format::Tar);
             assert_eq!(e.path(), path);
             assert_eq!(e.size(), size);
             assert_eq!(e.filetype(), ft);

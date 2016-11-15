@@ -1,11 +1,11 @@
 use std;
-use std::io::Read;
+use std::io::{Error,ErrorKind,Read};
 use postgres;
 
 use open;
 use archread;
 use man;
-use archive::{Archive,ArchiveEntry};
+use archive::{Format,Archive,ArchiveEntry};
 
 pub struct PkgOpt<'a> {
     pub force: bool,
@@ -104,22 +104,45 @@ fn insert_link(tr: &postgres::GenericConnection, verid: i32, src: &str, dest: &s
 }
 
 
+fn with_pkg<F,T>(f: open::Path, cb: F) -> std::io::Result<T>
+    where F: FnOnce(Option<ArchiveEntry>) -> std::io::Result<T>
+{
+    let mut rd = f.open()?;
+    let ent = match Archive::open_archive(&mut rd)? {
+        None => return cb(None),
+        Some(x) => x,
+    };
+
+    // .deb ("2.0")
+    if ent.format() == Format::Ar && ent.path() == Some("debian-binary") {
+        let mut ent = ent.next()?;
+        while let Some(mut e) = ent {
+            if e.path().map(|p| p.starts_with("data.tar")) == Some(true) {
+                return cb(Archive::open_archive(&mut e)?);
+            }
+            ent = e.next()?
+        }
+        Err(Error::new(ErrorKind::Other, "Debian file without data.tar"))
+
+    // any other archive (Arch/FreeBSD .tar)
+    } else {
+        cb(Some(ent))
+    }
+}
+
+
 fn index_pkg(tr: &postgres::GenericConnection, opt: &PkgOpt, verid: i32) -> std::io::Result<()> {
     let indexfunc = |paths: &[&str], ent: &mut ArchiveEntry| {
         insert_man(tr, verid, paths, ent);
         Ok(()) /* Don't propagate errors, continue handling other man pages */
     };
 
-    let mut rd = try!(opt.file.open());
-    let missed = try!(archread::FileList::read(
-            try!(Archive::open_archive(&mut rd)),
-            man::ismanpath, &indexfunc))
+    let missed = with_pkg(opt.file, |e| { archread::FileList::read(e, man::ismanpath, &indexfunc) })?
         .links(|src, dest| { insert_link(tr, verid, src, dest) });
 
     if let Some(missed) = missed {
         warn!("Some links were missed, reading package again");
-        let mut rd = try!(opt.file.open());
-        try!(missed.read(try!(Archive::open_archive(&mut rd)), indexfunc));
+        with_pkg(opt.file, |e| { missed.read(e, indexfunc) })?
     }
     Ok(())
 }
