@@ -18,6 +18,7 @@ mod man;
 mod open;
 mod pkg;
 mod sys_arch;
+mod sys_deb;
 
 
 // Convenience function to get a system id by short-name. Panics if the system doesn't exist.
@@ -50,6 +51,13 @@ fn main() {
             (@arg sys: --sys +required +takes_value "System short-name")
             (@arg mirror: --mirror +required +takes_value "Mirror URL")
             (@arg repo: --repo +required +takes_value "Repository name")
+        )
+        (@subcommand deb =>
+            (about: "Index a Debian repository")
+            (@arg sys: --sys +required +takes_value "System short-name")
+            (@arg mirror: --mirror +required +takes_value "Mirror URL")
+            (@arg contents: --contents +required +takes_value "Contents file")
+            (@arg packages: --packages +required +takes_value "Packages file")
         )
     ).get_matches();
 
@@ -92,6 +100,15 @@ fn main() {
             sysbyshort(&db, matches.value_of("sys").unwrap()),
             matches.value_of("mirror").unwrap(),
             matches.value_of("repo").unwrap()
+        );
+    }
+
+    if let Some(matches) = arg.subcommand_matches("deb") {
+        sys_deb::sync(&db,
+            sysbyshort(&db, matches.value_of("sys").unwrap()),
+            matches.value_of("mirror").unwrap(),
+            open::Path{ path: matches.value_of("contents").unwrap(), cache: true, canbelocal: true},
+            open::Path{ path: matches.value_of("packages").unwrap(), cache: true, canbelocal: true},
         );
     }
 }
