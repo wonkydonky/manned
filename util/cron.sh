@@ -1,9 +1,11 @@
-#!/bin/bash
+#!/bin/sh
 
-. ./common.sh
+PSQL="psql -U manned -Awtq"
 
-./arch.sh active
-./debian.sh active
+
+./arch.sh current
+./debian.sh current
+./ubuntu.sh current
 
 echo "============ Updating SQL indices"
 $PSQL -f update_indices.sql

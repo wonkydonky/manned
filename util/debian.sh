@@ -68,7 +68,7 @@ case "$1" in
         $0 lenny
         $0 squeeze
         ;;
-    active)
+    current)
         $0 wheezy
         $0 jessie
         ;;

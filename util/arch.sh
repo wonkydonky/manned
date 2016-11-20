@@ -2,12 +2,12 @@
 
 . ./common.sh
 
+MIRROR=http://ftp.nluug.nl/pub/os/Linux/distr/archlinux
+
 case "$1" in
-  active)
-    MIRROR=http://ftp.nluug.nl/pub/os/Linux/distr/archlinux
-    REPOS="core extra community"
-    for REPO in $REPOS; do
-      index arch --sys arch --mirror $MIRROR --repo $REPO
-    done
-    ;;
+    current)
+        index arch --sys arch --mirror $MIRROR --repo core
+        index arch --sys arch --mirror $MIRROR --repo extra
+        index arch --sys arch --mirror $MIRROR --repo community
+        ;;
 esac
