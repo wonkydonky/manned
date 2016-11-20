@@ -1,7 +1,49 @@
 #!/bin/bash
 
-CURL="curl -fSs -A manual-page-crawler,info@manned.org --limit-rate 500k"
+if test -f .config; then
+    source .config
+fi
+
+
+index() {
+  echo "====> indexer -vv $@"
+  ./indexer -vv --dryrun $@ 2>&1
+  echo
+}
+
+
+# Convenient wrapper around index() for debian repos
+# TODO: Use x86_64 for new releases
+# Usage: index_dev sys mirror distro list-of-components [contents]
+#   contents:
+#     empty for global Contents-i386.gz location
+#     "cmp" for per-component Contents.i386.gz location
+#     Otherwise, full path to Contents file
+index_deb() {
+  local SYS=$1
+  local MIRROR=$2
+  local DISTRO=$3
+  local COMPONENTS=$4
+  local CONTENTS=${5:-"dists/$DISTRO/Contents-i386.gz"}
+
+
+  for CMP in $COMPONENTS; do
+    local CONT=$CONTENTS
+    test $CONT = cmp && CONT="dists/$DISTRO/$CMP/Contents-i386.gz"
+    index deb --sys "$SYS" --mirror "$MIRROR" --contents "$MIRROR$CONT" --packages "${MIRROR}dists/$DISTRO/$CMP/binary-i386/Packages.gz"
+  done
+}
+
+
 PSQL="psql -U manned -Awtq"
+
+
+
+
+## THE STUFF BELOW IS OLD
+# To be replaced with calls to index()
+
+CURL="curl -fSs -A manual-page-crawler,info@manned.org --limit-rate 500k"
 
 TMP=`mktemp -d manned.XXXXXX`
 

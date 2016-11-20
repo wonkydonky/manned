@@ -245,10 +245,9 @@ sub about {
      Historical releases were fetched from <a
      href="http://archive.debian.org/debian/">http://archive.debian.org/debian/</a>
      and <a href="http://snapshot.debian.org/">http://snapshot.debian.org/</a>.
-     For buzz, rex and bo, only the 'main' component has been indexed, and
-     we're missing a few man pages because some packages were missing from the
-     repository archives. For the other releases, all components (main, contrib
-     and non-free) from the $release and $release-updates (where available)
+     For buzz, rex and bo, we're missing a few man pages because some packages
+     were missing from the repository archives. Where available, all components
+     (main, contrib and non-free) from the $release and $release-updates
      repositories are indexed.</dd>
     <dt>FreeBSD</dt><dd>
      Historical releases were fetched from <a
@@ -267,8 +266,8 @@ sub about {
      href="http://old-releases.ubuntu.com/ubuntu/">http://old-releases.ubuntu.com/ubuntu/</a>,
      supported releases from a local mirror.  All components (main, universe,
      restricted and multiverse) from the $release, $release-updates and
-     $release-security repositories are indexed.  Backports are not included at
-     the moment. Indexing started around mid June 2012.</dd>
+     $release-security repositories are indexed. Indexing started around mid
+     June 2012.</dd>
    </dl>
    Only packages for a single architecture (i386 or amd64) are scanned.  To my
    knowledge, packages that come with different manuals for different
