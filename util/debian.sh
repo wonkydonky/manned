@@ -74,5 +74,6 @@ case "$1" in
         ;;
     all)
         $0 old
-        $0 active
+        $0 current
+        ;;
 esac

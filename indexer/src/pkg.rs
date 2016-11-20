@@ -102,10 +102,16 @@ fn insert_man_row(tr: &postgres::GenericConnection, verid: i32, path: &str, enc:
 
 
 fn insert_man(tr: &postgres::GenericConnection, verid: i32, paths: &[&str], ent: &mut Read) {
-    let (dig, enc, cont) = match man::decode(paths, ent) {
+    let (dig, enc, mut cont) = match man::decode(paths, ent) {
         Err(e) => { error!("Error decoding {}: {}", paths[0], e); return },
         Ok(x) => x,
     };
+
+    // Postgres doesn't like the 0-byte in UTF-8 (and rightly so).
+    if cont.contains(0 as char) {
+        warn!("Removing 0-byte in man page contents");
+        cont = cont.replace(0 as char, "");
+    }
 
     // Overwrite entry if the contents are different. It's possible that earlier decoding
     // implementations didn't properly detect the encoding. (On the other hand, due to differences

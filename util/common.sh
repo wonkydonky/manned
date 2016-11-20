@@ -1,4 +1,4 @@
-test -f .config && source .config
+test -f .config && source ./.config
 
 
 index() {
