@@ -1,11 +1,32 @@
 use std;
 use std::io::{Error,ErrorKind,Read};
 use postgres;
+use chrono::NaiveDateTime;
 
 use open;
 use archread;
 use man;
 use archive::{Format,Archive,ArchiveEntry};
+
+
+#[derive(Debug,Clone,Copy)]
+pub enum Date<'a> {
+    Known(&'a str), // Given in PkgOpt
+    Found(i64),     // Found in package
+    Deb,            // Should be read from the timestamp of the 'debian-binary' file
+}
+
+
+impl<'a> Date<'a> {
+    fn update(&mut self, ent: &ArchiveEntry) {
+        // TODO: Validate that the mtime() date is sensible (e.g. 1990 < date < now)
+        *self = match *self {
+            Date::Deb if ent.format() == Format::Ar && ent.path() == Some("debian-binary") => Date::Found(ent.mtime()),
+            x => x,
+        }
+    }
+}
+
 
 pub struct PkgOpt<'a> {
     pub force: bool,
@@ -13,14 +34,14 @@ pub struct PkgOpt<'a> {
     pub cat: &'a str,
     pub pkg: &'a str,
     pub ver: &'a str,
-    pub date: &'a str, // TODO: Option to extract date from package metadata itself
+    pub date: Date<'a>,
     pub arch: Option<&'a str>,
     pub file: open::Path<'a>
 }
 
 
 fn insert_pkg(tr: &postgres::transaction::Transaction, opt: &PkgOpt) -> Option<i32> {
-    let pkginfo = format!("sys {} / {} / {} - {} @ {} @ {}", opt.sys, opt.cat, opt.pkg, opt.ver, opt.date, opt.file.path);
+    let pkginfo = format!("sys {} / {} / {} - {} @ {:?} @ {}", opt.sys, opt.cat, opt.pkg, opt.ver, opt.date, opt.file.path);
 
     // The ON CONFLICT .. DO UPDATE is used instead of DO NOTHING because in that case the
     // RETURNING clause wouldn't give us a package id.
@@ -38,9 +59,15 @@ fn insert_pkg(tr: &postgres::transaction::Transaction, opt: &PkgOpt) -> Option<i
     let res = tr.query(q, &[&pkgid, &opt.ver]).unwrap();
 
     let verid : i32;
+
+    let date = match opt.date {
+        Date::Known(d) => d,
+        _ => "1980-01-01", // Placeholder
+    };
+
     if res.is_empty() {
         let q = "INSERT INTO package_versions (package, version, released, arch) VALUES($1, $2, $3::text::date, $4) RETURNING id";
-        verid = tr.query(q, &[&pkgid, &opt.ver, &opt.date, &opt.arch]).unwrap().get(0).get(0);
+        verid = tr.query(q, &[&pkgid, &opt.ver, &date, &opt.arch]).unwrap().get(0).get(0);
         info!("New package pkgid {} verid {}, {}", pkgid, verid, pkginfo);
         Some(verid)
 
@@ -106,21 +133,23 @@ fn insert_link(tr: &postgres::GenericConnection, verid: i32, src: &str, dest: &s
 }
 
 
-fn with_pkg<F,T>(f: open::Path, cb: F) -> std::io::Result<T>
-    where F: FnOnce(Option<ArchiveEntry>) -> std::io::Result<T>
+fn with_pkg<F,T>(opt: &mut PkgOpt, cb: F) -> std::io::Result<T>
+    where F: FnOnce(Option<ArchiveEntry>, &mut PkgOpt) -> std::io::Result<T>
 {
-    let mut rd = f.open()?;
+    let mut rd = opt.file.open()?;
     let ent = match Archive::open_archive(&mut rd)? {
-        None => return cb(None),
+        None => return cb(None, opt),
         Some(x) => x,
     };
 
     // .deb ("2.0")
     if ent.format() == Format::Ar && ent.path() == Some("debian-binary") {
+        opt.date.update(&ent);
         let mut ent = ent.next()?;
         while let Some(mut e) = ent {
+            opt.date.update(&e);
             if e.path().map(|p| p.starts_with("data.tar")) == Some(true) {
-                return cb(Archive::open_archive(&mut e)?);
+                return cb(Archive::open_archive(&mut e)?, opt);
             }
             ent = e.next()?
         }
@@ -128,25 +157,39 @@ fn with_pkg<F,T>(f: open::Path, cb: F) -> std::io::Result<T>
 
     // any other archive (Arch/FreeBSD .tar)
     } else {
-        cb(Some(ent))
+        cb(Some(ent), opt)
     }
 }
 
 
-fn index_pkg(tr: &postgres::GenericConnection, opt: &PkgOpt, verid: i32) -> std::io::Result<()> {
+fn index_pkg(tr: &postgres::GenericConnection, mut opt: PkgOpt, verid: i32) -> std::io::Result<()> {
     let indexfunc = |paths: &[&str], ent: &mut ArchiveEntry| {
         insert_man(tr, verid, paths, ent);
         Ok(()) /* Don't propagate errors, continue handling other man pages */
     };
 
-    let missed = with_pkg(opt.file, |e| { archread::FileList::read(e, man::ismanpath, &indexfunc) })?
-        .links(|src, dest| { insert_link(tr, verid, src, dest) });
+    let missed = with_pkg(&mut opt, |e, opt| {
+            archread::FileList::read(e, |ent: &ArchiveEntry| {
+                opt.date.update(ent);
+                man::ismanpath(ent.path().unwrap())
+            }, &indexfunc)
+        })?.links(|src, dest| { insert_link(tr, verid, src, dest) });
 
     if let Some(missed) = missed {
         warn!("Some links were missed, reading package again");
-        with_pkg(opt.file, |e| { missed.read(e, indexfunc) })?
+        with_pkg(&mut opt, |e, _| { missed.read(e, indexfunc) })?
     }
-    Ok(())
+
+    match opt.date {
+        Date::Known(_) => Ok(()),
+        Date::Found(t) => {
+            let date = NaiveDateTime::from_timestamp(t, 0).format("%Y-%m-%d").to_string();
+            debug!("Date from package: {}", date);
+            tr.execute("UPDATE package_versions SET released = $1::text::date WHERE id = $2", &[&date, &verid]).unwrap();
+            Ok(())
+        },
+        _ => Err(Error::new(ErrorKind::Other, "No valid date found in this package")),
+    }
 }
 
 
@@ -156,7 +199,7 @@ pub fn pkg(conn: &postgres::GenericConnection, opt: PkgOpt) {
 
     let verid = match insert_pkg(&tr, &opt) { Some(x) => x, None => return };
 
-    match index_pkg(&tr, &opt, verid) {
+    match index_pkg(&tr, opt, verid) {
         Err(e) => error!("Error reading package: {}", e),
         Ok(_) => tr.set_commit()
     }

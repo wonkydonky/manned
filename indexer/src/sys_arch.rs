@@ -113,7 +113,7 @@ pub fn sync(pg: &postgres::GenericConnection, sys: i32, mirror: &str, repo: &str
                 cat: repo,
                 pkg: &m.name,
                 ver: &m.version,
-                date: &m.date,
+                date: pkg::Date::Known(&m.date),
                 arch: m.arch.as_ref().map(|e| &e[..]),
                 file: open::Path{
                     path: &p,

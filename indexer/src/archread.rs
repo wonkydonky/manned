@@ -76,8 +76,8 @@ impl FileList {
      *
      * Returns a FileList struct that can be used to retreive all interesting non-regular files.
      */
-    pub fn read<F,G>(ent: Option<ArchiveEntry>, interest_cb: F, mut file_cb: G) -> Result<FileList>
-        where F: Fn(&str) -> bool, G: FnMut(&[&str], &mut ArchiveEntry) -> Result<()>
+    pub fn read<F,G>(ent: Option<ArchiveEntry>, mut interest_cb: F, mut file_cb: G) -> Result<FileList>
+        where F: FnMut(&ArchiveEntry) -> bool, G: FnMut(&[&str], &mut ArchiveEntry) -> Result<()>
     {
         let mut fl = FileList {
             seen: HashMap::new(),
@@ -101,7 +101,7 @@ impl FileList {
 
             let et = match ft {
                 FileType::File => {
-                    if interest_cb(&path) {
+                    if interest_cb(&e) {
                         let pathv = [&path as &str];
                         try!(file_cb(&pathv[..], &mut e));
                         EntryType::Handled
@@ -110,7 +110,7 @@ impl FileList {
                     }
                 },
                 FileType::Link(l) => {
-                    if interest_cb(&path) {
+                    if interest_cb(&e) {
                         fl.links.push(path.clone());
                     }
                     EntryType::Link(l)
@@ -260,7 +260,7 @@ mod tests {
         let arch = Archive::open_archive(&mut f).unwrap();
         let mut cnt = 0;
         FileList::read(arch,
-            |p| p.starts_with("man/man"),
+            |p| p.path().unwrap().starts_with("man/man"),
             |p,e| {
                 assert_eq!(cnt, 0);
                 cnt += 1;

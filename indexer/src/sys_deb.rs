@@ -68,7 +68,7 @@ fn handlepkg(pg: &postgres::GenericConnection, sys: i32, mirror: &str, manpkgs: 
         cat: &section,
         pkg: &name,
         ver: &version,
-        date: "1980-01-01", // TODO: Fetch date from somewhere (package contents itself, likely)
+        date: pkg::Date::Deb,
         arch: Some(arch),
         file: open::Path{
             path: &uri,

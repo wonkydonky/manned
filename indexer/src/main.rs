@@ -88,13 +88,17 @@ fn main() {
     debug!("Connected to database");
 
     if let Some(matches) = arg.subcommand_matches("pkg") {
+        let date = match matches.value_of("date").unwrap() {
+            "deb" => pkg::Date::Deb,
+            s => pkg::Date::Known(s),
+        };
         pkg::pkg(&db, pkg::PkgOpt {
             force: matches.is_present("force"),
             sys: sysbyshort(&db, matches.value_of("sys").unwrap()),
             cat: matches.value_of("cat").unwrap(),
             pkg: matches.value_of("pkg").unwrap(),
             ver: matches.value_of("ver").unwrap(),
-            date: matches.value_of("date").unwrap(),
+            date: date,
             arch: matches.value_of("arch"),
             file: open::Path{ path: matches.value_of("FILE").unwrap(), cache: false, canbelocal: true},
         });

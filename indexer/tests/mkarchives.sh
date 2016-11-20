@@ -9,6 +9,7 @@
 
 mkdir simple
 echo Hi >simple/file
+touch -d '2016-11-20 08:44:02+01:00' simple/file
 ln -s file simple/link
 ln simple/file simple/hardlink
 mkfifo simple/fifo

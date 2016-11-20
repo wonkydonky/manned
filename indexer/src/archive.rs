@@ -210,6 +210,12 @@ impl<'a> ArchiveEntry<'a> {
         }
     }
 
+    // A proper implementation would call mtime_is_set() and _mtime_nsec() to return an
+    // Option<SomeHighResolutionTimestamp>. But this'll do for what I need.
+    pub fn mtime(&self) -> i64 {
+        unsafe { ffi::archive_entry_mtime(self.e) }
+    }
+
     fn symlink(&self) -> Option<String> {
         let c_str: &CStr = unsafe {
             let ptr = ffi::archive_entry_symlink(self.e);
@@ -329,6 +335,7 @@ mod tests {
 
         ent = ent.next().unwrap().unwrap();
         t(&mut ent, Some("simple/file"), 3, FileType::File, "Hi\n");
+        assert_eq!(ent.mtime(), 1479627842);
 
         ent = ent.next().unwrap().unwrap();
         t(&mut ent, Some("simple/link"), 0, FileType::Link("file".to_string()), "");
