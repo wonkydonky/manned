@@ -2,6 +2,7 @@ use std::io::{Result,BufReader,BufRead};
 use std::collections::HashSet;
 use std::str;
 use postgres;
+use regex;
 use regex::bytes::Regex;
 
 use man;
@@ -11,7 +12,8 @@ use archive;
 
 // Reference: https://wiki.debian.org/RepositoryFormat
 
-fn get_contents(f: open::Path) -> Result<HashSet<String>> {
+fn get_contents(f: Option<open::Path>) -> Result<HashSet<String>> {
+    let f = match f { Some(f) => f, None => return Ok(HashSet::new()) };
     let mut fd = f.open()?;
     let rd = archive::Archive::open_raw(&mut fd)?;
     let brd = BufReader::new(rd);
@@ -53,14 +55,24 @@ struct Pkg {
 
 fn handlepkg(pg: &postgres::GenericConnection, sys: i32, mirror: &str, manpkgs: &HashSet<String>, pkg: &Pkg) {
     let name     = match pkg.name     { Some(ref x) => x, None => return };
-    if !manpkgs.contains(name) {
+    if manpkgs.len() > 0 && !manpkgs.contains(name) {
         return
     }
     let section  = match pkg.section  { Some(ref x) => x, None => { error!("Package {} has no section",  name); return } };
-    let arch     = match pkg.arch     { Some(ref x) => x, None => { error!("Package {} has no arch",     name); return } };
     let version  = match pkg.version  { Some(ref x) => x, None => { error!("Package {} has no version",  name); return } };
     let filename = match pkg.filename { Some(ref x) => x, None => { error!("Package {} has no filename", name); return } };
-    let uri = format!("{}{}", mirror, filename);
+
+    // Workarounds for some bad repos
+    let uri = if sys == 18 || sys == 19 {
+        let filename = regex::Regex::new("^(Debian-1.[12])/").unwrap().replace(filename, "dists/$1/main/");
+        if filename.starts_with("contrib/") {
+            format!("{}dists/Debian-1.{}/{}", mirror, if sys == 18 { 1 } else { 2 }, filename)
+        } else {
+            format!("{}{}", mirror, filename)
+        }
+    } else {
+        format!("{}{}", mirror, filename)
+    };
 
     pkg::pkg(pg, pkg::PkgOpt{
         force: false,
@@ -69,7 +81,7 @@ fn handlepkg(pg: &postgres::GenericConnection, sys: i32, mirror: &str, manpkgs: 
         pkg: &name,
         ver: &version,
         date: pkg::Date::Deb,
-        arch: Some(arch),
+        arch: pkg.arch.as_ref().map(|e| &e[..]),
         file: open::Path{
             path: &uri,
             cache: false,
@@ -79,9 +91,9 @@ fn handlepkg(pg: &postgres::GenericConnection, sys: i32, mirror: &str, manpkgs: 
 }
 
 
-pub fn sync(pg: &postgres::GenericConnection, sys: i32, mirror: &str, contents: open::Path, packages: open::Path) {
+pub fn sync(pg: &postgres::GenericConnection, sys: i32, mirror: &str, contents: Option<open::Path>, packages: open::Path) {
     let manpkgs = match get_contents(contents) {
-        Err(e) => { error!("Can't read {}: {}", contents.path, e); return },
+        Err(e) => { error!("Can't read {}: {}", contents.unwrap().path, e); return },
         Ok(x) => x,
     };
 
@@ -110,12 +122,13 @@ pub fn sync(pg: &postgres::GenericConnection, sys: i32, mirror: &str, contents: 
         }
         if let Some(cap) = kv.captures(&line) {
             let val = str::from_utf8(cap.at(2).unwrap()).unwrap();
-            match str::from_utf8(cap.at(1).unwrap()).unwrap() {
-                "Package" => pkg.name = Some(val.to_string()),
-                "Section" => pkg.section = Some(val.to_string()),
-                "Version" => pkg.version = Some(val.to_string()),
-                "Architecture" => pkg.arch = Some(val.to_string()),
-                "Filename" => pkg.filename = Some(val.to_string()),
+            // Use case-insensitive matching, older package archives used lowercase keys
+            match str::from_utf8(cap.at(1).unwrap()).unwrap().to_lowercase().as_ref() {
+                "package" => pkg.name = Some(val.to_string()),
+                "section" => pkg.section = Some(val.to_string()),
+                "version" => pkg.version = Some(val.to_string()),
+                "architecture" => pkg.arch = Some(val.to_string()),
+                "filename" => pkg.filename = Some(val.to_string()),
                 _ => {}
             }
         }

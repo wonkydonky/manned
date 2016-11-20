@@ -35,6 +35,7 @@ fn main() {
     let arg = clap_app!(indexer =>
         (about: "Manned.org man page indexer")
         (@arg v: -v +multiple "Increase verbosity")
+        (@arg dry: --dryrun "Don't actually download and index packages")
         (@subcommand pkg =>
             (about: "Index a single package")
             (@arg force: --force "Overwrite existing indexed package")
@@ -56,10 +57,12 @@ fn main() {
             (about: "Index a Debian repository")
             (@arg sys: --sys +required +takes_value "System short-name")
             (@arg mirror: --mirror +required +takes_value "Mirror URL")
-            (@arg contents: --contents +required +takes_value "Contents file")
+            (@arg contents: --contents +takes_value "Contents file")
             (@arg packages: --packages +required +takes_value "Packages file")
         )
     ).get_matches();
+
+    unsafe { pkg::DRY_RUN = arg.is_present("dry") };
 
     let verbose = arg.occurrences_of("v");
     env_logger::LogBuilder::new()
@@ -85,7 +88,7 @@ fn main() {
         Ok(x) => x,
         Err(x) => { error!("Can't connect to postgres: {}", x); return },
     };
-    debug!("Connected to database");
+    trace!("Connected to database");
 
     if let Some(matches) = arg.subcommand_matches("pkg") {
         let date = match matches.value_of("date").unwrap() {
@@ -116,8 +119,10 @@ fn main() {
         sys_deb::sync(&db,
             sysbyshort(&db, matches.value_of("sys").unwrap()),
             matches.value_of("mirror").unwrap(),
-            open::Path{ path: matches.value_of("contents").unwrap(), cache: true, canbelocal: true},
+            matches.value_of("contents").map(|e| { open::Path{ path: e, cache: true, canbelocal: true} }),
             open::Path{ path: matches.value_of("packages").unwrap(), cache: true, canbelocal: true},
         );
     }
+
+    trace!("Exiting");
 }

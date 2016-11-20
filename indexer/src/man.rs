@@ -204,6 +204,7 @@ pub fn decode(paths: &[&str], ent: &mut Read) -> io::Result<(digest::Digest,&'st
     let dig = digest::digest(&digest::SHA1, &data);
 
     // TODO: Handle BOM? UTF-16?
+    // TODO: This fails badly for ISO-2022-JP. How the hell do we cleanly fix that?
     // If it passes as UTF-8, then just consider it UTF-8.
     if let Ok(_) = str::from_utf8(&data) {
         return Ok((dig, "utf8", unsafe { String::from_utf8_unchecked(data) } ));

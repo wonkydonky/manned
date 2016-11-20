@@ -8,6 +8,8 @@ use archread;
 use man;
 use archive::{Format,Archive,ArchiveEntry};
 
+pub static mut DRY_RUN: bool = false;
+
 
 #[derive(Debug,Clone,Copy)]
 pub enum Date<'a> {
@@ -72,6 +74,7 @@ fn insert_pkg(tr: &postgres::transaction::Transaction, opt: &PkgOpt) -> Option<i
         Some(verid)
 
     } else if opt.force {
+        // XXX: Should we update released & arch here?
         verid = res.get(0).get(0);
         info!("Overwriting package pkgid {} verid {}, {}", pkgid, verid, pkginfo);
         tr.query("DELETE FROM man WHERE package = $1", &[&verid]).unwrap();
@@ -198,6 +201,9 @@ pub fn pkg(conn: &postgres::GenericConnection, opt: PkgOpt) {
     tr.set_rollback();
 
     let verid = match insert_pkg(&tr, &opt) { Some(x) => x, None => return };
+    if unsafe { DRY_RUN } {
+        return;
+    }
 
     match index_pkg(&tr, opt, verid) {
         Err(e) => error!("Error reading package: {}", e),
