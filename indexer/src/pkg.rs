@@ -20,6 +20,8 @@ pub struct PkgOpt<'a> {
 
 
 fn insert_pkg(tr: &postgres::transaction::Transaction, opt: &PkgOpt) -> Option<i32> {
+    let pkginfo = format!("sys {} / {} / {} - {} @ {} @ {}", opt.sys, opt.cat, opt.pkg, opt.ver, opt.date, opt.file.path);
+
     // The ON CONFLICT .. DO UPDATE is used instead of DO NOTHING because in that case the
     // RETURNING clause wouldn't give us a package id.
     let q = "INSERT INTO packages (system, category, name) VALUES($1, $2, $3)
@@ -39,17 +41,17 @@ fn insert_pkg(tr: &postgres::transaction::Transaction, opt: &PkgOpt) -> Option<i
     if res.is_empty() {
         let q = "INSERT INTO package_versions (package, version, released, arch) VALUES($1, $2, $3::text::date, $4) RETURNING id";
         verid = tr.query(q, &[&pkgid, &opt.ver, &opt.date, &opt.arch]).unwrap().get(0).get(0);
-        info!("New package pkgid {} verid {}", pkgid, verid);
+        info!("New package pkgid {} verid {}, {}", pkgid, verid, pkginfo);
         Some(verid)
 
     } else if opt.force {
         verid = res.get(0).get(0);
-        info!("Overwriting package pkgid {} verid {}", pkgid, verid);
+        info!("Overwriting package pkgid {} verid {}, {}", pkgid, verid, pkginfo);
         tr.query("DELETE FROM man WHERE package = $1", &[&verid]).unwrap();
         Some(verid)
 
     } else {
-        info!("Package already in database, pkgid {} verid {}", pkgid, res.get(0).get::<usize,i32>(0));
+        debug!("Package already in database, pkgid {} verid {}, {}", pkgid, res.get(0).get::<usize,i32>(0), pkginfo);
         None
     }
 }
@@ -86,7 +88,7 @@ fn insert_man(tr: &postgres::GenericConnection, verid: i32, paths: &[&str], ent:
 
     for path in paths {
         insert_man_row(tr, verid, path, enc, dig.as_ref());
-        debug!("Inserted man page: {} ({})", path, enc);
+        info!("Inserted man page: {} ({})", path, enc);
     }
 }
 
@@ -100,7 +102,7 @@ fn insert_link(tr: &postgres::GenericConnection, verid: i32, src: &str, dest: &s
     let hash: Vec<u8> = res.get(0).get(0);
     let enc: String = res.get(0).get(1);
     insert_man_row(tr, verid, src, &enc, &hash);
-    debug!("Inserted man link: {} -> {}", src, dest);
+    info!("Inserted man link: {} -> {}", src, dest);
 }
 
 
@@ -149,8 +151,6 @@ fn index_pkg(tr: &postgres::GenericConnection, opt: &PkgOpt, verid: i32) -> std:
 
 
 pub fn pkg(conn: &postgres::GenericConnection, opt: PkgOpt) {
-    info!("Handling pkg: {} / {} / {} - {} @ {} @ {}", opt.sys, opt.cat, opt.pkg, opt.ver, opt.date, opt.file.path);
-
     let tr = conn.transaction().unwrap();
     tr.set_rollback();
 

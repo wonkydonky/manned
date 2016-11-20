@@ -72,6 +72,11 @@ fn main() {
         .filter(Some("postgres"), if verbose >= 4 { log::LogLevelFilter::Trace } else { log::LogLevelFilter::Info })
         .init().unwrap();
 
+    if let Err(e) = open::clear_cache() {
+        error!("Error clearing cache: {}", e);
+        return;
+    }
+
     let dbhost = match std::env::var("MANNED_PG") {
         Ok(x) => x,
         Err(_) => { error!("MANNED_PG not set."); return }

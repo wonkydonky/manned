@@ -1,5 +1,5 @@
 use std::io::{Read,Result,Error,ErrorKind,copy};
-use std::fs::{File,create_dir_all,metadata};
+use std::fs::{File,create_dir_all,metadata,read_dir,remove_file};
 use std::hash::{Hash,Hasher,SipHasher};
 use std::time::{Duration,SystemTime};
 use url::Url;
@@ -7,7 +7,7 @@ use hyper;
 
 
 const CACHE_PATH: &'static str = "/var/tmp/manned-indexer";
-const CACHE_TIME: u64 = 23*3600;
+const CACHE_TIME: u64 = 20*3600;
 
 
 #[derive(Clone,Copy)]
@@ -47,6 +47,19 @@ fn file(path: &str) -> Result<Box<Read>> {
 }
 
 
+pub fn clear_cache() -> Result<()> {
+    create_dir_all(CACHE_PATH)?;
+    for f in read_dir(CACHE_PATH)? {
+        let f = f?.path();
+        let m = metadata(&f)?;
+        if m.modified().unwrap() < SystemTime::now() - Duration::from_secs(CACHE_TIME) {
+            remove_file(&f)?;
+        }
+    }
+    Ok(())
+}
+
+
 impl<'a> Path<'a> {
     pub fn open(&self) -> Result<Box<Read>> {
         if let Ok(url) = Url::parse(self.path) {
@@ -56,12 +69,9 @@ impl<'a> Path<'a> {
 
             if self.cache {
                 let cfn = cache_fn(&url);
-                if let Ok(m) = metadata(&cfn) {
-                    if m.modified().unwrap() > SystemTime::now() - Duration::from_secs(CACHE_TIME) {
-                        return file(&cfn);
-                    }
+                if let Ok(f) = file(&cfn) {
+                    return Ok(f);
                 }
-                try!(create_dir_all(CACHE_PATH));
                 {
                     let mut rd = try!(fetch(url.as_str()));
                     let mut wr = try!(File::create(&cfn));
