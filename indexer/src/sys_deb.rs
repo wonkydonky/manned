@@ -18,24 +18,28 @@ fn get_contents(f: Option<open::Path>) -> Result<HashSet<String>> {
     let rd = archive::Archive::open_raw(&mut fd)?;
     let brd = BufReader::new(rd);
     let mut pkgs = HashSet::new();
-    let mut filecnt = 0;
+    let mut filecnt = -1;
     let mut mancnt = 0;
 
-    // Run the regex on bytes instead of strings, as paths aren't always UTF-8. This regex will
-    // not match non-UTF-8 paths.
-    let re = Regex::new(r"^(?u:([^\s].*?))\s+(?u:([^\s]+))\s*$").unwrap();
-
     for line in brd.split(b'\n') {
-        re.captures(&line?).map(|cap| {
-            filecnt += 1;
-            let path = str::from_utf8(cap.at(1).unwrap()).unwrap();
-            if man::ismanpath(path) {
-                mancnt += 1;
-                pkgs.extend( str::from_utf8(cap.at(2).unwrap()).unwrap().split(',').map(|e| {
-                    e.split('/').last().unwrap().to_string()
-                }) );
-            }
-        });
+        let line = line?;
+        let line = match str::from_utf8(&line) { Ok(x) => x, _ => continue };
+        if line.starts_with("FILE  ") {
+            filecnt = 0;
+            continue;
+        } else if filecnt < 0 {
+            continue;
+        }
+        filecnt += 1;
+        let mut it = line.split(' ');
+        let pkg = it.next_back().unwrap();
+        let path = it.fold(String::new(), |acc, x| acc + " " + x);
+        if man::ismanpath(&path.trim()) {
+            mancnt += 1;
+            pkgs.extend( pkg.split(',').map(|e| {
+                e.split('/').last().unwrap().to_string()
+            }) );
+        }
     }
 
     debug!("Found {}/{} man files in {} relevant packages from {}", mancnt, filecnt, pkgs.len(), f.path);
