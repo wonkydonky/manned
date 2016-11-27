@@ -27,7 +27,7 @@ fn get_contents(f: Option<open::Path>) -> Result<HashSet<String>> {
         let mut it = line.split(' ');
 
         let pkg = it.next_back().unwrap();
-        if !pkg.contains('/') || pkg == "LOCATION" {
+        if !pkg.contains('/') {
             continue;
         }
         filecnt += 1;
