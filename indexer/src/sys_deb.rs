@@ -18,21 +18,20 @@ fn get_contents(f: Option<open::Path>) -> Result<HashSet<String>> {
     let rd = archive::Archive::open_raw(&mut fd)?;
     let brd = BufReader::new(rd);
     let mut pkgs = HashSet::new();
-    let mut filecnt = -1;
+    let mut filecnt = 0;
     let mut mancnt = 0;
 
     for line in brd.split(b'\n') {
         let line = line?;
         let line = match str::from_utf8(&line) { Ok(x) => x, _ => continue };
-        if line.starts_with("FILE  ") {
-            filecnt = 0;
-            continue;
-        } else if filecnt < 0 {
+        let mut it = line.split(' ');
+
+        let pkg = it.next_back().unwrap();
+        if !pkg.contains('/') || pkg == "LOCATION" {
             continue;
         }
         filecnt += 1;
-        let mut it = line.split(' ');
-        let pkg = it.next_back().unwrap();
+
         let path = it.fold(String::new(), |acc, x| acc + " " + x);
         if man::ismanpath(&path.trim()) {
             mancnt += 1;
@@ -42,7 +41,7 @@ fn get_contents(f: Option<open::Path>) -> Result<HashSet<String>> {
         }
     }
 
-    debug!("Found {}/{} man files in {} relevant packages from {}", mancnt, filecnt, pkgs.len(), f.path);
+    info!("Found {}/{} man files in {} relevant packages from {}", mancnt, filecnt, pkgs.len(), f.path);
     Ok(pkgs)
 }
 

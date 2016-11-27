@@ -2,8 +2,8 @@ test -f .config && source ./.config
 
 
 index() {
-  echo "====> indexer -vv $@"
-  ./indexer -vv $@ 2>&1
+  echo "====> indexer -v $@"
+  ./indexer -v $@ 2>&1
   echo
 }
 
