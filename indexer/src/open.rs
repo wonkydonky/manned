@@ -1,8 +1,10 @@
-use std::io::{Read,Result,Error,ErrorKind,copy};
+use std::io::{BufRead,BufReader,Read,Result,Error,ErrorKind,copy};
 use std::fs::{File,create_dir_all,metadata,read_dir,remove_file};
 use std::hash::{Hash,Hasher,SipHasher};
 use std::time::{Duration,SystemTime};
+use regex::bytes::Regex;
 use url::Url;
+use url::percent_encoding::percent_decode;
 use hyper;
 
 
@@ -90,4 +92,41 @@ impl<'a> Path<'a> {
             Err(Error::new(ErrorKind::Other, "Invalid URL"))
         }
     }
+
+    // Attempt to parse a HTTP directory listing. Returns the name and whether it's a directory for
+    // each item.
+    // Only tested with a lighttpd/1.4 and apache 2.4 server.
+    // (I tried using FTP before, but that didn't work out well; While FTP does return a more easily
+    // parsable file list, some servers have issues with generating a list of a large directory)
+    pub fn dirlist(&self) -> Result<Vec<(String,bool)>> {
+        lazy_static!(
+            static ref RE: Regex = Regex::new("(?i:<a +href *= *\"([^?/\"]+)(/?)\">)").unwrap();
+        );
+        let rd = self.open()?;
+        let brd = BufReader::new(rd);
+        let mut res = Vec::new();
+        for line in brd.split(b'\n') {
+            let line = line?;
+            let mut matches = RE.captures_iter(&line);
+            let first = matches.next();
+
+            // There's only a single link per line.
+            if first.is_some() && matches.next().is_some() {
+                continue;
+            }
+
+            if let Some(cap) = first {
+                let name = cap.at(1).unwrap();
+                if name == b".." || name.starts_with(b"/") {
+                    continue;
+                }
+                if let Ok(name) = percent_decode(name).decode_utf8() {
+                    let isdir = cap.at(2) == Some(b"/");
+                    res.push((name.to_string(), isdir));
+                }
+            }
+        }
+        Ok(res)
+    }
+
 }

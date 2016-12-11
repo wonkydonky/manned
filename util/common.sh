@@ -1,3 +1,5 @@
+TMPDIR="/var/tmp/manned-indexer"
+
 test -f .config && source ./.config
 
 

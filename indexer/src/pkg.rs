@@ -16,6 +16,7 @@ pub enum Date<'a> {
     Known(&'a str), // Given in PkgOpt
     Found(i64),     // Found in package
     Deb,            // Should be read from the timestamp of the 'debian-binary' file
+    Desc,           // Should be read from the '+DESC' file (FreeBSD <= 9.2)
 }
 
 
@@ -24,6 +25,7 @@ impl<'a> Date<'a> {
         // TODO: Validate that the mtime() date is sensible (e.g. 1990 < date < now)
         *self = match *self {
             Date::Deb if ent.format() == Format::Ar && ent.path() == Some("debian-binary") => Date::Found(ent.mtime()),
+            Date::Desc if ent.path() == Some("+DESC") => Date::Found(ent.mtime()),
             x => x,
         }
     }
