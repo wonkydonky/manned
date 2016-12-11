@@ -1,8 +1,8 @@
 use std::io::{BufRead,BufReader,Read,Result,Error,ErrorKind,copy};
 use std::fs::{File,create_dir_all,metadata,read_dir,remove_file};
-use std::hash::{Hash,Hasher,SipHasher};
 use std::time::{Duration,SystemTime};
 use regex::bytes::Regex;
+use ring::digest;
 use url::Url;
 use url::percent_encoding::percent_decode;
 use hyper;
@@ -24,9 +24,11 @@ fn cache_fn(url: &Url) -> String {
     let name = url.path_segments().unwrap().last().unwrap();
     let name = if name == "" { "index" } else { name };
 
-    let mut hash = SipHasher::new();
-    url.hash(&mut hash);
-    format!("{}/{}-{}-{:x}", CACHE_PATH, url.host_str().unwrap(), name, hash.finish())
+    let hash = digest::digest(&digest::SHA1, url.as_str().as_bytes())
+        .as_ref()[0..8].into_iter()
+        .fold(0u64, |a, &e| (a<<8) + e as u64);
+
+    format!("{}/{}-{}-{:x}", CACHE_PATH, url.host_str().unwrap(), name, hash)
 }
 
 
@@ -65,7 +67,7 @@ pub fn clear_cache() -> Result<()> {
 impl<'a> Path<'a> {
     pub fn open(&self) -> Result<Box<Read>> {
         if let Ok(url) = Url::parse(self.path) {
-            if url.scheme() != "http" && url.scheme() != "https" {
+            if url.scheme() != "http" {
                 return Err(Error::new(ErrorKind::Other, "Invalid scheme"));
             }
 
