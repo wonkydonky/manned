@@ -17,6 +17,8 @@ pub enum Date<'a> {
     Found(i64),     // Found in package
     Deb,            // Should be read from the timestamp of the 'debian-binary' file
     Desc,           // Should be read from the '+DESC' file (FreeBSD <= 9.2)
+    Max,            // Use the latest timestamp in the archive
+    MaxVal(i64),
 }
 
 
@@ -26,6 +28,8 @@ impl<'a> Date<'a> {
         *self = match *self {
             Date::Deb if ent.format() == Format::Ar && ent.path() == Some("debian-binary") => Date::Found(ent.mtime()),
             Date::Desc if ent.path() == Some("+DESC") => Date::Found(ent.mtime()),
+            Date::Max => Date::MaxVal(ent.mtime()),
+            Date::MaxVal(t) if ent.mtime() > t => Date::MaxVal(ent.mtime()),
             x => x,
         }
     }
@@ -193,7 +197,7 @@ fn index_pkg(tr: &postgres::GenericConnection, mut opt: PkgOpt, verid: i32) -> s
 
     match opt.date {
         Date::Known(_) => Ok(()),
-        Date::Found(t) => {
+        Date::Found(t) | Date::MaxVal(t) => {
             let date = NaiveDateTime::from_timestamp(t, 0).format("%Y-%m-%d").to_string();
             debug!("Date from package: {}", date);
             tr.execute("UPDATE package_versions SET released = $1::text::date WHERE id = $2", &[&date, &verid]).unwrap();

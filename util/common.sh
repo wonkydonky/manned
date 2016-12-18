@@ -24,7 +24,6 @@ index_deb() {
   local COMPONENTS=$4
   local CONTENTS=${5:-"dists/$DISTRO/Contents-i386.gz"}
 
-
   for CMP in $COMPONENTS; do
     local CONT=$CONTENTS
     test $CONT = cmp && CONT="dists/$DISTRO/$CMP/Contents-i386.gz"

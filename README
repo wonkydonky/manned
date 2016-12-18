@@ -21,16 +21,10 @@ Requirements
     JSON::XS
     AnyEvent
 
-  util/: (DB updating and package synchronisation stuff)
-    bash (probably)
+  util/ & indexer/: (DB updating and package synchronisation stuff)
     curl
     psql
-    GNU tar
-    gzip, bzip2, xz
-    Compress::Raw::Bzip2
-    Compress::Raw::Lzma
-    GNU ar (For Debian)
-
+    cargo + rust (1.13+)
 
 
 Contact

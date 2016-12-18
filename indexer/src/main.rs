@@ -20,6 +20,7 @@ mod pkg;
 mod sys_arch;
 mod sys_deb;
 mod sys_freebsd1;
+mod sys_freebsd2;
 
 
 // Convenience function to get a system id by short-name. Panics if the system doesn't exist.
@@ -67,6 +68,11 @@ fn main() {
             (@arg mirror: --mirror +required +takes_value "Mirror URL (should point to the packages/ dir)")
             (@arg arch: --arch +required +takes_value "Arch")
         )
+        (@subcommand freebsd2 =>
+            (about: "Index packages from a FreeBSD >= 9.3 package repo")
+            (@arg sys: --sys +required +takes_value "System short-name")
+            (@arg mirror: --mirror +required +takes_value "Mirror URL")
+        )
     ).get_matches();
 
     unsafe { pkg::DRY_RUN = arg.is_present("dry") };
@@ -101,6 +107,7 @@ fn main() {
         let date = match matches.value_of("date").unwrap() {
             "deb" => pkg::Date::Deb,
             "desc" => pkg::Date::Desc,
+            "max" => pkg::Date::Max,
             s => pkg::Date::Known(s),
         };
         pkg::pkg(&db, pkg::PkgOpt {
@@ -136,6 +143,13 @@ fn main() {
         sys_freebsd1::sync(&db,
             sysbyshort(&db, matches.value_of("sys").unwrap()),
             matches.value_of("arch").unwrap(),
+            matches.value_of("mirror").unwrap()
+        ).unwrap_or_else(|e| error!("{}", e));
+    }
+
+    if let Some(matches) = arg.subcommand_matches("freebsd2") {
+        sys_freebsd2::sync(&db,
+            sysbyshort(&db, matches.value_of("sys").unwrap()),
             matches.value_of("mirror").unwrap()
         ).unwrap_or_else(|e| error!("{}", e));
     }
