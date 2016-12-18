@@ -85,6 +85,8 @@ fn validate(data: &Vec<u8>) -> Option<&'static str> {
         Some("Contents: '.so man3/'")
     } else if &data[..] == &b"timestamp\n"[..] {
         Some("Contents: 'timestamp'")
+    } else if &data[..] == &b"\x75ELF"[..] {
+        Some("Looks like an ELF binary")
     } else if HTML.is_match(&data) {
         Some("Looks like an HTML file")
     } else {
