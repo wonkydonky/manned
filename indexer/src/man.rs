@@ -108,7 +108,8 @@ fn codec_from_tag(data: &Vec<u8>) -> Option<EncodingRef> {
     let tag = str::from_utf8(cap.at(1).unwrap()).unwrap().to_lowercase();
 
     match &tag[..] {
-        // Deny some common UTF-8-compatible encodings. These tags are obviously incorrect.
+        // Deny some common UTF-8-compatible encodings. These tags are irrelevant because we're
+        // testing for UTF-8 anyway..
         "us-ascii" | "ascii" | "utf8" | "utf-8" | "utf-8-unix" => None,
 
         // latin-1 isn't in the whatwg spec under that name
@@ -205,27 +206,24 @@ pub fn decode(paths: &[&str], ent: &mut Read) -> io::Result<(digest::Digest,&'st
 
     let dig = digest::digest(&digest::SHA1, &data);
 
-    // TODO: Handle BOM? UTF-16?
-    // TODO: This fails badly for ISO-2022-JP. How the hell do we cleanly fix that?
-    // If it passes as UTF-8, then just consider it UTF-8.
-    if let Ok(_) = str::from_utf8(&data) {
-        return Ok((dig, "utf8", unsafe { String::from_utf8_unchecked(data) } ));
+    // Create a list of encodings to try, starting with UTF-8
+    let mut encs : Vec<EncodingRef> = vec![all::UTF_8];
+    encs.extend(codec_from_tag(&data));
+    encs.extend(paths.iter().filter_map(|&e| codec_from_path(e)));
+
+    // ISO-2022-JP is a 7bit encoding, and must be tested before UTF-8
+    if encs.iter().any(|&e| e.name() == (all::ISO_2022_JP as EncodingRef).name()) {
+        encs.insert(0, all::ISO_2022_JP);
     }
-    // Otherwise, look for a coding tag in the contents
-    if let Some(e) = codec_from_tag(&data) {
+
+    // Try the encodings in order, use the first one that succeeds
+    for e in encs {
         if let Ok(s) = e.decode(&data, encoding::DecoderTrap::Strict) {
             return Ok((dig, e.name(), s));
         }
     }
-    // If that fails as well, look for clues in the file path.
-    for path in paths {
-        if let Some(e) = codec_from_path(path) {
-            if let Ok(s) = e.decode(&data, encoding::DecoderTrap::Strict) {
-                return Ok((dig, e.name(), s));
-            }
-        }
-    }
-    // If all else fails, use a lossy iso-8859-1
+
+    // Fall back to lossy ISO-8859-1 if all else failed
     Ok((dig, "iso-8859-1", (all::ISO_8859_1 as EncodingRef).decode(&data, encoding::DecoderTrap::Ignore).unwrap() ))
 }
 
