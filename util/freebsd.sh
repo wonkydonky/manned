@@ -130,9 +130,9 @@ case $1 in
         index_core freebsd-3.1 "${MIR}des/des."           core-des-des       1999-02-15 ab
         index_core freebsd-3.1 "${MIR}des/krb."           core-des-krb       1999-02-15 ae
         index_core freebsd-3.1 "${MIR}manpages/manpages." core-manpages      1999-02-15 be
-        index_core freebsd-3.1 "${MIR}XF86332/Xfsrv.tgz"  core-XF86332-Xfsrv 1998-09-28
-        index_core freebsd-3.1 "${MIR}XF86332/Xman.tgz"   core-XF86332-Xman  1998-09-28
-        index_core freebsd-3.1 "${MIR}XF86332/Xset.tgz"   core-XF86332-Xset  1998-09-28
+        index_core freebsd-3.1 "${MIR}XF86332/Xfsrv.tgz"  core-XF86332-Xfsrv 1999-02-15
+        index_core freebsd-3.1 "${MIR}XF86332/Xman.tgz"   core-XF86332-Xman  1999-02-15
+        index_core freebsd-3.1 "${MIR}XF86332/Xset.tgz"   core-XF86332-Xset  1999-02-15
         ;;
     3.2)
         MIR="${AMIRROR}i386/3.2-RELEASE/"
