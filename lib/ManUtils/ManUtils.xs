@@ -20,7 +20,7 @@ html(str)
     STRLEN len;
     char *inbuf = SvPV(str, len);
     struct StringWrap buf = grotty2html_wrap(inbuf, len);
-    SV *dest = newSVpv(buf.buf, buf.len);
+    SV *dest = buf.len ? newSVpv(buf.buf, buf.len) : newSVpv("", 0);
     grotty2html_free(buf);
     SvUTF8_on(dest);
     RETVAL = dest;

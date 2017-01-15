@@ -181,7 +181,9 @@ impl FmtBuf {
         // - https://manned.org/urn/8cb83e85
         // TODO: Add heuristic to only remove ) at the end of the URL if there is no matching (
         // inside the URL.
-        let url = url.trim_right_matches('.').trim_right_matches(',').trim_right_matches(';').trim_right_matches(')').trim_right_matches('⟩').trim_right_matches('\'');
+        let url = url.trim_right_matches(|c|
+            match c { '.' | ',' | ';' | ')' | '⟩' | '\'' | ':' | ']' | '}' => true, _ => false }
+        );
         if url.len() < 10 {
             return;
         }
@@ -194,8 +196,19 @@ impl FmtBuf {
     fn flush_ref(&self, st: &mut Flush, end: usize) {
         // We know where the closing bracket is in the string, so this regex is used to search
         // backwards from there and find the start of the reference.
+        // There are a lot of 'special' multi-character section names, so it might not make sense
+        // to parse all of them. Here's an estimate of a few 'special' section references, in
+        // number of man pages using the reference (using ~ '%(3pm)%' on the 2017-01-14 database):
+        // - 3pm    17810
+        // - 3w      8729 (just a few packages)
+        // - 3tcl    2000
+        // - 3tk      758
+        // - 3p       309
+        // - 3perl    268
+        // - 3ssl     198
         lazy_static!(
-            static ref REF: Regex = Regex::new(r"([A-Za-z0-9:\._-]+)\(([1-9nl])\)$").unwrap();
+            // XXX: Make sure to keep this regex in sync with the one in flush()
+            static ref REF: Regex = Regex::new(r"([A-Za-z0-9:\._-]+)\(([1-9nl]|3tcl|3pm|3tk)\)$").unwrap();
         );
 
         // Disallow some characters following a reference
@@ -223,7 +236,7 @@ impl FmtBuf {
         // This regex is used to quickly *find* interesting patterns, any further validation
         // and processing is done afterwards by the (slower) specialized flush_ methods.
         lazy_static!(
-            static ref SEARCH: Regex = Regex::new(r"(?m)(^\[\[\[MANNEDINCLUDE|https?://|[A-Za-z0-9]+\([1-9nl]\))").unwrap();
+            static ref SEARCH: Regex = Regex::new(r"(?m)(^\[\[\[MANNEDINCLUDE|https?://|[A-Za-z0-9]+\(([1-9nl]|3tcl|3pm|3tk)\))").unwrap();
         );
 
         let mut st = Flush{
