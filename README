@@ -13,10 +13,11 @@ Requirements
   General:
     perl: A somewhat recent version (no idea which, due to my XS usage)
     postgresql: Also a somewhat recent version
+    rust + cargo (1.13+)
+
+  www/ & lib/ & webs/: (Website)
     DBI
     DBD::Pg
-
-  www/: (Website)
     TUWF
     JSON::XS
     AnyEvent
@@ -24,7 +25,6 @@ Requirements
   util/ & indexer/: (DB updating and package synchronisation stuff)
     curl
     psql
-    cargo + rust (1.13+)
 
 
 Contact

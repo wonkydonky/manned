@@ -1,0 +1,16 @@
+[package]
+name = "web"
+version = "0.1.0"
+authors = ["yorhel"]
+
+[lib]
+name = "web"
+crate-type = ["lib", "staticlib"]
+
+[dependencies]
+regex = "0.2.1"
+lazy_static = "0.2.2"
+
+# Add debugging symbols even in release mode, in order to help with profiling.
+[profile.release]
+debug = true

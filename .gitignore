@@ -3,4 +3,4 @@
 !/lib/ManUtils/ManUtils.pm
 !/lib/ManUtils/ManUtils.xs
 indexer/target
-
+web/target

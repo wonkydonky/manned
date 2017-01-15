@@ -32,11 +32,12 @@ sub fmt {
   # Other .so's should be handled by html()
   $input =~ s/^\.so (.+)$/.in -10\n.sp\n\[\[\[MANNEDINCLUDE$1\]\]\]/mg;
 
-  # Disable hyphenation, since that screws up man page references. :-(
-  $input = ".hy 0\n.de hy\n..\n$input";
-
-  # Emulate man-db's --nj option
-  $input = ".na\n.de ad\n..\n$input";
+  $input =
+    # Disable hyphenation, since that screws up man page references. :-(
+     ".hy 0\n.de hy\n..\n"
+    # Emulate man-db's --nj option
+    .".na\n.de ad\n..\n"
+    .$input;
 
   $input = encode_utf8($input);
 
@@ -100,6 +101,4 @@ sub fmt_block {
   $out;
 }
 
-
 1;
-
