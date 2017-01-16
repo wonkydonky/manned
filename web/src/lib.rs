@@ -12,6 +12,37 @@ enum FmtChar {
     Regular,
     Italic,
     Bold,
+    Both,
+}
+
+impl FmtChar {
+    fn add(self, b: Self) -> Self {
+        match (self, b) {
+            (FmtChar::Regular, x) |
+            (x, FmtChar::Regular) => x,
+            (FmtChar::Italic, FmtChar::Bold) |
+            (FmtChar::Bold, FmtChar::Italic) => FmtChar::Both,
+            _ => self
+        }
+    }
+
+    fn open(self) -> &'static str {
+        match self {
+            FmtChar::Regular => "",
+            FmtChar::Italic  => "<i>",
+            FmtChar::Bold    => "<b>",
+            FmtChar::Both    => "<em>",
+        }
+    }
+
+    fn close(self) -> &'static str {
+        match self {
+            FmtChar::Regular => "",
+            FmtChar::Italic  => "</i>",
+            FmtChar::Bold    => "</b>",
+            FmtChar::Both    => "</em>",
+        }
+    }
 }
 
 
@@ -57,9 +88,14 @@ impl CharParse {
                     Some((c, f))
                 },
 
-            CharParse::Escape(c, _) => {
-                // TODO: Handle combination of bold & italic
-                *self = CharParse::Token(chr, if c == '_' { FmtChar::Italic } else { FmtChar::Bold });
+            CharParse::Escape(c, f) => {
+                *self = if c == '_' {
+                    CharParse::Token(chr, f.add(FmtChar::Italic))
+                } else if chr == '_' {
+                    CharParse::Token(c, f.add(FmtChar::Italic))
+                } else {
+                    CharParse::Token(chr, f.add(FmtChar::Bold))
+                };
                 None
             },
         }
@@ -68,11 +104,9 @@ impl CharParse {
 
 
 fn pushfmt(out: &mut String, old: FmtChar, new: FmtChar) {
-    if new != old && old != FmtChar::Regular {
-        out.push_str(if old == FmtChar::Italic { "</i>" } else { "</b>" });
-    }
-    if new != old && new != FmtChar::Regular {
-        out.push_str(if new == FmtChar::Italic { "<i>" } else { "<b>" });
+    if new != old {
+        out.push_str(old.close());
+        out.push_str(new.open());
     }
 }
 
@@ -133,7 +167,7 @@ impl FmtBuf {
             st.idx = chunk;
             lastfmt = fmt;
         }
-        pushfmt(st.out, lastfmt, FmtChar::Regular);
+        st.out.push_str(lastfmt.close());
     }
 
     // Consume the input buffer until 'end' without generating output
@@ -276,13 +310,6 @@ pub fn grotty2html(input: &str) -> String {
     for chr in input.chars() {
         if let Some((chr, fmt)) = state.update(chr) {
             buf.push(chr, fmt);
-            // Line-based flushing is also possible, but not as fast.
-            //if chr == '\n' {
-            //    buf.flush(&mut out);
-            //    buf.buf.clear();
-            //    buf.fmt.clear();
-            //    buf.lastfmt = FmtChar::Regular;
-            //}
         }
     }
     if let CharParse::Token(chr, fmt) = state {
