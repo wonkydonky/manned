@@ -21,6 +21,7 @@ mod sys_arch;
 mod sys_deb;
 mod sys_freebsd1;
 mod sys_freebsd2;
+mod sys_rpmdir;
 
 
 // Convenience function to get a system id by short-name. Panics if the system doesn't exist.
@@ -71,6 +72,12 @@ fn main() {
         (@subcommand freebsd2 =>
             (about: "Index packages from a FreeBSD >= 9.3 package repo")
             (@arg sys: --sys +required +takes_value "System short-name")
+            (@arg mirror: --mirror +required +takes_value "Mirror URL")
+        )
+        (@subcommand rpmdir =>
+            (about: "Index a bare RPM directory")
+            (@arg sys: --sys +required +takes_value "System short-name")
+            (@arg cat: --cat +required +takes_value "Category to set for all packages")
             (@arg mirror: --mirror +required +takes_value "Mirror URL")
         )
     ).get_matches();
@@ -150,6 +157,14 @@ fn main() {
     if let Some(matches) = arg.subcommand_matches("freebsd2") {
         sys_freebsd2::sync(&db,
             sysbyshort(&db, matches.value_of("sys").unwrap()),
+            matches.value_of("mirror").unwrap()
+        ).unwrap_or_else(|e| error!("{}", e));
+    }
+
+    if let Some(matches) = arg.subcommand_matches("rpmdir") {
+        sys_rpmdir::sync(&db,
+            sysbyshort(&db, matches.value_of("sys").unwrap()),
+            matches.value_of("cat").unwrap(),
             matches.value_of("mirror").unwrap()
         ).unwrap_or_else(|e| error!("{}", e));
     }
