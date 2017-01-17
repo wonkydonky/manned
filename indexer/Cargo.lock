@@ -12,6 +12,7 @@ dependencies = [
  "libc 0.2.18 (registry+https://github.com/rust-lang/crates.io-index)",
  "log 0.3.6 (registry+https://github.com/rust-lang/crates.io-index)",
  "postgres 0.13.5 (registry+https://github.com/rust-lang/crates.io-index)",
+ "quick-xml 0.5.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "regex 0.2.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "ring 0.6.2 (registry+https://github.com/rust-lang/crates.io-index)",
  "url 1.2.4 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -351,6 +352,14 @@ dependencies = [
 ]
 
 [[package]]
+name = "quick-xml"
+version = "0.5.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+dependencies = [
+ "log 0.3.6 (registry+https://github.com/rust-lang/crates.io-index)",
+]
+
+[[package]]
 name = "redox_syscall"
 version = "0.1.16"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -575,6 +584,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 "checksum postgres 0.13.5 (registry+https://github.com/rust-lang/crates.io-index)" = "585ca978431cddac0aa926246f18fe30a47401eabbe9bbda573dc60389c10ea1"
 "checksum postgres-protocol 0.2.0 (registry+https://github.com/rust-lang/crates.io-index)" = "283e27d237a5772ef00c9e3f97e632f9a565ff514761af3e88e129576af7077c"
 "checksum postgres-shared 0.1.0 (registry+https://github.com/rust-lang/crates.io-index)" = "6f09b8819c2586032ed23bfbe95f6edfbebdc18bf9d0fe02c1f785f659958fbb"
+"checksum quick-xml 0.5.0 (registry+https://github.com/rust-lang/crates.io-index)" = "e685d9ea689e56229debf59cb6d24e28021a9c950bbd988af24e43da3ea2bd79"
 "checksum redox_syscall 0.1.16 (registry+https://github.com/rust-lang/crates.io-index)" = "8dd35cc9a8bdec562c757e3d43c1526b5c6d2653e23e2315065bc25556550753"
 "checksum regex 0.2.1 (registry+https://github.com/rust-lang/crates.io-index)" = "4278c17d0f6d62dfef0ab00028feb45bd7d2102843f80763474eeb1be8a10c01"
 "checksum regex-syntax 0.4.0 (registry+https://github.com/rust-lang/crates.io-index)" = "2f9191b1f57603095f105d317e375d19b1c9c5c3185ea9633a99a6dcbed04457"

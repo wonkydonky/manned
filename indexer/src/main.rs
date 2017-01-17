@@ -11,6 +11,7 @@ extern crate postgres;
 extern crate hyper;
 extern crate url;
 extern crate chrono;
+extern crate quick_xml;
 
 mod archive;
 mod archread;
@@ -22,6 +23,7 @@ mod sys_deb;
 mod sys_freebsd1;
 mod sys_freebsd2;
 mod sys_rpmdir;
+mod sys_rpm;
 
 
 // Convenience function to get a system id by short-name. Panics if the system doesn't exist.
@@ -76,6 +78,12 @@ fn main() {
         )
         (@subcommand rpmdir =>
             (about: "Index a bare RPM directory")
+            (@arg sys: --sys +required +takes_value "System short-name")
+            (@arg cat: --cat +required +takes_value "Category to set for all packages")
+            (@arg mirror: --mirror +required +takes_value "Mirror URL")
+        )
+        (@subcommand rpm =>
+            (about: "Index an RPM repository")
             (@arg sys: --sys +required +takes_value "System short-name")
             (@arg cat: --cat +required +takes_value "Category to set for all packages")
             (@arg mirror: --mirror +required +takes_value "Mirror URL")
@@ -163,6 +171,14 @@ fn main() {
 
     if let Some(matches) = arg.subcommand_matches("rpmdir") {
         sys_rpmdir::sync(&db,
+            sysbyshort(&db, matches.value_of("sys").unwrap()),
+            matches.value_of("cat").unwrap(),
+            matches.value_of("mirror").unwrap()
+        ).unwrap_or_else(|e| error!("{}", e));
+    }
+
+    if let Some(matches) = arg.subcommand_matches("rpm") {
+        sys_rpm::sync(&db,
             sysbyshort(&db, matches.value_of("sys").unwrap()),
             matches.value_of("cat").unwrap(),
             matches.value_of("mirror").unwrap()
