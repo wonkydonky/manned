@@ -124,9 +124,9 @@ pub fn sync(pg: &postgres::GenericConnection, sys: i32, mirror: &str, contents: 
             pkg = Pkg::default();
         }
         if let Some(cap) = kv.captures(&line) {
-            let val = str::from_utf8(cap.at(2).unwrap()).unwrap();
+            let val = str::from_utf8(&cap[2]).unwrap();
             // Use case-insensitive matching, older package archives used lowercase keys
-            match str::from_utf8(cap.at(1).unwrap()).unwrap().to_lowercase().as_ref() {
+            match str::from_utf8(&cap[1]).unwrap().to_lowercase().as_ref() {
                 "package" => pkg.name = Some(val.to_string()),
                 "section" => pkg.section = Some(val.to_string()),
                 "version" => pkg.version = Some(val.to_string()),

@@ -32,9 +32,9 @@ pub fn parse_path(path: &str) -> Option<(&str, &str, &str)> {
     }
 
     let cap = match RE.captures(path) { Some(x) => x, None => return None };
-    let locale = cap.at(1).unwrap_or("");
-    let name = cap.at(2).unwrap();
-    let section = cap.at(3).unwrap();
+    let locale = cap.get(1).map(|e| e.as_str()).unwrap_or("");
+    let name = cap.get(2).unwrap().as_str();
+    let section = cap.get(3).unwrap().as_str();
 
     // Not everything matching the regex is necessarily a man page, exclude some special cases.
     match (name, section, locale) {
@@ -105,7 +105,7 @@ fn codec_from_tag(data: &Vec<u8>) -> Option<EncodingRef> {
         static ref TAG: bytes::Regex = bytes::Regex::new(r"-\*-.*coding:\s*(?u:([^\s;]+)).*-\*").unwrap();
     }
     let cap = match TAG.captures(&data) { Some(x) => x, None => return None };
-    let tag = str::from_utf8(cap.at(1).unwrap()).unwrap().to_lowercase();
+    let tag = str::from_utf8(&cap[1]).unwrap().to_lowercase();
 
     match &tag[..] {
         // Deny some common UTF-8-compatible encodings. These tags are irrelevant because we're
@@ -143,9 +143,9 @@ fn codec_from_path(path: &str) -> Option<EncodingRef> {
     }
 
     let cap = match RE.captures(&locale) { Some(x) => x, None => return None };
-    let lang = cap.at(1).unwrap();
-    let seclang = cap.at(2);
-    let enc = cap.at(3);
+    let lang = &cap[1];
+    let seclang = cap.get(2).map(|e| e.as_str());
+    let enc = cap.get(3).map(|e| e.as_str());
 
     // Try to do something with the encoding tag
     match (lang, enc) {

@@ -4,16 +4,16 @@ version = "0.1.0"
 authors = ["Yorhel <git@yorhel.nl>"]
 
 [dependencies]
-regex = "0.1.77"
+regex = "0.2.1"
 log = "0.3.6"
-env_logger = "0.3.5"
+env_logger = "0.4.0"
 lazy_static = "0.2.1"
 libc = "0.2.17"
 libarchive3-sys = "0.1.2"
 encoding = { git = "https://github.com/lifthrasiir/rust-encoding", features = ["no-optimized-legacy-encoding"] }
-ring = "0.5.3"
-postgres = { git = "https://github.com/sfackler/rust-postgres" }
-clap = "2.16.3"
-hyper = { version = "0.9.11", default-features = false }
+ring = "0.6.2"
+postgres = "0.13.5"
+clap = "2.20.0"
+hyper = { version = "0.10.0", default-features = false }
 url = "1.2.3"
 chrono = "0.2.25"

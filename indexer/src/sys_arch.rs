@@ -47,8 +47,8 @@ fn read_desc(rd: &mut archive::ArchiveEntry) -> Result<Option<Meta>> {
     let mut arch = None;
 
     for kv in RE.captures_iter(&data) {
-        let key = kv.at(1).unwrap();
-        let val = kv.at(2).unwrap();
+        let key = &kv[1];
+        let val = kv.get(2).unwrap().as_str();
         trace!("{}: {} = {}", path, key, val);
         match key {
             "FILENAME"  => filename  = Some(val),

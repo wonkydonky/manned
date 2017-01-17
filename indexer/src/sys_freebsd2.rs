@@ -38,11 +38,11 @@ pub fn sync(pg: &postgres::GenericConnection, sys: i32, mirror: &str) -> Result<
 
     for line in brd.split(b'\n') {
         let line = line?;
-        let name = match RE_NAME.captures(&line) { None => continue, Some(c) => str::from_utf8(c.at(1).unwrap()).unwrap() };
-        let ver  = match RE_VER .captures(&line) { None => continue, Some(c) => str::from_utf8(c.at(1).unwrap()).unwrap() };
-        let cat  = match RE_CAT .captures(&line) { None => continue, Some(c) => str::from_utf8(c.at(1).unwrap()).unwrap() };
-        let path = match RE_PATH.captures(&line) { None => continue, Some(c) => str::from_utf8(c.at(1).unwrap()).unwrap() };
-        let arch = match RE_ARCH.captures(&line) { None => continue, Some(c) => str::from_utf8(c.at(1).unwrap()).unwrap() };
+        let name = match RE_NAME.captures(&line) { None => continue, Some(c) => str::from_utf8(c.get(1).unwrap().as_bytes()).unwrap() };
+        let ver  = match RE_VER .captures(&line) { None => continue, Some(c) => str::from_utf8(c.get(1).unwrap().as_bytes()).unwrap() };
+        let cat  = match RE_CAT .captures(&line) { None => continue, Some(c) => str::from_utf8(c.get(1).unwrap().as_bytes()).unwrap() };
+        let path = match RE_PATH.captures(&line) { None => continue, Some(c) => str::from_utf8(c.get(1).unwrap().as_bytes()).unwrap() };
+        let arch = match RE_ARCH.captures(&line) { None => continue, Some(c) => str::from_utf8(c.get(1).unwrap().as_bytes()).unwrap() };
         let uri = format!("{}{}", mirror, path);
         pkg::pkg(pg, pkg::PkgOpt{
             force: false,

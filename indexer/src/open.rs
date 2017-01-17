@@ -102,7 +102,7 @@ impl<'a> Path<'a> {
     // parsable file list, some servers have issues with generating a list of a large directory)
     pub fn dirlist(&self) -> Result<Vec<(String,bool)>> {
         lazy_static!(
-            static ref RE: Regex = Regex::new("(?i:<a +href *= *\"([^?/\"]+)(/?)\">)").unwrap();
+            static ref RE: Regex = Regex::new("(?i:<a +href *= *\"([^?/\"]+)(/)?\">)").unwrap();
         );
         let rd = self.open()?;
         let brd = BufReader::new(rd);
@@ -118,12 +118,12 @@ impl<'a> Path<'a> {
             }
 
             if let Some(cap) = first {
-                let name = cap.at(1).unwrap();
+                let name = &cap[1];
                 if name == b".." || name.starts_with(b"/") {
                     continue;
                 }
                 if let Ok(name) = percent_decode(name).decode_utf8() {
-                    let isdir = cap.at(2) == Some(b"/");
+                    let isdir = cap.get(2).is_some();
                     res.push((name.to_string(), isdir));
                 }
             }

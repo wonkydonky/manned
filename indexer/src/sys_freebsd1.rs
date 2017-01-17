@@ -103,9 +103,9 @@ fn splitver(n: &str) -> Option<(&str, &str)> {
         static ref RE2: Regex = Regex::new("^(.+)-([^-]+)$").unwrap();
     );
     if let Some(cap) = RE1.captures(n) {
-        Some((cap.at(1).unwrap(), cap.at(2).unwrap()))
+        Some((cap.get(1).unwrap().as_str(), cap.get(2).unwrap().as_str()))
     } else if let Some(cap) = RE2.captures(n) {
-        Some((cap.at(1).unwrap(), cap.at(2).unwrap()))
+        Some((cap.get(1).unwrap().as_str(), cap.get(2).unwrap().as_str()))
     } else {
         None
     }
