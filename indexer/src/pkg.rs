@@ -184,10 +184,7 @@ fn index_pkg(tr: &postgres::GenericConnection, mut opt: PkgOpt, verid: i32) -> s
     };
 
     let missed = with_pkg(&mut opt, |e, opt| {
-            archread::FileList::read(e, |ent: &ArchiveEntry| {
-                opt.date.update(ent);
-                man::ismanpath(ent.path().unwrap())
-            }, &indexfunc)
+            archread::FileList::read(e, man::ismanpath, |ent| opt.date.update(ent), &indexfunc)
         })?.links(|src, dest| { insert_link(tr, verid, src, dest) });
 
     if let Some(missed) = missed {

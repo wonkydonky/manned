@@ -253,6 +253,10 @@ impl<'a> ArchiveEntry<'a> {
             _ => FileType::Other,
         }
     }
+
+    pub fn nlink(&self) -> u32 {
+        unsafe { ffi::archive_entry_nlink(self.e) }
+    }
 }
 
 

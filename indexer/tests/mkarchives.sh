@@ -44,6 +44,9 @@ ln man3/helloworld.3 man6/hardlink.6
 ln -s ../man3/helloworld.3 man1/symlinkbefore.1
 ln -s ../man3/helloworld.3 man6/symlinkafter.6
 
+# Technically badsymlink1.1 is bad, but we can't detect this because package
+# archives don't necessarily list all directories. So it will have to be
+# considered valid.
 ln -s notadir/../../man3/helloworld.3 man1/badsymlink1.1
 ln -s man3/helloworld.3 man1/badsymlink2.1
 ln -s ../man3/helloworld.3/. man1/badsymlink3.1

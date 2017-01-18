@@ -38,6 +38,40 @@ use archive::{walk,ArchiveEntry,FileType};
  * (* So apparently some man pages are close to 10MB...)
  */
 
+/* How links are handled by libarchive and how we deal with that:
+ *
+ * symlinks:
+ *   Simply seen as a file entry containing a path that can be resolved to another file entry. Path
+ *   can be absolute or relative. Symlink can come before or after the referenced file.
+ *   (Handling of this is described above)
+ *
+ * tar hardlinks:
+ *   The first occurrence of the file is seen as a regular file. For any future occurrences,
+ *   libarchive will give us the path of the first occurrence in archive_entry_hardlink(), which
+ *   archive.rs will then merge into a Link() entry.
+ *   Basically, hard links can be handled in the exact same way as symlinks.
+ *
+ * cpio hardlinks (old): Hard links are duplicated. No special handling needed.
+ *
+ * cpio hardlinks (new):
+ *   A. The first occurrence of the file is seen as a regular file with size=0, nlinks>1
+ *   B. Any later occurrences of the file are seen as a hardlink to the first occurrence.
+ *   C. The last occurrence of the file is also seen as a hardlink to the first occurrence, but
+ *      actually has the correct file size and body.
+ *   How to handle:
+ *   - Entry (A) is inserted in the FileList as an 'Hardlink'
+ *   - Entry (B) is inserted as a normal 'Link' to (A)
+ *   - Entry (C), detected by having size>0, and handled as follows:
+ *     - The entry itself is inserted as a normal 'Link' to (A)
+ *     - If (A) is interesting, the contents of the entry are processed with (A)'s path, and (A)'s
+ *       entry is changed to 'Handled'
+ *   - Then you end up with one 'Handled' entry and several 'Link' entries pointing to it. The link
+ *     resolution mechanism will handle the rest.
+ *   Note that this will not work if (A)'s path itself is not interesting. In that case the archive
+ *   will be read a second time, but all entries pointing to (A), either through hardlinks or
+ *   symlinks pointing to hardlinks, will resolve to the empty file entry. I strongly doubt there
+ *   is a package archive like that.
+ */
 
 #[derive(Clone,Debug,PartialEq,Eq)]
 pub enum EntryType {
@@ -48,6 +82,8 @@ pub enum EntryType {
     Regular,
     // Link to another file (interesting or not is irrelevant)
     Link(String),
+    // A hardlink for which we don't have the file contents (yet)
+    Hardlink,
     // Directory; need this information when resolving links
     Directory,
     // Something that couldn't be an interesting file (chardev/socket/etc); If any link resolves to
@@ -71,13 +107,14 @@ impl FileList {
      *
      *   interest_cb: Called on every path in the archive, should return whether the file is
      *       interesting (i.e. whether we want to know its contents).
+     *   entry_cb: Called once on every entry in the archive.
      *   file_cb: Called on every regular file for which interest_cb() showed an interest.
      *       The callback accepts multiple path names, but this function will only provide one.
      *
      * Returns a FileList struct that can be used to retreive all interesting non-regular files.
      */
-    pub fn read<F,G>(ent: Option<ArchiveEntry>, mut interest_cb: F, mut file_cb: G) -> Result<FileList>
-        where F: FnMut(&ArchiveEntry) -> bool, G: FnMut(&[&str], &mut ArchiveEntry) -> Result<()>
+    pub fn read<F,G,H>(ent: Option<ArchiveEntry>, interest_cb: F, mut entry_cb: G, mut file_cb: H) -> Result<FileList>
+        where F: Fn(&str) -> bool, G: FnMut(&ArchiveEntry), H: FnMut(&[&str], &mut ArchiveEntry) -> Result<()>
     {
         let mut fl = FileList {
             seen: HashMap::new(),
@@ -90,7 +127,7 @@ impl FileList {
                 None => { warn!("Invalid UTF-8 filename in archive"); return Ok(true) }
             };
             let ft = e.filetype();
-            trace!("Archive entry: {:10} {} {:?}", e.size(), path, ft);
+            trace!("Archive entry: {:10} #{} {} {:?}", e.size(), e.nlink(), path, ft);
 
             // We ought to throw away the result of the previous entry with the same name and use
             // this new entry instead, but fuck it. This case is too rare, so let's just warn.
@@ -99,9 +136,13 @@ impl FileList {
                 return Ok(true);
             }
 
+            entry_cb(&e);
+
             let et = match ft {
                 FileType::File => {
-                    if interest_cb(&e) {
+                    if e.size() == 0 && e.nlink() > 1 {
+                        EntryType::Hardlink
+                    } else if interest_cb(&path) {
                         let pathv = [&path as &str];
                         try!(file_cb(&pathv[..], &mut e));
                         EntryType::Handled
@@ -110,7 +151,18 @@ impl FileList {
                     }
                 },
                 FileType::Link(l) => {
-                    if interest_cb(&e) {
+                    // cpio hard link for which we have the file contents
+                    if e.size() > 0 && e.nlink() > 1 {
+                        if let Some((EntryType::Hardlink, ocomp)) = fl.resolve_link(&path, &l, 32) {
+                            let opath = ocomp.join("/");
+                            if interest_cb(&opath) {
+                                let pathv = [&opath as &str];
+                                try!(file_cb(&pathv[..], &mut e));
+                                *fl.seen.get_mut(&opath).unwrap() = EntryType::Handled;
+                            }
+                        }
+                    }
+                    if interest_cb(&path) {
                         fl.links.push(path.clone());
                     }
                     EntryType::Link(l)
@@ -160,8 +212,14 @@ impl FileList {
                 // If it's a directory, we're good
                 Some(&EntryType::Directory) => (),
 
+                // If we didn't find anything but this isn't the last item, then it's possible that
+                // this is a directory for which no explicit entry was created. This happens with
+                // RPM files. Just continue and see if we find anything if we add more components.
+                None if i != comp.len()-1 => (),
+
                 // If it's a file or man page, it must be the last item.
                 Some(& ref x@ EntryType::Regular) |
+                Some(& ref x@ EntryType::Hardlink) |
                 Some(& ref x@ EntryType::Handled) => return
                     if i == comp.len()-1 {
                         Some((x.clone(), dest))
@@ -176,6 +234,7 @@ impl FileList {
                         // Same as above, with dirs we can continue, files have to be last
                         Some((EntryType::Directory, d)) => dest = d,
                         x@Some((EntryType::Regular, _)) |
+                        x@Some((EntryType::Hardlink, _)) |
                         x@Some((EntryType::Handled, _)) => return
                             if i == comp.len()-1 { x }
                             else {
@@ -215,7 +274,9 @@ impl FileList {
                 Some((EntryType::Regular, d)) => {
                     let dstr = d.join("/");
                     missed.entry(dstr).or_insert_with(Vec::new).push(p.to_string());
-                }
+                },
+                Some((EntryType::Hardlink, _)) =>
+                    error!("Interesting link resolved to uninteresting hardlink: {}-> {}", p, dest),
                 _ => (),
             }
         }
@@ -260,7 +321,8 @@ mod tests {
         let arch = Archive::open_archive(&mut f).unwrap();
         let mut cnt = 0;
         FileList::read(arch,
-            |p| p.path().unwrap().starts_with("man/man"),
+            |p| p.starts_with("man/man"),
+            |_| (),
             |p,e| {
                 assert_eq!(cnt, 0);
                 cnt += 1;
@@ -290,7 +352,7 @@ mod tests {
         assert_eq!(res("man/man1/symlinkbefore.1"), helloworld);
         assert_eq!(res("man/man6/symlinkafter.6"), helloworld);
 
-        assert_eq!(res("man/man1/badsymlink1.1"), None);
+        //assert_eq!(res("man/man1/badsymlink1.1"), None);
         assert_eq!(res("man/man1/badsymlink2.1"), None);
         assert_eq!(res("man/man1/badsymlink3.1"), None);
         assert_eq!(res("man/man1/badsymlink4.1"), None);
@@ -313,6 +375,7 @@ mod tests {
                 assert_eq!(r.0, p.to_string());
                 assert_eq!(r.1, "man/man3/helloworld.3".to_string());
             };
+            res("man/man1/badsymlink1.1");
             res("man/man1/doublesymlink1.1");
             res("man/man1/doublesymlink2.1");
             res("man/man1/symlinkbefore.1");
