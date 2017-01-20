@@ -99,7 +99,7 @@ sub home {
   my $fn = sub { local $_=shift; 1 while(s/(\d)(\d{3})($|,)/$1,$2/); $_ };
   $self->htmlHeader(title => 'Man Pages Archive');
   h1 'Man Pages Archive';
-  p; lit sprintf <<'  _', map $fn->($stats->{$_}), qw|hashes mans files packages|;
+  p class => 'txt'; lit sprintf <<'  _', map $fn->($stats->{$_}), qw|hashes mans files packages|;
    Indexing <b>%s</b> versions of <b>%s</b> manual pages found in <b>%s</b>
    files of <b>%s</b> packages.
    <br /><br />
@@ -269,6 +269,7 @@ sub about {
      $release-security repositories are indexed. Indexing started around mid
      June 2012.</dd>
    </dl>
+   <p>
    Only packages for a single architecture (i386 or amd64) are scanned.  To my
    knowledge, packages that come with different manuals for different
    architectures either don't exist or are extremely rare. It does happen that
@@ -276,20 +277,17 @@ sub about {
    every package is at least available for the most popular architecture, so
    hopefully we're not missing out on much.  <br /><br />
    The repositories are scanned for new packages on a daily basis.
+   </p>
   _
   end;
 
   h2 'Other systems';
   p; lit <<'  _';
-   Although further development of this site is a bit stalled at the moment,
-   I'd love to index the manuals of most major Linux distributions in the
-   future. Fedora and OpenSUSE, in particular, are interesting targets to
-   index.
+   Suggestions for new (or old) systems to index are welcome.
    <br /><br />
-   It would also be great to index a few more non-Linux systems such as other
-   BSDs, Solaris/Illumos and Mac OS X. Unfortunately, those don't always follow
-   a binary package based approach, or are otherwise less easy to properly
-   index.
+   It would be great to index a few more non-Linux systems such as other BSDs,
+   Solaris/Illumos and Mac OS X. Unfortunately, those don't always follow a
+   binary package based approach, or are otherwise less easy to properly index.
    <br /><br />
    In general, systems that follow an entirely source-based distribution
    approach can't be indexed without compiling everything. Since that is both

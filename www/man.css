@@ -2,12 +2,11 @@
 
 * { margin: 0; padding: 0; font-family: "Trebuchet MS", sans-serif; }
 html { background: #333; padding: 0 10px; }
-body { margin: 10px auto 50px auto; max-width: 1250px; border-collapse: separate; padding-bottom: 10px; border-radius: 10px; box-shadow: 0 10px 10px #def; }
+body { margin: 10px auto 50px auto; max-width: 1100px; border-collapse: separate; padding-bottom: 10px; border-radius: 10px; box-shadow: 0 10px 10px #def; }
 h1 { font-size: 24px; font-weight: normal; color: #abc; }
 h2 { font-size: 21px; margin-top: 40px; color: #468; font-weight: normal; clear: left }
 h2 + i { font-size: 12px; }
 h3 { font-size: 16px; margin-top: 20px; color: #468; font-weight: normal }
-dd { margin-left: 15px; }
 a { color: #048; }
 a:hover { text-decoration: underline; color: #48B;}
 code { font-family: "Lucida Console", Monospace; font-size: 12px; background-color: #f0f8ff }
@@ -35,15 +34,18 @@ code { font-family: "Lucida Console", Monospace; font-size: 12px; background-col
 #charselect a:hover,
 .paginate a:hover { background: #cde; }
 
-#external { list-style-type: none }
+p.txt { margin: 5px 0 0 10px; max-width: 700px }
+#external { list-style-type: none; margin-left: 10px }
 
 i.grayedout { color: #aaa; font-size: 13px; }
 
-#about { max-width: 900px }
-#about dt { margin-top: 5px }
+#about { max-width: 700px }
+#about h2 { margin-bottom: 5px }
 #about dl { margin-bottom: 5px }
-#about p, #about dd { text-align: justify }
-#about ul { padding: 5px 0 5px 20px }
+#about dt { margin: 5px 0 0 10px }
+#about p  { margin: 0 0 0 10px; }
+#about dd { margin: 0 0 0 20px; }
+#about ul { padding: 5px 0 5px 30px }
 
 #systems li { display: block; float: left; width: 300px; min-height: 70px; margin: 20px 10px; padding-left: 60px }
 #systems span { display: block; margin-left: -55px; float: left; width: 50px; height: 50px; background-repeat: no-repeat; }
