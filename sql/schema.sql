@@ -151,7 +151,32 @@ INSERT INTO systems (id, name, release, short, relorder) VALUES
   (97, 'FreeBSD',    '10.2',  'freebsd-10.2',    58),
   (98, 'FreeBSD',    '10.3',  'freebsd-10.3',    59),
   (99, 'FreeBSD',    '11.0',  'freebsd-11.0',    60),
-  (100,'Ubuntu',     '16.10', 'ubuntu-yakkety',  24);
+  (100,'Ubuntu',     '16.10', 'ubuntu-yakkety',  24),
+  (101,'Fedora',     '1',     'fedora-1',        0),
+  (102,'Fedora',     '2',     'fedora-2',        1),
+  (103,'Fedora',     '3',     'fedora-3',        2),
+  (104,'Fedora',     '4',     'fedora-4',        3),
+  (105,'Fedora',     '5',     'fedora-5',        4),
+  (106,'Fedora',     '6',     'fedora-6',        5),
+  (107,'Fedora',     '7',     'fedora-7',        6),
+  (108,'Fedora',     '8',     'fedora-8',        7),
+  (109,'Fedora',     '9',     'fedora-9',        8),
+  (110,'Fedora',     '10',    'fedora-10',       9),
+  (111,'Fedora',     '11',    'fedora-11',       10),
+  (112,'Fedora',     '12',    'fedora-12',       11),
+  (113,'Fedora',     '13',    'fedora-13',       12),
+  (114,'Fedora',     '14',    'fedora-14',       13),
+  (115,'Fedora',     '15',    'fedora-15',       14),
+  (116,'Fedora',     '16',    'fedora-16',       15),
+  (117,'Fedora',     '17',    'fedora-17',       16),
+  (118,'Fedora',     '18',    'fedora-18',       17),
+  (119,'Fedora',     '19',    'fedora-19',       18),
+  (120,'Fedora',     '20',    'fedora-20',       19),
+  (121,'Fedora',     '21',    'fedora-21',       20),
+  (122,'Fedora',     '22',    'fedora-22',       21),
+  (123,'Fedora',     '23',    'fedora-23',       22),
+  (124,'Fedora',     '24',    'fedora-24',       23),
+  (125,'Fedora',     '25',    'fedora-25',       24);
 
 
 -- Removes any path components and compression extensions from the filename.

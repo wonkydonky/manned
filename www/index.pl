@@ -249,6 +249,15 @@ sub about {
      were missing from the repository archives. Where available, all components
      (main, contrib and non-free) from the $release and $release-updates
      repositories are indexed.</dd>
+    <dt>Fedora</dt><dd>
+     Historical releases were fetched from <a
+     href="http://archives.fedoraproject.org/pub/archive/fedora/linux/">archives.fedoraproject.org</a>,
+     current releases from a local repository. Fedora Core 1 till 6 are
+     (incorrectly) called 'Fedora' here. To compensate for that, Fedora 3 till
+     6 also include the Extras repository. For Fedora 7 and later, the
+     'Everything' and 'updates' repositories are indexed. The i386 arch was
+     indexed for Fedora 17 and older, the x86_64 arch starting with Fedora
+     18.</dd>
     <dt>FreeBSD</dt><dd>
      Historical releases were fetched from <a
      href="http://ftp-archive.freebsd.org/mirror/FreeBSD-Archive/">http://ftp-archive.freebsd.org/mirror/FreeBSD-Archive/</a>.
@@ -257,10 +266,9 @@ sub about {
      indexed, except for 2.0.5 - 2.2.7 and 3.0 - 3.3 because those were not
      available on the ftp archive. Only the -RELEASE repositories have been
      included, which is generally a snapshot of the ports directory around the
-     time of the release. A few packages are missing because the indexing
-     script was unable to determine the package name and version for
-     everything. Additionally, the dates indicated for many packages is a bit
-     off, and the site doesn't handle this very well yet. :-(</dd>
+     time of the release. The release dates indicated for many packages were
+     guessed from the file modification dates in the tarball, and may be
+     inaccurate.</dd>
     <dt>Ubuntu</dt><dd>
      Historical releases were fetched from <a
      href="http://old-releases.ubuntu.com/ubuntu/">http://old-releases.ubuntu.com/ubuntu/</a>,

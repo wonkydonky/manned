@@ -5,6 +5,7 @@ PSQL="psql -U manned -Awtq"
 
 ./arch.sh current
 ./debian.sh current
+./fedora.sh current
 ./ubuntu.sh current
 
 echo "============ Updating SQL indices"
