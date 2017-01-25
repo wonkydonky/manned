@@ -338,6 +338,27 @@ sub about {
 }
 
 
+sub paginate {
+  my($url, $count, $perpage, $p) = @_;
+  return if $count <= $perpage;
+
+  my $l = sub {
+    my $c = shift;
+    a href => sprintf('%s%d', $url, $c), $c if $c != $p;
+    b $c if $c == $p;
+  };
+
+  my $lp = ceil($count/$perpage);
+  p class => 'paginate';
+   $l->(1) if $p > 1+4;
+   b '...' if $p > 1+5;
+   $l->($_) for (($p > 4 ? $p-4 : 1)..($p+4 > $lp ? $lp : $p+4));
+   b '...' if $p < $lp-5;
+   $l->($lp) if $p < $lp-4;
+  end;
+}
+
+
 sub browsesearch {
   my $self = shift;
   my $q = $self->reqGet('q')||'';
@@ -374,52 +395,39 @@ sub pkg_list {
 
   my $f = $self->formValidate(
     { get => 'c', required => 0, enum => [ '0', 'all', 'a'..'z' ], default => 'all' },
-    { get => 's', required => 0, regex => qr/^[a-zA-Z0-9_+.-]+$/i },
+    { get => 'p', required => 0, default => 1, template => 'uint', min => 1, max => 200 },
   );
   return $self->resNotFound if $f->{_err};
 
-  my $pkg = $self->dbPackageGet(
-    hasman => 1,
-    sysid => $sys->{id},
-    char => $f->{c} eq 'all' ? undef : $f->{c},
-    start => $f->{s},
-    results => 201,
-  );
-
-  my $more = @$pkg > 200 && pop @$pkg;
-
-  # TODO: A "previous" link would be nice...
-  my $next = sub {
-    use utf8;
-    if($more) {
-      p class => 'pagination';
-       a href => "/pkg/$short?c=$f->{c};s=$pkg->[199]{name}", 'next »';
-      end;
-    }
-  };
+  my %opt = (hasman => 1, sysid => $sys->{id}, char => $f->{c} eq 'all' ? undef : $f->{c});
+  my $pkg = $self->dbPackageGet(%opt, results => 200, page => $f->{p});
+  my $count = $self->dbPackageGet(%opt, countonly => 1)->[0]{count};
 
   my $title = "Packages for $sys->{name}".($sys->{release}?" $sys->{release}":"");
   $self->htmlHeader(title => $title);
-  h1 $title;
+  div id => 'pkglist';
+   h1 $title;
 
-  p id => 'charselect';
-   for('all', 0, 'a'..'z') {
-     a href => "/pkg/$short?c=$_", $_?uc$_:'#' if $_ ne $f->{c};
-     b $_?uc$_:'#' if $_ eq $f->{c};
-   }
-  end;
+   p class => 'charselect';
+    for('all', 0, 'a'..'z') {
+      a href => "/pkg/$short?c=$_", $_?uc$_:'#' if $_ ne $f->{c};
+      b $_?uc$_:'#' if $_ eq $f->{c};
+    }
+   end;
 
-  p 'Note: Packages without man pages are not listed.';
-  $next->();
-  ul id => 'packages';
-   for(@$pkg) {
-     li;
-      a href => "/pkg/$short/$_->{category}/$_->{name}", $_->{name};
-      i ' '.$_->{category};
-     end;
-   }
+   p 'Note: Packages without man pages are not listed.';
+   paginate "/pkg/$short?c=$f->{c};p=", $count, 200, $f->{p};
+   ul id => 'packages';
+    for(@$pkg) {
+      li;
+       a href => "/pkg/$short/$_->{category}/$_->{name}", $_->{name};
+       i ' '.$_->{category};
+      end;
+    }
+   end;
+   paginate "/pkg/$short?c=$f->{c};p=", $count, 200, $f->{p};
+
   end;
-  $next->();
   $self->htmlFooter;
 }
 
@@ -450,27 +458,6 @@ sub pkg_frompath {
 }
 
 
-sub paginate {
-  my($url, $count, $perpage, $p) = @_;
-  return if $count <= $perpage;
-
-  my $l = sub {
-    my $c = shift;
-    a href => sprintf('%s%d', $url, $c), $c if $c != $p;
-    b $c if $c == $p;
-  };
-
-  my $lp = ceil($count/$perpage);
-  p class => 'paginate';
-   $l->(1) if $p > 1+4;
-   b '...' if $p > 1+5;
-   $l->($_) for (($p > 4 ? $p-4 : 1)..($p+4 > $lp ? $lp : $p+4));
-   b '...' if $p < $lp-5;
-   $l->($lp) if $p < $lp-4;
-  end;
-}
-
-
 sub pkg_info {
   my($self, $short, $path) = @_;
 
@@ -489,7 +476,6 @@ sub pkg_info {
   return $self->resNotFound if $f->{_err};
 
   my $mans = $self->dbManInfo(package => $sel->{id}, results => 200, page => $f->{p}, sort => 'syspkgname');
-  my $more = 1;
   my $count = $self->dbManInfo(package => $sel->{id}, countonly => 1)->[0]{count};
 
   # Latest version of this package determines last modification date of the page.
@@ -874,7 +860,7 @@ sub dbManContent {
 }
 
 
-# Options: name, section, shorthash, package, start, results, sort, countonly
+# Options: name, section, shorthash, package, results, sort, countonly
 sub dbManInfo {
   my $s = shift;
   my %o = (
@@ -892,7 +878,6 @@ sub dbManInfo {
     defined($o{locale}) && !$o{locale}  ? ('m.locale IS NULL' => 1) : (),
     $o{shorthash} ? (q{substring(m.hash from 1 for 4) = decode(?, 'hex')} => $o{shorthash}) : (),
     $o{hash}      ? (q{m.hash = decode(?, 'hex')} => $o{hash}) : (),
-    $o{start}     ? ('m.name > ?' => $o{start}) : (),
   );
 
   my $order =
@@ -1032,29 +1017,29 @@ sub dbSystemGet {
 }
 
 
-# Options: sysid char hasman start results
+# Options: sysid char hasman page results countonly
 sub dbPackageGet {
   my $s = shift;
-  my %o = (results => 10, @_);
+  my %o = (results => 10, page => 1, @_);
 
   my @where = (
-    $o{sysid} ? ('system = ?' => $o{sysid}) : (),
+    $o{sysid}    ? ('system = ?'   => $o{sysid}   ) : (),
     $o{category} ? ('category = ?' => $o{category}) : (),
-    $o{name} ? ('name = ?' => $o{name}) : (),
-    $o{start} ? ('name > ?' => $o{start}) : (),
+    $o{name}     ? ('name = ?'     => $o{name}    ) : (),
     # This seems slow, perhaps cache?
     defined($o{hasman}) ? ('!s EXISTS(SELECT 1 FROM package_versions pv WHERE pv.package = p.id AND EXISTS(SELECT 1 FROM man m WHERE m.package = pv.id))' => $o{hasman}?'':'NOT') : (),
     $o{char} ? ( 'LOWER(SUBSTR(name, 1, 1)) = ?' => $o{char} ) : (),
     defined($o{char}) && !$o{char} ? ( '(ASCII(name) < 97 OR ASCII(name) > 122) AND (ASCII(name) < 65 OR ASCII(name) > 90)' => 1 ) : (),
   );
 
-  return $s->dbAll(q{
-      SELECT id, system, name, category
-        FROM packages p
-          !W
-    ORDER BY name
-       LIMIT ?},
-  \@where, $o{results})
+  my $select = $o{countonly} ? 'COUNT(*) as count' : 'id, system, name, category';
+  my $order = $o{countonly} ? '' : 'ORDER BY name';
+
+  my($r, $np) = $s->dbPage(\%o,
+    'SELECT !s FROM packages p !W !s',
+    $select, \@where, $order
+  );
+  wantarray ? ($r, $np) : $r;
 }
 
 

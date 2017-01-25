@@ -24,14 +24,14 @@ code { font-family: "Lucida Console", Monospace; font-size: 12px; background-col
 #body { padding: 10px 10px 20px 10px; background: #fff }
 
 #systems a,
-#charselect a,
+.charselect a,
 .paginate a { color: #048; font-family: "Verdana"; font-weight: normal; text-decoration: none; padding: 3px 5px; border-radius: 4px; }
 
-#charselect b,
+.charselect b,
 .paginate b { font-family: "Verdana"; padding: 3px }
 
 #systems a:hover,
-#charselect a:hover,
+.charselect a:hover,
 .paginate a:hover { background: #cde; }
 
 p.txt { margin: 5px 0 0 10px; max-width: 700px }
@@ -51,8 +51,8 @@ i.grayedout { color: #aaa; font-size: 13px; }
 #systems span { display: block; margin-left: -55px; float: left; width: 50px; height: 50px; background-repeat: no-repeat; }
 #systems b { font-size: 24px; display: block }
 
-#charselect { float: right }
-.pagination { display: block; margin: 10px; width: 100%; text-align: center }
+#pkglist .charselect { float: right }
+#pkglist .paginate { display: block; margin: 10px; width: 100%; text-align: center }
 
 #packages { margin: 20px 0; -webkit-column-width: 300px; -moz-column-width: 300px; column-width: 300px }
 #packages li { display: block; }
