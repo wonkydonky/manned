@@ -618,20 +618,49 @@ sub _normalizename {
 }
 
 
+# Replace .so's in man source with the contents (if available in the same
+# package) or with a reference to the other man page.
+sub soelim {
+  my($self, $verid, $src) = @_;
+
+  # tix comes with[1] a custom(?) macro package. But it looks okay even without
+  # loading that.
+  # [1] It actually doesn't, the tcllib package appears to have that file, but
+  # doesn't '.so' it.
+  $src =~ s/^\.so man.macros$//mg;
+
+  # Other .so's should be handled by html()
+  $src =~ s{^\.so (.+)$}{
+    my $path = $1;
+    my $name = (reverse split /\//, $path)[0];
+    my($man) = $verid ? $self->dbManPrefName($name, pkgver => $verid) : ();
+    if($man) {
+      # Recursive soelim, but the second call gets $verid=0 so we don't keep checking the database
+      soelim($self, 0, $self->dbManContent($man->{hash}))
+    } else {
+      ".in -10\n.sp\n\[\[\[MANNEDINCLUDE$path\]\]\]"
+    }
+  }emg;
+  return $src;
+}
+
+
 sub man {
   my($self, $name, $hash) = @_;
 
   $name = _normalizename($name);
 
-  my $man;
-  if($hash) {
-    $man = $self->dbManInfo(name => $name, shorthash => $hash)->[0];
-  } else {
-    ($man, undef) = $self->dbManPrefName($name);
-  }
+  # Unfortunately, even in the permalink format with the hash, we don't know
+  # from which package we're supposed to get the man page. This info is
+  # needed in order to do .so substitution, so we can substitute files from
+  # the same package as the requested man page. Use the dbManPref logic here
+  # to deterministically select a good package.
+  my($man, undef) = $hash
+    ? $self->dbManPref(name => $name, shorthash => $hash)
+    : $self->dbManPrefName($name);
   return $self->resNotFound() if !$man;
 
-  my $fmt = ManUtils::html(ManUtils::fmt_block $self->dbManContent($man->{hash}));
+  my $fmt = ManUtils::html(ManUtils::fmt_block soelim $self, $man->{verid}, $self->dbManContent($man->{hash}));
   my @toc;
   $fmt =~ s{\n<b>(.+?)<\/b>\n}{
     push @toc, $1;
@@ -884,7 +913,7 @@ sub dbManInfo {
     $o{sort} eq 'syspkgname' ? 'ORDER BY s.name, s.relorder DESC, p.name, v.released DESC, m.name, m.locale NULLS FIRST, m.filename' : '';
 
   my $select = $o{countonly} ? 'COUNT(*) as count'
-    : "p.system, p.category, p.name AS package, v.version, v.released, m.name, m.section, m.filename, m.locale, encode(m.hash, 'hex') AS hash";
+    : "p.system, p.category, p.name AS package, v.version, v.released, v.id AS verid, m.name, m.section, m.filename, m.locale, encode(m.hash, 'hex') AS hash";
 
   my($r, $np) = $s->dbPage(\%o, q{
     SELECT !s
@@ -919,10 +948,11 @@ sub dbSearch {
 
 # Get the preferred man page for the given filters. Returns a row with the same fields as dbManInfo().
 sub dbManPref {
-  my($s, $name, $section, %o) = @_;
+  my($s, %o) = @_;
   my %where = (
-    'm.name = ?' => $name,
-    $section    ? ('m.section LIKE ?' => escape_like($section).'%') : (),
+    $o{name}    ? ('m.name = ?' => $o{name}) : (),
+    $o{shorthash} ? (q{substring(m.hash from 1 for 4) = decode(?, 'hex')} => $o{shorthash}) : (),
+    $o{section} ? ('m.section LIKE ?' => escape_like($o{section}).'%') : (),
     $o{sysid}   ? ('p.system = ?' => $o{sysid}) : (),
     $o{package} ? ('p.id = ?' => $o{package}) : (),
     $o{pkgver}  ? ('v.id = ?' => $o{pkgver}) : (),
@@ -962,10 +992,10 @@ sub dbManPref {
     ), f_secorder AS(
       SELECT * FROM f_sysrel a WHERE NOT EXISTS(SELECT 1 FROM f_sysrel b WHERE (a.man).section > (b.man).section)
     )
-    SELECT (pkg).system, (pkg).category, (pkg).name AS package, (ver).version, (ver).released,
+    SELECT (pkg).system, (pkg).category, (pkg).name AS package, (ver).version, (ver).released, (ver).id AS verid,
            (man).name, (man).section, (man).filename, (man).locale, encode((man).hash, 'hex') AS hash
      FROM f_secorder ORDER BY (man).hash LIMIT 1
-  }, \%where, $section, $section)->[0];
+  }, \%where, $o{section}||'', $o{section}||'')->[0];
 }
 
 
@@ -974,12 +1004,12 @@ sub dbManPref {
 sub dbManPrefName {
   my($s, $name, %o) = @_;
 
-  my $man = $s->dbManPref($name, '', %o);
+  my $man = $s->dbManPref(%o, name => $name);
   return ($man, '') if $man;
 
   return (undef, '') if $name !~ s/\.([^.]+)$//;
   my $section = $1;
-  $man = $s->dbManPref($name, $section, %o);
+  $man = $s->dbManPref(%o, name => $name, section => $section);
   return ($man, $section) if $man;
   return (undef, '');
 }

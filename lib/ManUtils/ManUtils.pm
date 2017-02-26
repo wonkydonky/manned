@@ -24,14 +24,6 @@ sub fmt {
   $$output = '';
   @$errors = ();
 
-  # tix comes with[1] a custom(?) macro package. But it looks okay even without
-  # loading that.
-  # [1] It actually doesn't, the tcllib package appears to have that file, but
-  # doesn't '.so' it.
-  $input =~ s/^\.so man.macros$//mg;
-  # Other .so's should be handled by html()
-  $input =~ s/^\.so (.+)$/.in -10\n.sp\n\[\[\[MANNEDINCLUDE$1\]\]\]/mg;
-
   $input =
     # Disable hyphenation, since that screws up man page references. :-(
      ".hy 0\n.de hy\n..\n"
