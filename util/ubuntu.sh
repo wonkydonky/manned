@@ -7,11 +7,12 @@ CMIRROR=http://nl.archive.ubuntu.com/ubuntu/
 
 
 # Shortcut for a standard Ubuntu repo, usage:
-#   stdrepo name mirror
+#   stdrepo name mirror arch
 stdrepo() {
-    index_deb ubuntu-$1 $2 $1 "main multiverse restricted universe"
-    index_deb ubuntu-$1 $2 $1-updates "main multiverse restricted universe"
-    index_deb ubuntu-$1 $2 $1-security "main multiverse restricted universe"
+    local ARCH=${3:-"i386"}
+    index_deb ubuntu-$1 $2 $1 "main multiverse restricted universe" "" $ARCH
+    index_deb ubuntu-$1 $2 $1-updates "main multiverse restricted universe" "" $ARCH
+    index_deb ubuntu-$1 $2 $1-security "main multiverse restricted universe" "" $ARCH
 }
 
 
@@ -100,6 +101,9 @@ case $1 in
     yakkety)
         stdrepo yakkety $CMIRROR
         ;;
+    zesty)
+        stdrepo zesty $CMIRROR amd64
+        ;;
     old)
         $0 warty
         $0 hoary
@@ -128,6 +132,7 @@ case $1 in
         $0 trusty   # until 2019-04
         $0 xenial   # until 2021-04
         $0 yakkety  # until 2017-07
+        $0 zesty    # until 2018-01
         ;;
     all)
         $0 old

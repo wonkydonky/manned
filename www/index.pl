@@ -276,7 +276,8 @@ sub about {
      supported releases from a local mirror.  All components (main, universe,
      restricted and multiverse) from the $release, $release-updates and
      $release-security repositories are indexed. Indexing started around mid
-     June 2012.</dd>
+     June 2012. All releases before 2017 were indexed from the i386
+     repositories, starting with 17.04 the amd64 repositories were used.</dd>
    </dl>
    <p>
    Only packages for a single architecture (i386 or amd64) are scanned.  To my
