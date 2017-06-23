@@ -55,6 +55,10 @@ case "$1" in
         index_deb debian-jessie $CMIRROR jessie "main contrib non-free" cmp
         index_deb debian-jessie $CMIRROR jessie-updates "main contrib non-free" cmp
         ;;
+    stretch)
+        index_deb debian-stretch $CMIRROR stretch "main contrib non-free" cmp
+        index_deb debian-stretch $CMIRROR stretch-updates "main contrib non-free" cmp
+        ;;
     old)
         $0 buzz
         $0 rex
@@ -71,6 +75,7 @@ case "$1" in
     current)
         $0 wheezy
         $0 jessie
+        $0 stretch
         ;;
     all)
         $0 old
