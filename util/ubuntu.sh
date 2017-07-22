@@ -120,18 +120,18 @@ case $1 in
         $0 natty
         $0 hardy
         $0 oneiric
+        $0 precise
         $0 raring
         $0 quantal
         $0 saucy
         $0 utopic
         $0 vivid
         $0 wily
+        $0 yakkety
         ;;
     current)
-        $0 precise  # until 2017-04
         $0 trusty   # until 2019-04
         $0 xenial   # until 2021-04
-        $0 yakkety  # until 2017-07
         $0 zesty    # until 2018-01
         ;;
     all)

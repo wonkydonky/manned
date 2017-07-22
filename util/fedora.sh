@@ -95,6 +95,9 @@ case "$1" in
     25)
         fedora 25 x86_64 $CMIRROR
         ;;
+    26)
+        fedora 26 x86_64 $CMIRROR
+        ;;
     old)
         $0 1
         $0 2
@@ -123,6 +126,7 @@ case "$1" in
     current)
         $0 24
         $0 25
+        $0 26
         ;;
     all)
         $0 old
