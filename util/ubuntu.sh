@@ -104,6 +104,9 @@ case $1 in
     zesty)
         stdrepo zesty $CMIRROR amd64
         ;;
+    artful)
+        stdrepo artful $CMIRROR amd64
+        ;;
     old)
         $0 warty
         $0 hoary
@@ -133,6 +136,7 @@ case $1 in
         $0 trusty   # until 2019-04
         $0 xenial   # until 2021-04
         $0 zesty    # until 2018-01
+        $0 artful   # until 2018-07
         ;;
     all)
         $0 old

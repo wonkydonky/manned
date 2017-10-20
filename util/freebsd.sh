@@ -564,6 +564,12 @@ case $1 in
         index_core freebsd-11.0 "${MIR}base.txz" core-base 2016-10-10
         index freebsd2 --sys freebsd-11.0 --mirror "$PKG"
         ;;
+    11.1)
+        MIR="${CMIRROR}amd64/11.1-RELEASE/"
+        PKG="${PMIRROR}FreeBSD:11:amd64/release_1/"
+        index_core freebsd-11.1 "${MIR}base.txz" core-base 2017-07-26
+        index freebsd2 --sys freebsd-11.1 --mirror "$PKG"
+        ;;
     old)
         $0 1.0
         $0 2.0.5
@@ -626,5 +632,6 @@ case $1 in
         $0 10.2
         $0 10.3
         $0 11.0
+        $0 11.1
         ;;
 esac

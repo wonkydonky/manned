@@ -269,7 +269,8 @@ sub about {
      included, which is generally a snapshot of the ports directory around the
      time of the release. The release dates indicated for many packages were
      guessed from the file modification dates in the tarball, and may be
-     inaccurate.</dd>
+     inaccurate. The i368 arch was indexed for FreeBSD 11.0 and older, the
+     amd64 arch starting with 11.1.</dd>
     <dt>Ubuntu</dt><dd>
      Historical releases were fetched from <a
      href="http://old-releases.ubuntu.com/ubuntu/">http://old-releases.ubuntu.com/ubuntu/</a>,
