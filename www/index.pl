@@ -970,7 +970,8 @@ sub dbManPref {
   # 5. arch:     Prefer Arch over other systems (because it tends to be the most up-to-date, and closest to upstreams)
   # 6. sysrel:   Prefer a later system release over an older release
   # 7. secorder: Lower sections before higher sections (because man does it this way, for some reason)
-  # 8. Fall back on hash comparison, to ensure the result is stable
+  # 8. pkgdate:  Prefer more recent packages (cross-distro)
+  # 9. Fall back on hash comparison, to ensure the result is stable
 
   $s->dbAll(q{
     WITH unfiltered AS (
@@ -994,10 +995,12 @@ sub dbManPref {
       SELECT * FROM f_arch a WHERE NOT EXISTS(SELECT 1 FROM f_arch b WHERE (a.sys).name = (b.sys).name AND (a.sys).relorder < (b.sys).relorder)
     ), f_secorder AS(
       SELECT * FROM f_sysrel a WHERE NOT EXISTS(SELECT 1 FROM f_sysrel b WHERE (a.man).section > (b.man).section)
+    ), f_pkgdate AS(
+      SELECT * FROM f_secorder a WHERE NOT EXISTS(SELECT 1 FROM f_secorder b WHERE (a.ver).released < (b.ver).released)
     )
     SELECT (pkg).system, (pkg).category, (pkg).name AS package, (ver).version, (ver).released, (ver).id AS verid,
            (man).name, (man).section, (man).filename, (man).locale, encode((man).hash, 'hex') AS hash
-     FROM f_secorder ORDER BY (man).hash LIMIT 1
+     FROM f_pkgdate ORDER BY (man).hash LIMIT 1
   }, \%where, $o{section}||'', $o{section}||'')->[0];
 }
 
