@@ -181,7 +181,8 @@ INSERT INTO systems (id, name, release, short, relorder) VALUES
   (127,'Debian',     '9.0',   'debian-stretch',  13),
   (128,'Fedora',     '26',    'fedora-26',       25),
   (129,'FreeBSD',    '11.1',  'freebsd-11.1',    61),
-  (130,'Ubuntu',     '17.10', 'ubuntu-artful',   26);
+  (130,'Ubuntu',     '17.10', 'ubuntu-artful',   26),
+  (131,'Fedora',     '27',    'fedora-27',       26);
 
 
 -- Removes any path components and compression extensions from the filename.

@@ -87,16 +87,19 @@ case "$1" in
         fedora 22 x86_64
         ;;
     23)
-        fedora 23 x86_64 $CMIRROR
+        fedora 23 x86_64
         ;;
     24)
-        fedora 24 x86_64 $CMIRROR
+        fedora 24 x86_64
         ;;
     25)
         fedora 25 x86_64 $CMIRROR
         ;;
     26)
         fedora 26 x86_64 $CMIRROR
+        ;;
+    27)
+        fedora 27 x86_64 $CMIRROR
         ;;
     old)
         $0 1
@@ -127,6 +130,7 @@ case "$1" in
     current)
         $0 25
         $0 26
+        $0 27
         ;;
     all)
         $0 old
