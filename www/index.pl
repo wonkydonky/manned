@@ -292,6 +292,24 @@ sub about {
   _
   end;
 
+  h2 'Database download';
+  p; lit <<'  _';
+   This site is backed by a PostgreSQL database containing all the man pages.
+   Weekly dumps of the full database are available for download at
+   <a href="http://dl.manned.org/dumps/">http://dl.manned.org/dumps/</a>.
+   <br /><br />
+   Be warned that the download server may not be terribly reliable, so it is
+   advisable to use a client that supports resumption of partial downloads. See
+   <a href="/wget">wget's -c</a> or <a href="/curl">curl's -C</a>.
+   <br /><br />
+   The database schema is "documented" at <a
+   href="https://g.blicky.net/manned.git/tree/sql/schema.sql">schema.sql</a> in
+   the git repo. Note that these dumps don't constitute a stable API and, while
+   this won't happen frequently, incompatible schema changes or Postgres major
+   version bumps may occur.
+  _
+  end;
+
   h2 'Other systems';
   p; lit <<'  _';
    Suggestions for new (or old) systems to index are welcome.
