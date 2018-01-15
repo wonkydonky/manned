@@ -558,6 +558,13 @@ case $1 in
         index_core freebsd-10.3 "${MIR}games.txz" core-games 2016-04-04
         index freebsd2 --sys freebsd-10.3 --mirror "$PKG"
         ;;
+    10.4)
+        MIR="${CMIRROR}i386/10.4-RELEASE/"
+        PKG="${PMIRROR}FreeBSD:10:i386/release_4/"
+        index_core freebsd-10.4 "${MIR}base.txz"  core-base  2017-10-03
+        index_core freebsd-10.4 "${MIR}games.txz" core-games 2017-10-03
+        index freebsd2 --sys freebsd-10.4 --mirror "$PKG"
+        ;;
     11.0)
         MIR="${CMIRROR}i386/11.0-RELEASE/"
         PKG="${PMIRROR}FreeBSD:11:i386/release_0/"
@@ -631,6 +638,7 @@ case $1 in
         $0 10.1
         $0 10.2
         $0 10.3
+        $0 10.4
         $0 11.0
         $0 11.1
         ;;

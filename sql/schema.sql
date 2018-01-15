@@ -150,7 +150,7 @@ INSERT INTO systems (id, name, release, short, relorder) VALUES
   (96, 'FreeBSD',    '10.1',  'freebsd-10.1',    57),
   (97, 'FreeBSD',    '10.2',  'freebsd-10.2',    58),
   (98, 'FreeBSD',    '10.3',  'freebsd-10.3',    59),
-  (99, 'FreeBSD',    '11.0',  'freebsd-11.0',    60),
+  (99, 'FreeBSD',    '11.0',  'freebsd-11.0',    61),
   (100,'Ubuntu',     '16.10', 'ubuntu-yakkety',  24),
   (101,'Fedora',     '1',     'fedora-1',        0),
   (102,'Fedora',     '2',     'fedora-2',        1),
@@ -180,9 +180,10 @@ INSERT INTO systems (id, name, release, short, relorder) VALUES
   (126,'Ubuntu',     '17.04', 'ubuntu-zesty',    25),
   (127,'Debian',     '9.0',   'debian-stretch',  13),
   (128,'Fedora',     '26',    'fedora-26',       25),
-  (129,'FreeBSD',    '11.1',  'freebsd-11.1',    61),
+  (129,'FreeBSD',    '11.1',  'freebsd-11.1',    62),
   (130,'Ubuntu',     '17.10', 'ubuntu-artful',   26),
-  (131,'Fedora',     '27',    'fedora-27',       26);
+  (131,'Fedora',     '27',    'fedora-27',       26),
+  (132,'FreeBSD',    '10.4',  'freebsd-10.4',    60);
 
 
 -- Removes any path components and compression extensions from the filename.
