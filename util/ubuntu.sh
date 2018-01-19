@@ -131,11 +131,11 @@ case $1 in
         $0 vivid
         $0 wily
         $0 yakkety
+        $0 zesty
         ;;
     current)
         $0 trusty   # until 2019-04
         $0 xenial   # until 2021-04
-        $0 zesty    # until 2018-01
         $0 artful   # until 2018-07
         ;;
     all)
