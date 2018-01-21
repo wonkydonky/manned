@@ -250,6 +250,13 @@ sub about {
      were missing from the repository archives. Where available, all components
      (main, contrib and non-free) from the $release and $release-updates
      repositories are indexed.</dd>
+    <dt>CentOS</dt><dd>
+     Historical releases were fetched from <a
+     href="http://vault.centos.org/">vault.centos.org</a>, current releases
+     from a local mirror. Where applicable, the following repositories were
+     indexed: addons, centosplus, contrib, extras, os. The i386 architecture
+     was indexed for versions lower than 7.0, since 7.0 the packages from
+     x86_64 are indexed.
     <dt>Fedora</dt><dd>
      Historical releases were fetched from <a
      href="http://archives.fedoraproject.org/pub/archive/fedora/linux/">archives.fedoraproject.org</a>,
