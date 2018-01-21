@@ -143,6 +143,7 @@ sub home {
    li; a href => 'http://linux.die.net/man/', 'die.net'; txt ' - Seems to be based on an RPM-based Linux distribution.'; end;
    li; a href => 'http://manpages.org/', 'manpages.org'; txt ' - Lots of mostly-nicely formatted man pages, no clue about source.'; end;
    li; a href => 'http://www.manpagez.com/', 'manpagez.com'; txt ' - Mac OS X, has some GTK-html and texinfo documentation as well.'; end;
+   li; a href => 'https://jlk.fjfi.cvut.cz/arch/manpages/dev', 'Arch Linux Man Pages'; end;
    li; a href => 'https://manpages.debian.org/', 'Debian Man Pages'; end;
    li; a href => 'https://www.dragonflybsd.org/cgi/web-man', 'DragonFlyBSD Man Pages'; end;
    li; a href => 'http://www.freebsd.org/cgi/man.cgi', 'FreeBSD.org Man Pages'; end;
@@ -162,22 +163,27 @@ sub about {
 
   h2 'Goal';
   p; lit <<'  _';
-   The state of online indices of manual pages is a sad one. Existing sites
-   only offer you a single version of a man page: From one origin, and often
-   only in a single language. Most don't even tell you where the manual
-   actually originated from, making it very hard to determine whether the
-   manual you found actually applies to your situation and even harder to find
-   a manual from a specific system. Additionally, some sites render the manuals
-   in an unreadable way, don't correctly handle special formatting - like
-   tables - or don't correctly display non-ASCII characters.
+   The state of online indices of manual pages used to be a sad one. Existing
+   sites used to only offer you a single version of a man page: From one
+   origin, and often only in a single language. Most didn't even tell you where
+   the manual actually originated from, making it very hard to determine
+   whether the manual you found actually applied to your situation and even
+   harder to find a manual for a specific system. Additionally, some sites
+   rendered the manuals in an unreadable way, didn't correctly handle special
+   formatting - like tables - or didn't correctly display non-ASCII characters.
    <br /><br />
-   Manned.org was created in order to improve this situation. This site aims to
-   index the manual pages from a variaty of systems, both old and new, and
-   allows you to browse through the various versions of a manual page to find
-   out how each system behaves. The manuals are stored in the database as
-   UTF-8, and are passed through <a
-   href="http://www.gnu.org/software/groff/">groff</a> to render them in
-   (mostly) the same way as they are displayed in your terminal.
+   Nowadays there are many good alternatives, but Manned.org was one of the
+   sites created in order to improve situation. This site aims to index the
+   manual pages from a variaty of systems, both old and new, and allows you to
+   browse through the various versions of a manual page to find out how each
+   system behaves. The manuals are stored in the database as UTF-8, and are
+   passed through <a href="http://www.gnu.org/software/groff/">groff</a> to
+   render them in (mostly) the same way as they are displayed in your terminal.
+   <br /><br />
+   This website is <a href="https://g.blicky.net/manned.git/">open source</a>
+   (MIT licensed) and written in a combination of Perl and Rust. The entire
+   PostgreSQL database is available for download (see "Database download"
+   below).
   _
   end;
 
