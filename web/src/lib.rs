@@ -1,5 +1,6 @@
-#![feature(test)]
-extern crate test;
+//It's really unfortunate that benchmarking is still unstable.
+//#![feature(test)]
+//extern crate test;
 extern crate regex;
 #[macro_use] extern crate lazy_static;
 
@@ -351,6 +352,7 @@ pub extern fn grotty2html_free(buf: StringWrap) {
 }
 
 
+/*
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -388,4 +390,4 @@ mod tests {
         bench_file(b, "t/wfilter.4.output");
     }
     */
-}
+}*/

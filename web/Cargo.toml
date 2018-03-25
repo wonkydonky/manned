@@ -8,8 +8,8 @@ name = "web"
 crate-type = ["lib", "staticlib"]
 
 [dependencies]
-regex = "0.2.1"
-lazy_static = "0.2.2"
+regex = "0.2.10"
+lazy_static = "1.0.0"
 
 # Add debugging symbols even in release mode, in order to help with profiling.
 [profile.release]
