@@ -2,9 +2,11 @@ use std::collections::HashSet;
 use std::io::BufReader;
 use std::str::FromStr;
 use std::error::Error;
+use std::fmt;
 use chrono::NaiveDateTime;
 use postgres;
 use quick_xml as xml;
+use quick_xml::events::Event;
 
 use archive;
 use open;
@@ -12,14 +14,29 @@ use pkg;
 use man;
 
 
-fn xml_getattr(e: &xml::Element, attr: &str) -> Result<String,Box<Error>> {
-    for kv in e.unescaped_attributes() {
-        let (key, val) = kv.map_err(|(e,_)| e)?;
-        if key == attr.as_bytes() {
-            return Ok(String::from_utf8(val.into_owned())?);
+// Ugh, quick-xml's Error type does not implement Error.
+#[derive(Debug)]
+struct XmlError(String);
+impl fmt::Display for XmlError {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result { write!(f, "{}", self.0) }
+}
+impl Error for XmlError {
+    fn description(&self) -> &str { self.0.as_ref() }
+}
+fn to_err(e: xml::Error) -> XmlError {
+    XmlError(format!("{}", e))
+}
+
+
+
+fn xml_getattr(e: &xml::events::BytesStart, attr: &str) -> Result<String,Box<Error>> {
+    for kv in e.attributes().with_checks(false) {
+        let kv = kv.map_err(to_err)?;
+        if kv.key == attr.as_bytes() {
+            return Ok(String::from_utf8(kv.value.into_owned())?);
         }
     }
-    Err(Box::new(xml::error::Error::EOL))
+    Err(Box::new(XmlError(format!("Attribute '{}' not found", attr))))
 }
 
 
@@ -41,23 +58,28 @@ fn readpkgs<F>(url: String, mut cb: F) -> Result<(),Box<Error>>
 {
     debug!("Reading {}", url);
     let mut fd = open::Path{path: &url, cache: true, canbelocal: false}.open()?;
-    let xml = xml::XmlReader::from_reader(
+    let mut xml = xml::Reader::from_reader(
         BufReader::new(
             archive::Archive::open_raw(&mut fd)?
         )
-    ).trim_text(true);
+    );
+    xml.trim_text(true);
 
     let mut savestr = false;
     let mut saved = None;
     let mut pkg = PkgInfo::default();
+    let mut buf = Vec::new();
 
     let arch_src = Some("src".to_string());
 
-    for event in xml {
-        let event = event.map_err(|(e,_)| e)?;
+    loop {
+        let event = xml.read_event(&mut buf);
+        let event = event.map_err(to_err)?;
+
         match event {
 
-            xml::Event::Start(ref e) =>
+            Event::Start(ref e) |
+            Event::Empty(ref e) =>
                 match e.name() {
                     b"name" |
                     b"file" |
@@ -72,13 +94,13 @@ fn readpkgs<F>(url: String, mut cb: F) -> Result<(),Box<Error>>
                     _ => (),
                 },
 
-            xml::Event::Text(e) =>
+            Event::Text(e) =>
                 if savestr {
-                    saved = Some(e.into_unescaped_string()?);
+                    saved = Some(e.unescape_and_decode(&xml).map_err(to_err)?);
                     savestr = false
                 },
 
-            xml::Event::End(ref e) => {
+            Event::End(ref e) => {
                 savestr = false;
                 match e.name() {
                     b"name" => pkg.name = Some(saved.take().unwrap()),
@@ -94,6 +116,7 @@ fn readpkgs<F>(url: String, mut cb: F) -> Result<(),Box<Error>>
                 };
             },
 
+            Event::Eof => break,
             _ => (),
         }
     }
@@ -105,35 +128,43 @@ fn readpkgs<F>(url: String, mut cb: F) -> Result<(),Box<Error>>
 fn repomd(url: String) -> Result<(String,String),Box<Error>> {
     debug!("Reading {}", url);
     let mut fd = open::Path{path: &url, cache: true, canbelocal: false}.open()?;
-    let xml = xml::XmlReader::from_reader(
+    let mut xml = xml::Reader::from_reader(
         BufReader::new(
             archive::Archive::open_raw(&mut fd)?
         )
-    ).trim_text(true);
+    );
+    xml.trim_text(true);
 
     let mut primary = String::new();
     let mut filelists = String::new();
     let mut datatype = 0;
+    let mut buf = Vec::new();
 
-    for event in xml {
-        if let xml::Event::Start(ref e) = event.map_err(|(e,_)| e)? {
-            match e.name() {
-                b"data" =>
-                    datatype = match &xml_getattr(e, "type")? as &str {
-                        "primary"   => 1,
-                        "filelists" => 2,
-                        _           => 0,
-                    },
+    loop {
+        let event = xml.read_event(&mut buf).map_err(to_err)?;
+        match event {
+            Event::Start(ref e) |
+            Event::Empty(ref e) => {
+                match e.name() {
+                    b"data" =>
+                        datatype = match &xml_getattr(e, "type")? as &str {
+                            "primary"   => 1,
+                            "filelists" => 2,
+                            _           => 0,
+                        },
 
-                b"location" =>
-                    match datatype {
-                        1 => primary   = xml_getattr(e, "href")?,
-                        2 => filelists = xml_getattr(e, "href")?,
-                        _ => (),
-                    },
+                    b"location" =>
+                        match datatype {
+                            1 => primary   = xml_getattr(e, "href")?,
+                            2 => filelists = xml_getattr(e, "href")?,
+                            _ => (),
+                        },
 
-                _ => (),
-            }
+                    _ => (),
+                }
+            },
+            Event::Eof => break,
+            _ => (),
         }
     }
     Ok((primary, filelists))

@@ -1,5 +1,4 @@
 use std::collections::HashSet;
-use std::ascii::AsciiExt;
 use std::io::Result;
 use regex::Regex;
 use postgres;

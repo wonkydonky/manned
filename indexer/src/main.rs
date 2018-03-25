@@ -93,15 +93,15 @@ fn main() {
     unsafe { pkg::DRY_RUN = arg.is_present("dry") };
 
     let verbose = arg.occurrences_of("v");
-    env_logger::LogBuilder::new()
+    env_logger::Builder::new()
         .filter(Some("indexer"), match verbose {
-            0 => log::LogLevelFilter::Warn,
-            1 => log::LogLevelFilter::Info,
-            2 => log::LogLevelFilter::Debug,
-            _ => log::LogLevelFilter::Trace,
+            0 => log::LevelFilter::Warn,
+            1 => log::LevelFilter::Info,
+            2 => log::LevelFilter::Debug,
+            _ => log::LevelFilter::Trace,
         })
-        .filter(Some("postgres"), if verbose >= 4 { log::LogLevelFilter::Trace } else { log::LogLevelFilter::Info })
-        .init().unwrap();
+        .filter(Some("postgres"), if verbose >= 4 { log::LevelFilter::Trace } else { log::LevelFilter::Info })
+        .init();
 
     if let Err(e) = open::clear_cache() {
         error!("Error clearing cache: {}", e);
