@@ -147,9 +147,10 @@ sub home {
    li; a href => 'https://manpages.debian.org/', 'Debian Man Pages'; end;
    li; a href => 'https://www.dragonflybsd.org/cgi/web-man', 'DragonFlyBSD Man Pages'; end;
    li; a href => 'http://www.freebsd.org/cgi/man.cgi', 'FreeBSD.org Man Pages'; end;
-   li; a href => 'http://www.openbsd.org/cgi-bin/man.cgi', 'OpenBSD Man Pages'; end;
    li; a href => 'http://netbsd.gw.com/cgi-bin/man-cgi', 'NetBSD Man Pages'; end;
+   li; a href => 'http://www.openbsd.org/cgi-bin/man.cgi', 'OpenBSD Man Pages'; end;
    li; a href => 'http://manpages.ubuntu.com/', 'Ubuntu Manuals'; end;
+   li; a href => 'https://man.voidlinux.eu/', 'Void Linux manpages'; end;
   end;
   $self->htmlFooter;
 }
